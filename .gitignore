@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/linux,windows,java,node,react,visualstudiocode,intellij
-# Edit at https://www.toptal.com/developers/gitignore?templates=linux,windows,java,node,react,visualstudiocode,intellij
+# Created by https://www.toptal.com/developers/gitignore/api/linux,windows,maven,java,node,react,visualstudiocode,intellij
+# Edit at https://www.toptal.com/developers/gitignore?templates=linux,windows,maven,java,node,react,visualstudiocode,intellij
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
@@ -43,9 +43,6 @@
 # .idea/modules
 # *.iml
 # *.ipr
-
-# Maven
-target/
 
 # CMake
 cmake-build-*/
@@ -157,6 +154,25 @@ replay_pid*
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse m2e generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
 
 ### Node ###
 # Logs
@@ -355,4 +371,4 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/linux,windows,java,node,react,visualstudiocode,intellij
+# End of https://www.toptal.com/developers/gitignore/api/linux,windows,maven,java,node,react,visualstudiocode,intellij
