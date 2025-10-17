@@ -16,7 +16,7 @@ RUN cd backend/ && mvn clean package
 FROM eclipse-temurin:21-jre-alpine 
 WORKDIR /app
 # Copy the packaged JAR from the builder stage
-COPY --from=builder /workspace/target/*.jar /app/app.jar
+COPY --from=builder /workspace/backend/target/*.jar /app/app.jar
 
 # Expose the default Spring Boot port (optional)
 EXPOSE 8080
