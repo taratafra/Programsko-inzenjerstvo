@@ -10,7 +10,8 @@ RUN ls -la
 RUN chmod +x ./backend/mvnw
 
 # Build your Spring Boot JAR
-RUN ./backend/mvnw clean package 
+RUN cd backend/
+RUN mvn clean package 
 
 # 2) Runtime stage (Java 21 JRE)
 FROM eclipse-temurin:21-jre-alpine
