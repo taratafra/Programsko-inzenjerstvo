@@ -7,10 +7,10 @@ WORKDIR /workspace
 COPY . .
 RUN pwd
 RUN ls -la
-RUN chmod +x ./workspace/mvnw
+RUN chmod +x ./workspace/backend/mvnw
 
 # Build your Spring Boot JAR
-RUN ./workspace/mvnw clean package 
+RUN ./workspace/backend/mvnw clean package 
 
 # 2) Runtime stage (Java 21 JRE)
 FROM eclipse-temurin:21-jre-alpine
