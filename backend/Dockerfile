@@ -5,10 +5,11 @@ WORKDIR /workspace
 
 # Copy everything from backend/ (Dockerfile context is already backend/)
 COPY . .
-RUN chmod +x ./backend/mvnw
+RUN pwd
+RUN chmod +x ./workspace/mvnw
 
 # Build your Spring Boot JAR
-RUN ./backend/mvnw clean package 
+RUN ./workspace/mvnw clean package 
 
 # 2) Runtime stage (Java 21 JRE)
 FROM eclipse-temurin:21-jre-alpine
