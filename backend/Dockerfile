@@ -5,7 +5,7 @@ WORKDIR /workspace
 
 # Copy everything from backend/ (Dockerfile context is already backend/)
 COPY . .
-RUN chmod +x mvnw
+RUN chmod +x ./backend/mvnw
 
 # Build your Spring Boot JAR
 RUN ./mvnw clean package 
