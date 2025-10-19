@@ -3,11 +3,11 @@ import './App.css';
 
 
 function App() {
-  const [message, setMessage] = useState("");
-
+    const [message, setMessage] = useState("");
+    const BACKEND_URL = process.env.REACT_APP_BACKEND
   const handleClick = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/connect");
+      const response = await fetch(BACKEND_URL);
       const text = await response.text();
       setMessage(text);
     } catch (error) {
