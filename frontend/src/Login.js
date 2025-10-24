@@ -41,19 +41,17 @@ function Login() {
           <p>LOGIN</p>
           <form action="/login" method="post">
               <div className="username">
-                  <label>Username:</label>
                   <input 
                     type="text" 
-                    placeholder="Enter your username" 
+                    placeholder="Username" 
                     value={username}
                     onChange={(e)=>setUsername(e.target.value)}
                     required/>
               </div>
               <div className="password">
-                  <label>Password:</label>
                   <input 
                   type="password" 
-                  placeholder="Enter your password"
+                  placeholder="Password"
                   value={password}
                   onChange={(e)=>setPassword(e.target.value)}
                   required
@@ -63,8 +61,8 @@ function Login() {
               <button type="submit" className="submit-btn">Login</button>
           </form>
           <div className="alternativa">
-            <p>Dont have an account?
-            <a href="/register">Register</a>
+            <p>Dont have an account? 
+            <a href="/register"> Register</a>
             </p>
           </div>
           
