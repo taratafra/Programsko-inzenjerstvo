@@ -1,4 +1,4 @@
-package Pomna_Sedmica.Mindfulnes;
+package Pomna_Sedmica.Mindfulnes.controller;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
