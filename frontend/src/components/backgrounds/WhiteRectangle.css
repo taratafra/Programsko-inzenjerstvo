@@ -1,0 +1,28 @@
+.rectangle{
+    position:relative;
+    z-index:1;    
+    background-color: rgba(184, 241, 255, 0.5);
+    border-radius:40px;
+    border: none;
+
+
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align:center;
+    padding:20px;
+    width:40%;
+}
+
+.rectangle p{
+    background-color: transparent;
+    font-weight: bold;
+    color:white;
+    font-size:100%;
+}
+
+.rectangle form{
+    background-color: transparent;
+    width: 50%;
+}

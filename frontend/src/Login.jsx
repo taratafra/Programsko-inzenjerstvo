@@ -1,7 +1,9 @@
 import { useState } from "react";
 import './login.css';
 import CloudBackground from "./components/backgrounds/CloudyBackground";
+import WhiteRectangle from "./components/backgrounds/WhiteRectangle.jsx"
 import { FcGoogle } from "react-icons/fc";
+import {Link} from "react-router-dom"
 
 
 function Login() {
@@ -39,7 +41,7 @@ function Login() {
 
     return (
         <CloudBackground>
-            <div className="pravokutnik">
+            <WhiteRectangle>
                 <p>LOGIN</p>
                 <form onSubmit={handleLogin}>
                     <div className="username">
@@ -71,10 +73,10 @@ function Login() {
                 </button>
                 <div className="alternativa">
                     <p>Dont have an account? 
-                        <a href="/register"> Register</a>
+                        <Link to="/register">Register</Link>
                     </p>
                 </div>
-            </div>
+            </WhiteRectangle>
         </CloudBackground>
     );
 }

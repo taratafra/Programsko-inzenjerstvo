@@ -1,4 +1,4 @@
-.rectangle{
+.recktangle{
     position:relative;
     z-index:1;    
     background-color: rgba(184, 241, 255, 0.5);
@@ -15,46 +15,28 @@
     width:40%;
 }
 
-.rectangle p{
+.recktangle p{
     background-color: transparent;
     font-weight: bold;
     color:white;
     font-size:190%;
 }
 
-.rectangle form{
+.recktangle form{
     background-color: transparent;
     width: 50%;
 }
 
 
 
-.username, .password, .alternativa{
-    align-items: center;
-    background-color: transparent;
-    display: flex;
-    color: white;
+.register-auth-choice {   
+    display: flex;   
+    flex-direction: column;   
+    align-items: center;   
+    width: 100%;   
+    background-color: transparent; 
 }
 
-.alternativa a{
-    background-color: transparent ;
-}
-.alternativa p{
-    font-weight: 200;
-    font-size: 100%;
-}
-
-.username input, .password input{
-    background-color: rgb(214, 214, 214);
-    padding-right: 2%;
-    padding-left:2%;
-    border-radius: 20px;
-    width: 100%;
-    font-size: larger;
-    margin-top: 5%;
-    padding: 5%;
-    border: none;
-}
 
 .submit-btn{
     background-color: rgba(79, 48, 255, 0.7);
@@ -97,7 +79,7 @@
 }
 
  .google-btn {     
-     width: 40%;     
+     width: 70%;     
      background-color: #ffffff;     
      color: #444;     
      border: none;     
