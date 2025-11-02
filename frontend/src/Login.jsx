@@ -16,7 +16,7 @@ function Login() {
         try {
             const response = await fetch('${BACKEND_URL}/login',{//ne postoji dok oni zabusavaju
                 method: "POST",
-        //tu dodat nesto za pretrazivanje backenda? predlozeno ovo dolje ali nez sto znaci
+        //za pretrazivanje backenda: (mozda promijeni kasnije)
                 headers:{
                     "Content-Type": "application/json"
                 },
@@ -42,46 +42,51 @@ function Login() {
     return (
         <CloudBackground>
             <WhiteRectangle>
-                <p>LOGIN</p>
-                <form onSubmit={handleLogin}>
-                    <div className="username">
-                        <input 
-                            type="text" 
-                            placeholder="Username" 
-                            value={username}
-                            onChange={(e)=>setUsername(e.target.value)}
-                            required/>
-                    </div>
-                    <div className="password">
-                        <input 
-                            type="password" 
-                            placeholder="Password"
-                            value={password}
-                            onChange={(e)=>setPassword(e.target.value)}
-                            required/>
-                    </div>
+                <p className="LOGIN">LOGIN</p>
+                <div className="register-step-content1">
+                    <form onSubmit={handleLogin}>
+                        <div className="username">
+                            <input 
+                                type="text" 
+                                placeholder="Username" 
+                                value={username}
+                                onChange={(e)=>setUsername(e.target.value)}
+                                required/>
+                        </div>
+                        <div className="password">
+                            <input 
+                                type="password" 
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e)=>setPassword(e.target.value)}
+                                required/>
+                        </div>
 
-                    <button type="submit" className="submit-btn">Login</button>
-                </form>
+                        <button type="submit" className="submit-btn">Login</button>
+                    </form>
 
-                <div className="separator">
-                    <span>or</span>
+                    <div className="separator">
+                        <span>or</span>
+                    </div>
+                    
+                    <button type="button" className="google-btn" onClick={handleGoogleLogin}>
+                        <FcGoogle size={22} />Login with Google
+                    </button>
+                    <div className="alternativa">
+                        <p>Dont have an account? 
+                            <Link to="/register">Register</Link>
+                        </p>
+                    </div>    
                 </div>
                 
-                <button type="button" className="google-btn" onClick={handleGoogleLogin}>
-                    <FcGoogle size={22} /> Login with Google
-                </button>
-                <div className="alternativa">
-                    <p>Dont have an account? 
-                        <Link to="/register">Register</Link>
-                    </p>
-                </div>
             </WhiteRectangle>
         </CloudBackground>
     );
 }
 
 export default Login;
+
+
 
 
 
