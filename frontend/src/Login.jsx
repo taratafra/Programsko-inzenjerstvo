@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import './login.css';
 import CloudBackground from "./components/backgrounds/CloudyBackground";
 import WhiteRectangle from "./components/backgrounds/WhiteRectangle.jsx"
 import { FcGoogle } from "react-icons/fc";
-import {Link} from "react-router-dom"
+import {Link, useNavigate} from "react-router-dom"
+import { useAuth0 } from "@auth0/auth0-react"; /////////////////////minjala//////////////////////////////
+
 
 
 function Login() {
@@ -11,6 +13,20 @@ function Login() {
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
+    const {loginWithRedirect, user, isAuthenticated, isLoading, error} = useAuth0();// ovo sam mijenjala///////////////////////////////////////////
+    const navigate = useNavigate();
+
+
+    useEffect(() => {
+    
+    // mijenjalaaa
+        if (!isLoading && isAuthenticated) {
+            console.log("Redirecting to home from Login");
+            navigate("/home");
+        }
+    }, [isAuthenticated, isLoading, navigate]);
+
+
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
@@ -33,11 +49,13 @@ function Login() {
         }
     };
 
-    const handleGoogleLogin = async (e) => {
-        console.log("Attempting to login with google");
-        //Ovo je funkcija koja će rukovat loginom preko googla al nam backend ekipa
-        //mora javit šta se vamo treba dogodit zasad se samo logga 
-    };
+    //minjalaa
+    if (isLoading) {
+        return (
+            <div>Loading...</div>
+        )
+    }
+
 
     return (
         <CloudBackground>
@@ -67,10 +85,14 @@ function Login() {
                 <div className="separator">
                     <span>or</span>
                 </div>
-                
-                <button type="button" className="google-btn" onClick={handleGoogleLogin}>
-                    <FcGoogle size={22} /> Login with Google
-                </button>
+
+                <button className="google-btn" onClick={() => {
+                        
+                    loginWithRedirect({
+                                appState: { returnTo: "/home" }
+                            })}}>Login with Google / Other options</button>
+
+
                 <div className="alternativa">
                     <p>Dont have an account? 
                         <Link to="/register">Register</Link>
