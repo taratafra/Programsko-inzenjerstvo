@@ -49,7 +49,7 @@ public class User {
     private boolean firstLogin; // jel ovo prvi puta da se korisnik prijavljuje -> kad postavi novu lozinku ide u 0
 
     @Column(name = "last_modified_at")
-    private LocalDateTime lastModifiedAt
+    private LocalDateTime lastModifiedAt;
 
     public User(String email, String passwordOrAuth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
         if(isSocialLogin) {
