@@ -1,7 +1,6 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
-import Pomna_Sedmica.Mindfulnes.domain.dto.UpdateUserSettingsRequestDTO;
-import Pomna_Sedmica.Mindfulnes.domain.dto.UserSettingsResponseDTO;
+import Pomna_Sedmica.Mindfulnes.domain.dto.*;
 import Pomna_Sedmica.Mindfulnes.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,15 +27,6 @@ public class UserSettingsController {
     }
 
     /**
-     * Get user settings by user ID (for admin purposes)
-     */
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserSettingsResponseDTO> getUserSettingsById(@PathVariable Long userId) {
-        UserSettingsResponseDTO settings = userSettingsService.getUserSettings(userId);
-        return ResponseEntity.ok(settings);
-    }
-
-    /**
      * Update user profile settings
      */
     @PutMapping("/profile")
@@ -49,22 +39,46 @@ public class UserSettingsController {
     }
 
     /**
-     * Check if current user requires first-time actions
+     * Reset password for first-time login (local users only)
+     */
+    @PostMapping("/first-time-reset")
+    public ResponseEntity<?> resetFirstTimePassword(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody FirstTimePasswordResetRequestDTO request) {
+        String email = jwt.getClaimAsString("email");
+        boolean success = userSettingsService.resetFirstTimePassword(email, request);
+
+        if (success) {
+            return ResponseEntity.ok().body("Password reset successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Password reset failed - user may not be local or not first login");
+        }
+    }
+
+    /**
+     * Change password for existing local users
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody ChangePasswordRequestDTO request) {
+        String email = jwt.getClaimAsString("email");
+        boolean success = userSettingsService.changePassword(email, request);
+
+        if (success) {
+            return ResponseEntity.ok().body("Password changed successfully");
+        } else {
+            return ResponseEntity.badRequest().body("Password change failed");
+        }
+    }
+
+    /**
+     * Check if current user requires first-time password reset
      */
     @GetMapping("/check-first-login")
     public ResponseEntity<?> checkFirstLogin(@AuthenticationPrincipal Jwt jwt) {
         String email = jwt.getClaimAsString("email");
-        boolean requiresFirstLogin = userSettingsService.isFirstLoginRequired(email);
-        return ResponseEntity.ok().body(requiresFirstLogin);
-    }
-
-    /**
-     * Mark first login as completed
-     */
-    @PostMapping("/complete-first-login")
-    public ResponseEntity<?> completeFirstLogin(@AuthenticationPrincipal Jwt jwt) {
-        String email = jwt.getClaimAsString("email");
-        userSettingsService.completeFirstLogin(email);
-        return ResponseEntity.ok().body("First login completed");
+        boolean requiresReset = userSettingsService.isFirstLoginRequired(email);
+        return ResponseEntity.ok().body(requiresReset);
     }
 }
