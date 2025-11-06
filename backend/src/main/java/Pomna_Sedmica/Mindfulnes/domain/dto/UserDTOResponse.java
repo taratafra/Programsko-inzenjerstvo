@@ -15,8 +15,8 @@ public record UserDTOResponse(
         Boolean isSocialLogin,
         LocalDateTime lastLogin,
         LocalDate dateOfBirth,
-        String profilePictureUrl,
         String bio,
+        String profilePictureUrl,
         boolean firstLogin
 ) {
 

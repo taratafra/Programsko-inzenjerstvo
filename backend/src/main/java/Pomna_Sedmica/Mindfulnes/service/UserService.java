@@ -18,7 +18,6 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-
     public UserDTOResponse saveOrUpdateUser(SaveAuth0UserRequestDTO request) {
 
         //provjera jel ga vec imamo
