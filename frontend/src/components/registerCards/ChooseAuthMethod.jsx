@@ -23,5 +23,5 @@ function ChooseAuthMethod({setAuthMethod, error}) {
         </div>       
     );
 }
-
+ 
 export default ChooseAuthMethod;

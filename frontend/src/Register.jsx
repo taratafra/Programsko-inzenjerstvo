@@ -200,7 +200,7 @@ const renderNavigationButtons = () => {
     return (
         <CloudBackground>
             <WhiteRectangle>
-                <p>REGISTRATION</p>
+                <p className="LOGIN">REGISTRATION</p>
                 {renderCurrentSetop()}
                 {renderNavigationButtons()}
 

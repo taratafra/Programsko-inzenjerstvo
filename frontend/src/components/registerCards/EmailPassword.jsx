@@ -14,8 +14,8 @@ function EmailPassword({ email, password, rePassword, onChange, errors, onRegist
             {errors?.password && (                 
                 <div className="register-error">
                     {errors.password}
-                </div>             
-            )}             
+                </div>
+            )}
             <div className="password">                 
                 <input type="password" placeholder="Confirm password" value={rePassword} onChange={(e) => onChange("rePassword", e.target.value)} required/>             
             </div>             
@@ -24,7 +24,7 @@ function EmailPassword({ email, password, rePassword, onChange, errors, onRegist
                     {errors.rePassword}
                 </div>             
             )}         
-
+ 
             <button type="button" className="submit-btn" onClick={onRegister}>Register</button>
         </div>     
     ); 
