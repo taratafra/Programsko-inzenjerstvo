@@ -1,3 +1,4 @@
+//ne koristi se
 import React from "react"; 
 
 function DateOfBirth({ dateOfBirth, onChange, errors }) {     
