@@ -25,13 +25,13 @@ public class SecurityConfigProd {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/api/user/settings/**").authenticated() // ONLY ADD THIS LINE
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
     }
-
 
     @Bean
     public JwtDecoder jwtDecoder() {
@@ -50,4 +50,3 @@ public class SecurityConfigProd {
         return jwtDecoder;
     }
 }
-

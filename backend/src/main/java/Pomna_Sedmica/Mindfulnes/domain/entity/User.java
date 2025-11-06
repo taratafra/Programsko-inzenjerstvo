@@ -42,6 +42,8 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
@@ -50,6 +52,12 @@ public class User {
 
     @Column(name = "last_modified_at")
     private LocalDateTime lastModifiedAt;
+
+    @Column(name = "bio", length = 1000)
+    private String bio;
+
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
 
     public User(String email, String passwordOrAuth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
 

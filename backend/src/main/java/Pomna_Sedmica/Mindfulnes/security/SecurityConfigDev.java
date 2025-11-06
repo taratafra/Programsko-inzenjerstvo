@@ -1,6 +1,5 @@
 package Pomna_Sedmica.Mindfulnes.security;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +21,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("dev")
 public class SecurityConfigDev {
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("Ejjjjj");
@@ -34,15 +32,14 @@ public class SecurityConfigDev {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/api/user/settings/**").authenticated() // ONLY ADD THIS LINE
                         .requestMatchers("/public").permitAll()
                         .anyRequest().permitAll()
                 )
-                .cors(Customizer.withDefaults()) // This now works because CorsConfigurationSource bean exists
+                .cors(Customizer.withDefaults())
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .build();
     }
-
-
 
     @Bean
     public JwtDecoder jwtDecoder() {
@@ -60,5 +57,4 @@ public class SecurityConfigDev {
 
         return jwtDecoder;
     }
-
 }
