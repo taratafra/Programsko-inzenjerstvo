@@ -52,6 +52,7 @@ public class User {
     private LocalDateTime lastModifiedAt;
 
     public User(String email, String passwordOrAuth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
+
         if(isSocialLogin) {
             this.auth0Id = passwordOrAuth0Id; // za korisnika koji se ulogirao preko auth0
             this.password = null;
@@ -71,6 +72,9 @@ public class User {
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
         if (lastLogin == null) lastLogin = LocalDateTime.now();
+    }
+
+    public void setLastUpdated(LocalDateTime now) {
     }
 
     @PreUpdate

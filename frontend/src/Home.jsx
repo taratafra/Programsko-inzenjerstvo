@@ -14,16 +14,57 @@ export default function Home() {
     useEffect(() => {
         if (user) {
             console.log("User found, fetching protected data");
+            sendUserDataToBackend();  
             getDataFromResourceServer();
         }
     }, [user]);
 
-    const getDataFromResourceServer = async () => {
+      const sendUserDataToBackend = async () => {
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
                     audience: 'http://localhost:8080',
-                    scope: "read:current_user",
+                    scope: "openid profile email",
+                }
+            });
+
+            const payload = {
+                name: user.given_name || user.name?.split(" ")[0] || "",
+                surname: user.family_name || user.name?.split(" ")[1] || "",
+                email: user.email,
+                lastLogin: new Date().toISOString(),
+                isSocialLogin: true,
+                auth0Id: user.sub,
+            };
+
+            console.log("Sending user data:", payload);
+
+            const response = await fetch("http://localhost:8080/api/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                console.error("Failed to send user data:", response.statusText);
+            } else {
+                console.log("User data sent successfully");
+            }
+        } catch (error) {
+            console.error("Error sending user data to backend:", error);
+        }
+    };
+
+    const getDataFromResourceServer = async () => {
+        try {
+            console.log("token");
+            const token = await getAccessTokenSilently({
+                authorizationParams: {
+                    audience: 'http://localhost:8080',
+                    scope: "openid profile email",
                 }
             });
             const response = await fetch("http://localhost:8080/protected", {
@@ -32,11 +73,13 @@ export default function Home() {
                 },
             });
             const responseData = await response.text();
+            console.log(responseData);
             setResponse(responseData);
         } catch (error) {
             console.error("Error fetching protected data:", error);
         }
     }
+
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -45,6 +88,8 @@ export default function Home() {
     if (!user) {
         return <div>No user found...</div>;
     }
+
+    
 
     return (
         <div>

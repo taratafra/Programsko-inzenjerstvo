@@ -4,7 +4,7 @@ import CloudBackground from "./components/backgrounds/CloudyBackground";
 import WhiteRectangle from "./components/backgrounds/WhiteRectangle.jsx"
 import { FcGoogle } from "react-icons/fc";
 import {Link, useNavigate} from "react-router-dom"
-import { useAuth0 } from "@auth0/auth0-react"; /////////////////////minjala//////////////////////////////
+import { useAuth0 } from "@auth0/auth0-react"; 
 
 
 
@@ -13,13 +13,11 @@ function Login() {
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
-    const {loginWithRedirect, user, isAuthenticated, isLoading, error} = useAuth0();// ovo sam mijenjala///////////////////////////////////////////
+    const {loginWithRedirect, user, isAuthenticated, isLoading, error} = useAuth0();
     const navigate = useNavigate();
 
 
     useEffect(() => {
-    
-    // mijenjalaaa
         if (!isLoading && isAuthenticated) {
             console.log("Redirecting to home from Login");
             navigate("/home");
@@ -49,7 +47,7 @@ function Login() {
         }
     };
 
-    //minjalaa
+    
     if (isLoading) {
         return (
             <div>Loading...</div>

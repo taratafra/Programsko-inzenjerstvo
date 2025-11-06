@@ -15,7 +15,12 @@ function App() {
       <Route path="/home" element={<Home />} />
       
       <Route element={<ProtectedRoute />}>
+
+        {/* !!!!!!!!!!!!! treba popravit ProtectedRoutes.js inace necete moc nigdi ili ako vam to ne uspije javite se meni pa cu
+        privremeno dodat rutu dok se ne popravi ovo*/}
+
         {/* tu dodajite sve rute od sad pa nadalje al aj neka neko provjeri jel radi ovo*/}
+
       </Route>
     </Routes>
   );
