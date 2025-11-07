@@ -47,13 +47,13 @@ public class SecurityConfigDev {
     @Bean
     public JwtDecoder jwtDecoder() {
         System.out.println("Ejjjjj i tebii");
-        String jwkSetUri = "https://mindfulness.eu.auth0.com/.well-known/jwks.json";
+        String jwkSetUri = "https://mindfulness-application.eu.auth0.com/.well-known/jwks.json";
 
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
         // Add audience validator
         OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator("http://localhost:8080");
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer("https://mindfulness.eu.auth0.com/");
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer("https://mindfulness-application.eu.auth0.com/");
         OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
 
         jwtDecoder.setJwtValidator(withAudience);
