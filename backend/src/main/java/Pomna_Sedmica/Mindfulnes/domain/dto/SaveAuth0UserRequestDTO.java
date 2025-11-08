@@ -4,6 +4,6 @@ public record SaveAuth0UserRequestDTO(
         String auth0Id,
         String email,
         String name,
-        String surname
-) {
-}
+        String surname,
+        Boolean isSocialLogin
+) {}

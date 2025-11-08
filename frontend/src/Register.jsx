@@ -1,79 +1,136 @@
+// src/Register.jsx
 import { useState } from "react";
-import './Register.css';
+import "./Register.css";
 import CloudBackground from "./components/backgrounds/CloudyBackground";
-import WhiteRectangle from "./components/backgrounds/WhiteRectangle"
-import EmailPassword from "./components/registerCards/EmailPassword";
+import WhiteRectangle from "./components/backgrounds/WhiteRectangle";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
-    const [currentStep, setCurrentStep]=useState(0);
-    
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const BACKEND_URL = process.env.REACT_APP_BACKEND; // e.g. http://localhost:8080
 
-    const [regData, setRegData] = useState({
-        email: "",
-        password: "",
-    });
+  // Registration state
+  const [regData, setRegData] = useState({
+    email: "",
+    password: "",
+    name: "",
+    surname: "",
+    dateOfBirth: "",
+  });
 
-    const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-    const handleRegDataUpdate = (field, value) => {
-        setRegData((prev)=> ({
-            ...prev,
-            [field]: value,
-            }));
-    };
+  // Update input fields
+  const handleRegDataUpdate = (field, value) => {
+    setRegData((prev) => ({ ...prev, [field]: value }));
+  };
 
-    const validateInputs = () => {
-        const newErrors = {}
+  // Input validation
+  const validateInputs = () => {
+    const newErrors = {};
+    if (!regData.email.trim()) newErrors.email = "Please enter an email.";
+    if (!regData.password.trim()) newErrors.password = "Please enter a password.";
+    if (regData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters.";
+    if (!regData.name.trim()) newErrors.name = "Please enter your name.";
+    if (!regData.surname.trim()) newErrors.surname = "Please enter your surname.";
+    if (!regData.dateOfBirth.trim())
+      newErrors.dateOfBirth = "Please enter your date of birth.";
 
-        if(currentStep == 0) {
-            if (!regData.email.trim()) {             
-                newErrors.email = "Please enter an email.";           
-            }
-        }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length == 0;
+  // Submit registration
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateInputs()) return;
+
+    setLoading(true);
+    setMessage("");
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(regData),
+      });
+
+      const text = await response.text();
+
+      if (!response.ok) {
+        throw new Error(text || "Registration failed");
+      }
+
+      setMessage("Registration successful! You can now log in.");
+      setTimeout(() => navigate("/login"), 1200);
+    } catch (error) {
+      console.error("Registration error:", error);
+      setMessage(error.message || "Failed to register");
+    } finally {
+      setLoading(false);
     }
+  };
 
+  return (
+    <CloudBackground>
+      <WhiteRectangle>
+        <p className="LOGIN">REGISTER</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={regData.email}
+            onChange={(e) => handleRegDataUpdate("email", e.target.value)}
+            required
+          />
+          {errors.email && <p className="error">{errors.email}</p>}
 
-     const handleSubmit = async () => {
-        //This will have to be written when we finally have an api endpoint for this
-        return null
-    };
+          <input
+            type="password"
+            placeholder="Password"
+            value={regData.password}
+            onChange={(e) => handleRegDataUpdate("password", e.target.value)}
+            required
+          />
+          {errors.password && <p className="error">{errors.password}</p>}
 
-    const renderCurrentSetop = () => {
-        console.log(currentStep);
- 
-        if(currentStep === 0){
-            return(
-                <EmailPassword email={regData.email} 
-                    password={regData.password} 
-                    onChange={handleRegDataUpdate}
-                    errors={errors}
-                    onRegister={()=>{
-                        if(validateInputs()){
-                            navigate("/login");
-                        }
-                    }}
-                />
-            );
-        }
-    }
+          <input
+            type="text"
+            placeholder="Name"
+            value={regData.name}
+            onChange={(e) => handleRegDataUpdate("name", e.target.value)}
+            required
+          />
+          {errors.name && <p className="error">{errors.name}</p>}
 
-    return (
-        <CloudBackground>
-            <WhiteRectangle>
-                <p className="LOGIN">REGISTRATION</p>
-                {renderCurrentSetop()}
+          <input
+            type="text"
+            placeholder="Surname"
+            value={regData.surname}
+            onChange={(e) => handleRegDataUpdate("surname", e.target.value)}
+            required
+          />
+          {errors.surname && <p className="error">{errors.surname}</p>}
 
-            </WhiteRectangle>
-        </CloudBackground>
-    );
+          <input
+            type="date"
+            value={regData.dateOfBirth}
+            onChange={(e) => handleRegDataUpdate("dateOfBirth", e.target.value)}
+            required
+          />
+          {errors.dateOfBirth && <p className="error">{errors.dateOfBirth}</p>}
+
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+
+          {message && <p className="info-message">{message}</p>}
+        </form>
+      </WhiteRectangle>
+    </CloudBackground>
+  );
 }
 
 export default Register;
-
-
-

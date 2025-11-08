@@ -15,7 +15,6 @@ public record UserDTOResponse(
         Boolean isSocialLogin,
         LocalDateTime lastLogin,
         LocalDate dateOfBirth
-
 ) {
 
 }
