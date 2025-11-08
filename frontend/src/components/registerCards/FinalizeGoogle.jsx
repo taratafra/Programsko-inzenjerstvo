@@ -1,3 +1,4 @@
+//ne koristi se
 import React from "react"; 
 
 function FinalizeGoogle({ googleError, onContinueToLogin }) {     
