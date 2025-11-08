@@ -27,7 +27,11 @@ public class SecurityConfigDev {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("Ejjjjj");
 
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(
+                "/h2-console/**",
+                "/onboarding/**",
+                "/users/**"
+        ));
         http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http
