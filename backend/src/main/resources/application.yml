@@ -1,13 +1,35 @@
 # ────────────── DEFAULT / COMMON SETTINGS ──────────────
 spring:
   application:
-    name: Mindfulnes
+    name: ${spring.application.name}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
   profiles:
-    active: dev
+    active: ${spring.profiles.active:dev} # fallback if not defined
+
+---
+
+# ────────────── AUTH0 & SECURITY SETTINGS ──────────────
+auth0:
+  domain: ${auth0.domain}
+  clientId: ${auth0.clientId}
+  clientSecret: ${auth0.clientSecret}
+  audience: ${auth0.audience}
+
+jwt:
+  secret: ${jwt.secret}
+
+cors:
+  allowed-origin: ${cors.allowed-origin}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${auth0.domain}
 
 ---
 
@@ -32,7 +54,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect #potencijalno ne treba
+        dialect: org.hibernate.dialect.H2Dialect
     database-platform: org.hibernate.dialect.H2Dialect
 
 ---
@@ -43,10 +65,10 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: jdbc:postgresql://db:5432/mydb
+    url: ${db.url}
     driver-class-name: org.postgresql.Driver
-    username: myuser
-    password: mypassword
+    username: ${db.user}
+    password: ${db.password}
   jpa:
     hibernate:
       ddl-auto: update
