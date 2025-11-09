@@ -16,8 +16,8 @@ export default function Home() {
     const init = async () => {
       const localToken = localStorage.getItem("token");
 
-      try {
-        // 🔹 Auth0 login
+      try { 
+        // Auth0 login
         if (isAuthenticated && auth0User) {
           console.log("Authenticated via Auth0:", auth0User);
           setUser(auth0User);
@@ -25,7 +25,7 @@ export default function Home() {
           await sendUserDataToBackend(auth0User);
           await fetchProtectedResource(); // SDK provides token internally
         } 
-        // 🔹 Local JWT login
+        //  Local JWT login
         else if (localToken) {
           console.log("Authenticated via local JWT");
 
@@ -42,15 +42,10 @@ export default function Home() {
           // Fetch protected resource with local token
           await fetchProtectedResource(localToken);
         } 
-        // 🔹 Not logged in
-        else {
-          console.log("No token found, redirecting to login");
-          navigate("/login");
-        }
-      } catch (err) {
-        console.error("Error initializing user:", err);
-      } finally {
         setLoading(false);
+      } catch (err) {
+            console.error("Error initializing user:", err);
+            setLoading(false);
       }
     };
 
