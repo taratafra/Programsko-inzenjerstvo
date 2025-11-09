@@ -3,7 +3,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Home() {
+export default function Home() { 
+
   const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated } = useAuth0();
   const [user, setUser] = useState(null);
   const [responseFromServer, setResponse] = useState("");
@@ -11,8 +12,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND;
-
-  useEffect(() => {
+      useEffect(() => {
     const init = async () => {
       const localToken = localStorage.getItem("token");
 
