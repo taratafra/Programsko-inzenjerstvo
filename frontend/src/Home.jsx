@@ -1,6 +1,13 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation} from "react-router-dom"; 
+import styles from "./Home.module.css";
+
+import Header from "./components/home/Header";
+import LeftSidebar from "./components/home/LeftSidebar";
+import RightSidebar from "./components/home/RightSidebar";
+import DashboardTabs from "./components/home/DashboardTabs";
+import GeneralInfoGrid from "./components/home/GeneralInfoGrid";
 
 export default function Home() {
     const { user, getAccessTokenSilently, isLoading } = useAuth0();
@@ -89,14 +96,135 @@ export default function Home() {
         return <div>No user found...</div>;
     }
 
-    
+    console.log("Login Successful!");
+    console.log(`Welcome, ${user.name}!`);
+    console.log(responseFromServer);
+    console.log(`Email: ${user.email}`);
 
+    function HomeLayout() {
+        const location = useLocation();
+        
+
+        const [activeTab, setActiveTab] = useState('Fokus');
+
+        const renderTabContent = () => {
+            switch (activeTab) {
+                case 'Personalized recomendations':
+                    return <GeneralInfoGrid />;
+
+                case 'Focus':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Focus Placeholder</h1>
+                            <p>Kolege će ovdje implementirati svoj tab.</p>
+                        </div>
+                    );
+                
+                case 'Sleep':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Sleep Placeholder</h1>
+                            <p>Kolege će ovdje implementirati svoj tab.</p>
+                        </div>
+                    );
+                
+                case 'Stress':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Stress Placeholder</h1>
+                            <p>Kolege će ovdje implementirati svoj tab.</p>
+                        </div>
+                    );
+
+                case 'Gratitude':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Gratitude Placeholder</h1>
+                            <p>Kolege će ovdje implementirati svoj tab.</p>
+                        </div>
+                    );
+                
+                case 'Calendar':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Calendar Placeholder</h1>
+                            <p>Kolege će ovdje implementirati Calendar.</p>
+                        </div>
+                    );
+                case 'Journal':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Journal Placeholder</h1>
+                            <p>Kolege će ovdje implementirati Journal.</p>
+                        </div>
+                    );
+                case 'Statistics':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Statistics Placeholder</h1>
+                            <p>Kolege će ovdje implementirati Statistics.</p>
+                        </div>
+                    );
+
+                case 'Breathing':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Breathing Placeholder</h1>
+                        </div>
+                    );
+                
+                case 'Account':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <h1>Account Details Placeholder</h1>
+                            <p>Ovdje će biti stranica za uređivanje profila.</p>   
+                        </div>
+                    );
+
+                default:
+                    return <GeneralInfoGrid />;
+            }
+        };
+
+        return (
+            <div className={styles.layoutContainer}>
+                
+                {/* oblaci */}
+                <div id="o1"></div>
+                <div id="o2"></div>
+                <div id="o3"></div>
+
+                <div className={styles.dashboardContentWrapper}>
+
+                    <Header navigate={navigate} user={user} />
+
+                    <div className={styles.mainGrid}>
+                        <LeftSidebar 
+                            user={user} 
+                            //handleLogout={handleLogout} 
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                        />
+
+                        <div className={styles.mainContent}>
+                            <DashboardTabs 
+                                activeTab={activeTab}
+                                setActiveTab={setActiveTab}
+                            />
+                            
+                            {renderTabContent()}
+                        </div>
+
+                        <RightSidebar navigate={navigate} />
+                    </div>
+                </div>
+            </div>
+        );
+    
+    }
     return (
         <div>
-            <h1>Login Successful!</h1>
-            <h2>Welcome, {user.name}!</h2>
-            <h3>{responseFromServer}</h3>
-            <p>Email: {user.email}</p>
+            <HomeLayout />
         </div>
     );
 }
