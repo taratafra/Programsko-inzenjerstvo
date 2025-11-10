@@ -1,3 +1,4 @@
+//ne koristi se
 import React from "react"; 
 
 function NameSurname({ name, surname, onChange, errors }) {     

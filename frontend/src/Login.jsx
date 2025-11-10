@@ -1,112 +1,119 @@
+// src/Login.jsx
 import { useState, useEffect } from "react";
 import './login.css';
 import CloudBackground from "./components/backgrounds/CloudyBackground";
-import WhiteRectangle from "./components/backgrounds/WhiteRectangle.jsx"
-import { FcGoogle } from "react-icons/fc";
-import {Link, useNavigate} from "react-router-dom"
+import WhiteRectangle from "./components/backgrounds/WhiteRectangle.jsx";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
-
-
 function Login() {
-    const [username, setUsername]=useState("");
-    const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("");
-    const BACKEND_URL = process.env.REACT_APP_BACKEND;
-    const {loginWithRedirect, user, isAuthenticated, isLoading, error} = useAuth0();
-    const navigate = useNavigate();
+  const [email, setEmail] = useState(""); // use email for clarity
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND; // example: http://localhost:8080
+  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!isLoading && isAuthenticated) {
-            console.log("Redirecting to home from Login");
-            navigate("/home");
-        }
-    }, [isAuthenticated, isLoading, navigate]);
-
-
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('${BACKEND_URL}/login',{//ne postoji dok oni zabusavaju
-                method: "POST",
-        //za pretrazivanje backenda: (mozda promijeni kasnije)
-                headers:{
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({username, password}),
-            });
-            if(!response.ok){
-                throw new Error("Login failed");
-            }
-            const data = await response.text();
-            setMessage(`Succes: ${data}`);
-        } catch (error) {
-            console.error("Error:", error);
-            setMessage("Failed to connect to backend");
-        }
-    };
-
-
-    if (isLoading) {
-        return (
-            <div>Loading...</div>
-        )
+  // Redirect to home if Auth0 is already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate("/home");
     }
+  }, [isAuthenticated, isLoading, navigate]);
 
+   // Handle local login
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setMessage("");
+    setLoading(true);
 
-    return (
-        <CloudBackground>
-            <WhiteRectangle>
-                <p className="LOGIN">LOGIN</p>
-                <div className="register-step-content1">
-                    <form onSubmit={handleLogin}>
-                        <div className="username">
-                            <input
-                                type="text"
-                                placeholder="Username"
-                                value={username}
-                                onChange={(e)=>setUsername(e.target.value)}
-                                required/>
-                        </div>
-                        <div className="password">
-                            <input
-                                type="password"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e)=>setPassword(e.target.value)}
-                                required/>
-                        </div>
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, socialLogin: false }),
+      });
 
-                        <button type="submit" className="submit-btn">Login</button>
-                    </form>
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Login failed");
+      }
 
-                <div className="separator">
-                    <span>or</span>
-                </div>
+      const data = await response.json();
+      localStorage.setItem("token", data.access_token);
 
-                <button className="google-btn" onClick={() => {
+      setMessage("Login successful!");
+      navigate("/home");
+    } catch (error) {
+      console.error("Error:", error);
+      setMessage(error.message || "Failed to connect to backend");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    loginWithRedirect({
-                                appState: { returnTo: "/home" }
-                            })}}>Login with Google / Other options</button>
+  if (isLoading) return <div>Loading...</div>;
 
+  return (
+    <CloudBackground>
+      <WhiteRectangle>
+        <p className="LOGIN">LOGIN</p>
+        <div className="register-step-content1">
+          <form onSubmit={handleLogin}>
+            <div className="email">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="password">
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
 
-                    <div className="alternativa">
-                        <p>Dont have an account?
-                            <Link to="/register">Register</Link>
-                        </p>
-                    </div>
-                </div>
+            <button type="submit" className="submit-btn" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </button>
 
-            </WhiteRectangle>
-        </CloudBackground>
-    );
+            {message && <p className="error">{message}</p>}
+          </form>
+
+          <div className="separator">
+            <span>or</span>
+          </div>
+
+          <button
+            className="google-btn"
+            onClick={() =>
+              loginWithRedirect({
+                appState: { returnTo: "/home" },
+                // Optional: include audience if needed
+                // authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE }
+              })
+            }
+          >
+            Login with Google / Other options
+          </button>
+
+          <div className="alternativa">
+            <p>
+              Don’t have an account? <Link to="/register">Register</Link>
+            </p>
+          </div>
+        </div>
+      </WhiteRectangle>
+    </CloudBackground>
+  );
 }
 
 export default Login;
-
-
-
-
-

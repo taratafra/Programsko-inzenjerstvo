@@ -1,3 +1,5 @@
+//ne koristi se
+
 import React from "react"; 
 
 function AccountType({ accountType, onChange, errors }) {     
