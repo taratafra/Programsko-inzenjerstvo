@@ -30,14 +30,14 @@ export default function Home() {
                     await sendUserDataToBackend(auth0User);
                     await fetchProtectedResource(); // SDK provides token internally
 
-                    // Auth0 users don't need password reset
+                    // Auth0 ne treba reset
                     setRequiresPasswordReset(false);
                 }
                 // Local JWT login
                 else if (localToken) {
                     console.log("Authenticated via local JWT");
 
-                    // Fetch user info from backend - this should include firstLogin field
+
                     const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
@@ -48,14 +48,12 @@ export default function Home() {
                     console.log("User data from backend:", userData); // Debug log
                     setUser(userData);
 
-                    // Check if first login password reset is required
-                    // userData should have firstLogin field from your UserDTOResponse
+
                     if (userData.firstLogin !== undefined) {
                         console.log("First login status:", userData.firstLogin);
                         setRequiresPasswordReset(userData.firstLogin);
                     } else {
                         console.warn("firstLogin field not found in user data");
-                        // Fallback: check the separate endpoint
                         try {
                             const resetRes = await fetch(`${BACKEND_URL}/api/user/settings/check-first-login`, {
                                 headers: { Authorization: `Bearer ${localToken}` },
@@ -69,7 +67,6 @@ export default function Home() {
                         }
                     }
 
-                    // Fetch protected resource with local token
                     await fetchProtectedResource(localToken);
                 }
                 setLoading(false);
@@ -122,7 +119,6 @@ export default function Home() {
         }
     };
 
-    // 🔹 Send Auth0 user info to backend
     const sendUserDataToBackend = async (auth0User) => {
         try {
             const token = await getAccessTokenSilently({
@@ -162,7 +158,6 @@ export default function Home() {
         }
     };
 
-    // 🔹 Fetch protected resource (works for both Auth0 and local JWT)
     const fetchProtectedResource = async (localToken) => {
         try {
             let token;
@@ -193,7 +188,6 @@ export default function Home() {
         }
     };
 
-    // 🔹 Handle password input change
     const handlePasswordChange = (e) => {
         const { name, value } = e.target;
         setPasswordResetData(prev => ({
@@ -202,7 +196,6 @@ export default function Home() {
         }));
     };
 
-    // 🔹 Render password reset form
     const renderPasswordResetForm = () => (
         <div style={{
             border: "2px solid #f0ad4e",
@@ -264,7 +257,6 @@ export default function Home() {
         </div>
     );
 
-    // 🔹 Render login status message
     const renderLoginStatus = () => {
         if (auth0User) {
             return <p style={{ color: "#5bc0de", fontStyle: "italic" }}>OAuth Login (No password reset required)</p>;
