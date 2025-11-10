@@ -11,16 +11,53 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const AUTH0_AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE; 
   const BACKEND_URL = process.env.REACT_APP_BACKEND;
+  const getApiToken = async (localToken) => {
+    if (localToken) return localToken; // local login
+    // Auth0 access token
+    return await getAccessTokenSilently({
+      authorizationParams: {
+        audience: `${AUTH0_AUDIENCE}`,
+        scope: "openid profile email",
+      },
+    });
+  };
+
+const checkFirstLogin = async (token) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(res);
+      if (!res.ok) return false;
+      const me = await res.json();
+      return !!me?.isFirstLogin;
+    } catch {
+      return false;
+    }
+  };
+
       useEffect(() => {
     const init = async () => {
       const localToken = localStorage.getItem("token");
 
       try { 
         // Auth0 login
+        console.log("Ave maria");
         if (isAuthenticated && auth0User) {
           console.log("Authenticated via Auth0:", auth0User);
           setUser(auth0User);
+          const token = await getApiToken(null);
+          const isFirst = await checkFirstLogin(token);
+          if(isFirst){
+            navigate("/questions");
+            return;
+          }
 
           await sendUserDataToBackend(auth0User);
           await fetchProtectedResource(); // SDK provides token internally
@@ -28,7 +65,7 @@ export default function Home() {
         //  Local JWT login
         else if (localToken) {
           console.log("Authenticated via local JWT");
-
+            
           // Fetch user info from backend
           const res = await fetch(`${BACKEND_URL}/api/users/me`, {
             headers: { Authorization: `Bearer ${localToken}` },
@@ -38,7 +75,12 @@ export default function Home() {
 
           const data = await res.json();
           setUser(data);
-
+          const isFirst = await checkFirstLogin(localToken);
+            console.log("Is first token:", isFirst);
+            if (isFirst) {
+                navigate("/questions");
+                return;
+            }
           // Fetch protected resource with local token
           await fetchProtectedResource(localToken);
         } 
@@ -52,7 +94,7 @@ export default function Home() {
     init();
   }, [auth0User, isAuthenticated, navigate, BACKEND_URL]);
 
-  // 🔹 Send Auth0 user info to backend
+  //  Send Auth0 user info to backend
   const sendUserDataToBackend = async (auth0User) => {
     try {
       const token = await getAccessTokenSilently({
@@ -92,7 +134,7 @@ export default function Home() {
     }
   };
 
-  // 🔹 Fetch protected resource (works for both Auth0 and local JWT)
+  //  Fetch protected resource (works for both Auth0 and local JWT)
   const fetchProtectedResource = async (localToken) => {
     try {
       let token;
