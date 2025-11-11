@@ -39,7 +39,7 @@ public class SecurityConfigDev {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/**"));
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/**","/onboarding/**","/messages/**"));
         http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
         http

@@ -15,12 +15,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.context.annotation.Profile;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Map;
 
+@Profile("dev")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "${CORS_ALLOWED_ORIGIN:http://localhost:3000}")

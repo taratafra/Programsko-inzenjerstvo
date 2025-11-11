@@ -418,7 +418,7 @@ export default function Home() {
             )} */}
 
             {!requiresPasswordReset && <HomeLayout />}
-            
+
         </div>
     );
 }
