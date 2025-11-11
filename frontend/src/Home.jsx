@@ -402,22 +402,23 @@ export default function Home() {
 
     return (
         <div style={{ padding: "20px" }}>
-            <h1>Login Successful!</h1>
+            {/* <h1>Login Successful!</h1>
             <h2>Welcome, {user.name || user.given_name || user.email}!</h2>
-            <p>Email: {user.email}</p>
+            <p>Email: {user.email}</p> */}
 
-            {renderLoginStatus()}
+            {/* {renderLoginStatus()} */}
 
             {requiresPasswordReset && renderPasswordResetForm()}
 
-            {responseFromServer && (
+            {/* {responseFromServer && (
                 <div style={{ marginTop: "20px" }}>
                     <h3>Protected Resource Response:</h3>
                     <p>{responseFromServer}</p>
                 </div>
-            )}
+            )} */}
 
-            <HomeLayout />
+            {!requiresPasswordReset && <HomeLayout />}
+            
         </div>
     );
 }
