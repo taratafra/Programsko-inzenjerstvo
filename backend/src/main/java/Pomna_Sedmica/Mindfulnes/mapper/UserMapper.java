@@ -22,6 +22,8 @@ public class UserMapper {
         user.setSocialLogin(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setLastLogin(LocalDateTime.now());
+        user.setBio("");
+        user.setProfilePictureUrl("");
         return user;
     }
 
@@ -34,7 +36,10 @@ public class UserMapper {
                 user.getRole(),
                 user.isSocialLogin(),
                 user.getLastLogin(),
-                user.getDateOfBirth()
+                user.getDateOfBirth(),
+                user.getBio(),
+                user.getProfilePictureUrl(),
+                user.isFirstLogin()
         );
     }
 }

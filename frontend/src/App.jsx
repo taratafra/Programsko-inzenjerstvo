@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Register from "./Register";
 import Home from "./Home";
 import ProtectedRoute from "./ProtectedRoute";
+import Questionnaire from "./Questionnaire";
 
 function App() {
   return (
@@ -12,15 +13,10 @@ function App() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/home" element={<Home />} />
-      
+      <Route path="/questions" element={<Questionnaire />} />
+            
       <Route element={<ProtectedRoute />}>
-
-        {/* !!!!!!!!!!!!! treba popravit ProtectedRoutes.js inace necete moc nigdi ili ako vam to ne uspije javite se meni pa cu
-        privremeno dodat rutu dok se ne popravi ovo*/}
-
-        {/* tu dodajite sve rute od sad pa nadalje al aj neka neko provjeri jel radi ovo*/}
-
+        <Route path="/home" element={<Home />} />
       </Route>
     </Routes>
   );

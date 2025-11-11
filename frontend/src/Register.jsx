@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 function Register() {
   const navigate = useNavigate();
-  const BACKEND_URL = process.env.REACT_APP_BACKEND; // e.g. http://localhost:8080
+  const BACKEND_URL = process.env.REACT_APP_BACKEND; 
 
   // Registration state
   const [regData, setRegData] = useState({
