@@ -44,7 +44,7 @@ public class SecurityConfigDev {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // CSRF settings
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/auth/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/**"))
                 // Allow H2 frames
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 // Authorization rules

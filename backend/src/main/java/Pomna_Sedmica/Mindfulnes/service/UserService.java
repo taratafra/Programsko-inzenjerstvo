@@ -7,32 +7,42 @@ import Pomna_Sedmica.Mindfulnes.mapper.UserMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserDTOResponse saveOrUpdateUser(SaveAuth0UserRequestDTO request) {
+    @Transactional
+    public UserDTOResponse saveOrUpdateUser(SaveAuth0UserRequestDTO dto) {
+        Optional<User> existing = dto.email() != null ?
+                userRepository.findByEmail(dto.email()) :
+                Optional.empty();
 
-        //provjera jel ga vec imamo
-        User existing = userRepository.findByEmail(request.email()).orElse(null);
-
-        if (existing != null) {
-            // Update ako vec postoji
-            existing.setAuth0Id(request.auth0Id());
-            existing.setName(request.name());
-            existing.setSurname(request.surname());
-            existing.setLastLogin(LocalDateTime.now());
-
-            User savedUser = userRepository.save(existing);
-            return UserMapper.toDTO(savedUser);
+        User user;
+        if (existing.isPresent()) {
+            user = existing.get();
+            user.setLastLogin(LocalDateTime.now());
+            user.setName(dto.name());
+            user.setSurname(dto.surname());
+            user.setAuth0Id(dto.auth0Id());
+            user.setSocialLogin(dto.isSocialLogin());
+        } else {
+            user = new User();
+            user.setEmail(dto.email());
+            user.setName(dto.name());
+            user.setSurname(dto.surname());
+            user.setAuth0Id(dto.auth0Id());
+            user.setSocialLogin(dto.isSocialLogin());
+            user.setRole(Role.USER); // default role for both local and social
+            user.setCreatedAt(LocalDateTime.now());
+            user.setLastLogin(LocalDateTime.now());
         }
 
         // stvaramo ga ako ne postoji
@@ -51,5 +61,32 @@ public class UserService {
     public Optional<UserDTOResponse> getUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(UserMapper::toDTO);
+    }
+
+
+
+
+    //kad zavrsi sa upitnion stavlja mu se false na first login
+    @Transactional
+    public Optional<UserDTOResponse> completeOnboarding(String email) {
+
+        return userRepository.findByEmail(email)
+                .map(user -> {
+                    user.setFirstLogin(false);
+                    User savedUser = userRepository.save(user);
+                    return UserMapper.toDTO(savedUser);
+                });
+    }
+
+
+    @Transactional
+    public Optional<UserDTOResponse> completeOnboardingByAuth0Id(String auth0Id) {
+
+        return userRepository.findByAuth0Id(auth0Id)
+                .map(user -> {
+                    user.setFirstLogin(false);
+                    User savedUser = userRepository.save(user);
+                    return UserMapper.toDTO(savedUser);
+                });
     }
 }

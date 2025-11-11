@@ -13,6 +13,7 @@ public record UserDTOResponse(
         String email,
         Role role,
         Boolean isSocialLogin,
+        Boolean isFirstLogin,
         LocalDateTime lastLogin,
         LocalDate dateOfBirth,
         String bio,
