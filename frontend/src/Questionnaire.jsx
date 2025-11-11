@@ -1,15 +1,80 @@
-import { useState, useEffect } from "react";
-import CloudBackground from "./components/backgrounds/CloudyBackground";
-import WhiteRectangle from "./components/backgrounds/WhiteRectangle.jsx";
-import { Link, useNavigate } from "react-router-dom";
+// Questionnaire.jsx
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
-
 export default function Questionnaire() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  
+  const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      
+      // uzimamo token
+      let token;
+      const localToken = localStorage.getItem("token");
+      
+      if (isAuthenticated) {
+        token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: BACKEND_URL,
+            scope: "openid profile email",
+          },
+        });
+      } else if (localToken) {
+        token = localToken;
+      } else {
+        setError("Not authenticated");
+        setIsSubmitting(false);
+        return;
+      }
+
+      
+      // saljemo na backend 
+      const response = await fetch(`${BACKEND_URL}/api/users/complete-onboarding`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to complete onboarding");
+      }
+
+      console.log("Onboarding completed successfully!");
+      
+      // vracamo ljude na home
+      navigate("/home", { replace: true });
+      
+    } catch (err) {
+      console.error("Error submitting questionnaire:", err);
+      setError("Failed to submit questionnaire. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <form id="onboarding-form" method="post" noValidate>
+    <form onSubmit={handleSubmit} id="onboarding-form" method="post" noValidate>
       <h1>Onboarding & Goals</h1>
       <p>Please fill out this short questionnaire so we can generate a personalized 7-day practice plan.</p>
+
+      {error && (
+        <div style={{ padding: '1rem', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', marginBottom: '1rem' }}>
+          <p style={{ color: '#c00' }}>{error}</p>
+        </div>
+      )}
 
       {/* Basic info */}
       <fieldset>
@@ -157,7 +222,9 @@ export default function Questionnaire() {
 
       {/* Submit */}
       <div>
-        <button type="submit">Generate my plan</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Generating..." : "Generate my plan"}
+        </button>
         <button type="reset">Reset</button>
       </div>
 

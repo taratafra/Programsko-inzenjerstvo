@@ -46,7 +46,7 @@ public class User {
     private LocalDateTime lastLogin;
 
     @Column(name = "is_first_login")
-    private boolean firstLogin; // jel ovo prvi puta da se korisnik prijavljuje -> kad postavi novu lozinku ide u 0
+    private boolean firstLogin = true; // jel ovo prvi puta da se korisnik prijavljuje -> kad postavi novu lozinku ide u 0
 
     @Column(name = "last_modified_at")
     private LocalDateTime lastModifiedAt;
@@ -66,7 +66,6 @@ public class User {
         this.dateOfBirth = dob;
         this.role = role;
         this.isSocialLogin = isSocialLogin;
-        this.firstLogin = true;
     }
     @PrePersist
     protected void onCreate() {

@@ -30,7 +30,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    // NEW endpoint for current logged-in user
+
     @GetMapping("/me")
     public ResponseEntity<UserDTOResponse> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) return ResponseEntity.status(401).build();
@@ -42,4 +42,45 @@ public class UserController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(404).build());
     }
+
+
+
+    @PostMapping("/complete-onboarding")
+    public ResponseEntity<UserDTOResponse> completeOnboarding(@AuthenticationPrincipal Jwt jwt) {
+
+        if (jwt == null) {
+            System.out.println("No JWT token found");
+            return ResponseEntity.status(401).build();
+        }
+
+        String claim = extractEmailFromJwt(jwt);
+
+        //provjeravamo jel email ako nije onda se user prijavia preko googla il necega
+        boolean isEmail = claim != null && claim.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+
+        if (isEmail) {
+            return userService.completeOnboarding(claim)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> {
+                        return ResponseEntity.status(404).build();
+                    });
+        } else {
+            return userService.completeOnboardingByAuth0Id(claim)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> {
+                        return ResponseEntity.status(404).build();
+                    });
+        }
+    }
+
+
+    private String extractEmailFromJwt(Jwt jwt) {
+        String email = jwt.getClaimAsString("email");
+        if (email == null) {
+            email = jwt.getSubject();
+        }
+        return email;
+    }
+
+
 }
