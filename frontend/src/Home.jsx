@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation} from "react-router-dom";
 import styles from "./Home.module.css";
 
@@ -8,6 +8,121 @@ import LeftSidebar from "./components/home/LeftSidebar";
 import RightSidebar from "./components/home/RightSidebar";
 import DashboardTabs from "./components/home/DashboardTabs";
 import GeneralInfoGrid from "./components/home/GeneralInfoGrid";
+
+const PasswordResetModal = ({ onPasswordReset, passwordResetData, onPasswordChange }) => {
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onPasswordReset(e);
+    };
+
+    const handleChange = (e) => {
+        onPasswordChange(e);
+    };
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+        }}>
+            <div style={{
+                backgroundColor: 'white',
+                padding: '30px',
+                borderRadius: '15px',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                width: '90%',
+                maxWidth: '500px',
+                textAlign: 'center'
+            }}>
+                <h2 style={{ color: '#e74c3c', marginBottom: '15px' }}>
+                    Password Reset Required
+                </h2>
+                <p style={{ marginBottom: '25px', color: '#555' }}>
+                    This is your first login. You must set a new password before accessing the application.
+                </p>
+
+                <form onSubmit={handleSubmit}>
+                    <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                            New Password:
+                        </label>
+                        <input
+                            type="password"
+                            name="newPassword"
+                            value={passwordResetData.newPassword}
+                            onChange={handleChange}
+                            required
+                            minLength="8"
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: '2px solid #ddd',
+                                fontSize: '16px'
+                            }}
+                            placeholder="Enter new password (min 8 characters)"
+                        />
+                    </div>
+
+                    <div style={{ marginBottom: '25px', textAlign: 'left' }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                            Confirm Password:
+                        </label>
+                        <input
+                            type="password"
+                            name="confirmPassword"
+                            value={passwordResetData.confirmPassword}
+                            onChange={handleChange}
+                            required
+                            minLength="8"
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: '2px solid #ddd',
+                                fontSize: '16px'
+                            }}
+                            placeholder="Confirm new password"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        style={{
+                            backgroundColor: '#27ae60',
+                            color: 'white',
+                            padding: '12px 30px',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            width: '100%'
+                        }}
+                    >
+                        Set New Password
+                    </button>
+                </form>
+
+                <p style={{
+                    marginTop: '15px',
+                    fontSize: '12px',
+                    color: '#777',
+                    fontStyle: 'italic'
+                }}>
+                    You cannot access the application until you set a new password.
+                </p>
+            </div>
+        </div>
+    );
+};
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated } = useAuth0();
@@ -43,7 +158,6 @@ export default function Home() {
                 else if (localToken) {
                     console.log("Authenticated via local JWT");
 
-
                     const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
@@ -53,7 +167,6 @@ export default function Home() {
                     const userData = await userRes.json();
                     console.log("User data from backend:", userData); // Debug log
                     setUser(userData);
-
 
                     if (userData.firstLogin !== undefined) {
                         console.log("First login status:", userData.firstLogin);
@@ -85,7 +198,7 @@ export default function Home() {
         init();
     }, [auth0User, isAuthenticated, navigate, BACKEND_URL]);
 
-    const handlePasswordReset = async (e) => {
+    const handlePasswordReset = useCallback(async (e) => {
         e.preventDefault();
 
         if (passwordResetData.newPassword !== passwordResetData.confirmPassword) {
@@ -115,6 +228,14 @@ export default function Home() {
                 setRequiresPasswordReset(false);
                 alert("Password reset successfully! You can now use your new password.");
                 setPasswordResetData({ newPassword: "", confirmPassword: "" });
+
+                const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
+                    headers: { Authorization: `Bearer ${localToken}` },
+                });
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(userData);
+                }
             } else {
                 const error = await res.text();
                 alert(`Password reset failed: ${error}`);
@@ -123,7 +244,15 @@ export default function Home() {
             console.error("Error resetting password:", err);
             alert("Error resetting password. Please try again.");
         }
-    };
+    }, [passwordResetData, BACKEND_URL]);
+
+    const handlePasswordChange = useCallback((e) => {
+        const { name, value } = e.target;
+        setPasswordResetData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }, []);
 
     const sendUserDataToBackend = async (auth0User) => {
         try {
@@ -194,95 +323,14 @@ export default function Home() {
         }
     };
 
-    const handlePasswordChange = (e) => {
-        const { name, value } = e.target;
-        setPasswordResetData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const renderPasswordResetForm = () => (
-        <div style={{
-            border: "2px solid #f0ad4e",
-            padding: "20px",
-            borderRadius: "10px",
-            backgroundColor: "#fcf8e3",
-            margin: "20px 0"
-        }}>
-            <h3>First Login - Password Reset Required</h3>
-            <p>Since this is your first login, you need to set a new password for your account.</p>
-
-            <form onSubmit={handlePasswordReset}>
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ display: "block", marginBottom: "5px" }}>
-                        New Password:
-                    </label>
-                    <input
-                        type="password"
-                        name="newPassword"
-                        value={passwordResetData.newPassword}
-                        onChange={handlePasswordChange}
-                        required
-                        minLength="8"
-                        style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-                        placeholder="Enter new password (min 8 characters)"
-                    />
-                </div>
-
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ display: "block", marginBottom: "5px" }}>
-                        Confirm Password:
-                    </label>
-                    <input
-                        type="password"
-                        name="confirmPassword"
-                        value={passwordResetData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        required
-                        minLength="8"
-                        style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
-                        placeholder="Confirm new password"
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    style={{
-                        backgroundColor: "#5cb85c",
-                        color: "white",
-                        padding: "10px 20px",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer"
-                    }}
-                >
-                    Reset Password
-                </button>
-            </form>
-        </div>
-    );
-
-    const renderLoginStatus = () => {
-        if (auth0User) {
-            return <p style={{ color: "#5bc0de", fontStyle: "italic" }}>OAuth Login (No password reset required)</p>;
-        } else if (user && !requiresPasswordReset) {
-            return <p style={{ color: "#5cb85c", fontStyle: "italic" }}>Not first login - Regular local account</p>;
-        }
-        return null;
-    };
-
     function HomeLayout() {
         const location = useLocation();
-
-
         const [activeTab, setActiveTab] = useState('Fokus');
 
         const renderTabContent = () => {
             switch (activeTab) {
                 case 'Personalized recomendations':
                     return <GeneralInfoGrid />;
-
                 case 'Focus':
                     return (
                         <div className={styles.tabPanel}>
@@ -290,7 +338,6 @@ export default function Home() {
                             <p>Kolege će ovdje implementirati svoj tab.</p>
                         </div>
                     );
-
                 case 'Sleep':
                     return (
                         <div className={styles.tabPanel}>
@@ -298,7 +345,6 @@ export default function Home() {
                             <p>Kolege će ovdje implementirati svoj tab.</p>
                         </div>
                     );
-
                 case 'Stress':
                     return (
                         <div className={styles.tabPanel}>
@@ -306,7 +352,6 @@ export default function Home() {
                             <p>Kolege će ovdje implementirati svoj tab.</p>
                         </div>
                     );
-
                 case 'Gratitude':
                     return (
                         <div className={styles.tabPanel}>
@@ -314,7 +359,6 @@ export default function Home() {
                             <p>Kolege će ovdje implementirati svoj tab.</p>
                         </div>
                     );
-
                 case 'Calendar':
                     return (
                         <div className={styles.tabPanel}>
@@ -336,14 +380,12 @@ export default function Home() {
                             <p>Kolege će ovdje implementirati Statistics.</p>
                         </div>
                     );
-
                 case 'Breathing':
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Breathing Placeholder</h1>
                         </div>
                     );
-
                 case 'Account':
                     return (
                         <div className={styles.tabPanel}>
@@ -351,7 +393,6 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
-
                 default:
                     return <GeneralInfoGrid />;
             }
@@ -359,20 +400,17 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
-
                 {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
                 <div id="o3"></div>
 
                 <div className={styles.dashboardContentWrapper}>
-
                     <Header navigate={navigate} user={user} />
 
                     <div className={styles.mainGrid}>
                         <LeftSidebar
                             user={user}
-                            //handleLogout={handleLogout}
                             activeTab={activeTab}
                             setActiveTab={setActiveTab}
                         />
@@ -391,33 +429,25 @@ export default function Home() {
                 </div>
             </div>
         );
-
     }
-
-
 
     // 🔹 Render logic
     if (loading || isLoading) return <div>Loading...</div>;
     if (!user) return <div>No user found...</div>;
 
     return (
-        <div style={{ padding: "20px" }}>
-            <h1>Login Successful!</h1>
-            <h2>Welcome, {user.name || user.given_name || user.email}!</h2>
-            <p>Email: {user.email}</p>
-
-            {renderLoginStatus()}
-
-            {requiresPasswordReset && renderPasswordResetForm()}
-
-            {responseFromServer && (
-                <div style={{ marginTop: "20px" }}>
-                    <h3>Protected Resource Response:</h3>
-                    <p>{responseFromServer}</p>
-                </div>
+        <div style={{ position: 'relative' }}>
+            {requiresPasswordReset && (
+                <PasswordResetModal
+                    onPasswordReset={handlePasswordReset}
+                    passwordResetData={passwordResetData}
+                    onPasswordChange={handlePasswordChange}
+                />
             )}
 
-            <HomeLayout />
+            <div style={requiresPasswordReset ? { filter: 'blur(5px)', pointerEvents: 'none' } : {}}>
+                <HomeLayout />
+            </div>
         </div>
     );
 }
