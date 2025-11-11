@@ -5,10 +5,12 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.mapper.UserMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
+import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,20 +36,10 @@ public class UserService {
             user.setAuth0Id(dto.auth0Id());
             user.setSocialLogin(dto.isSocialLogin());
         } else {
-            user = new User();
-            user.setEmail(dto.email());
-            user.setName(dto.name());
-            user.setSurname(dto.surname());
-            user.setAuth0Id(dto.auth0Id());
-            user.setSocialLogin(dto.isSocialLogin());
-            user.setRole(Role.USER); // default role for both local and social
-            user.setCreatedAt(LocalDateTime.now());
-            user.setLastLogin(LocalDateTime.now());
+            user = UserMapper.toEntity(dto);
         }
 
-        // stvaramo ga ako ne postoji
-        User newUser = UserMapper.toEntity(request);
-        User savedUser = userRepository.save(newUser);
+        User savedUser = userRepository.save(user);
         return UserMapper.toDTO(savedUser);
     }
 
