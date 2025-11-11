@@ -32,7 +32,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    // 🔐 Injected from .env / application.properties
+    // Injected from .env / application.properties
     @Value("${auth0.domain}")
     private String auth0Domain;
 
@@ -45,12 +45,10 @@ public class AuthController {
     @Value("${auth0.audience}")
     private String audience;
 
-    // 🧠 LOGIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
 
         if (req.isSocialLogin()) {
-            // 🔹 Auth0 login flow
             Map<String, Object> body = Map.of(
                     "grant_type", "password",
                     "username", req.getEmail(),
@@ -75,7 +73,6 @@ public class AuthController {
                 return ResponseEntity.status(401).body("Invalid Auth0 credentials");
             }
 
-            // Find or create user by Auth0 ID
             String auth0Id = decodeAuth0Sub(token.getId_token());
             User user = userRepository.findByAuth0Id(auth0Id)
                     .orElseGet(() -> {
@@ -113,7 +110,6 @@ public class AuthController {
         }
     }
 
-    // 🧾 REGISTER
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         if (userRepository.findByEmail(req.getEmail()).isPresent()) {
@@ -138,7 +134,6 @@ public class AuthController {
         return ResponseEntity.ok("Registered successfully");
     }
 
-    // 🧩 Decode JWT payload from Auth0
     private String decodeAuth0Sub(String idToken) {
         String[] parts = idToken.split("\\.");
         String payload = new String(Base64.getUrlDecoder().decode(parts[1]));

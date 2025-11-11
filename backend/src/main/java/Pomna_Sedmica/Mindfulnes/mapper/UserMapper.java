@@ -12,6 +12,21 @@ import java.time.LocalDateTime;
 @UtilityClass
 public class UserMapper {
 
+    public User toEntity(SaveAuth0UserRequestDTO request) {
+        User user = new User();
+        user.setAuth0Id(request.auth0Id());
+        user.setEmail(request.email());
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setRole(Role.USER); // stavljamo da je ovo default
+        user.setSocialLogin(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setLastLogin(LocalDateTime.now());
+        user.setBio("");
+        user.setProfilePictureUrl("");
+        return user;
+    }
+
     public User toNewEntity(SaveAuth0UserRequestDTO request) {
         User user = new User();
         user.setAuth0Id(request.auth0Id());

@@ -35,11 +35,8 @@ public class UserService {
         }
 
         User savedUser = userRepository.save(user);
-
         return UserMapper.toDTO(savedUser);
     }
-
-
 
     public List<UserDTOResponse> getAllUsers() {
         return userRepository.findAll()
