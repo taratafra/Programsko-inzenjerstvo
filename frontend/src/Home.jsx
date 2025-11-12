@@ -13,11 +13,6 @@ export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [requiresPasswordReset, setRequiresPasswordReset] = useState(false);
-    const [passwordResetData, setPasswordResetData] = useState({
-        newPassword: "",
-        confirmPassword: ""
-    });
     const navigate = useNavigate();
     const location = useLocation();
     const hasNavigatedToQuestions = useRef(false);
@@ -36,8 +31,6 @@ export default function Home() {
 
                     const userResponse = await sendUserDataToBackend(auth0User);
 
-                    setRequiresPasswordReset(false);
-
                     // provjera za jel rjesia kviz
                     if (userResponse && !userResponse.isOnboardingComplete) {
                         if (!hasNavigatedToQuestions.current) {
@@ -51,7 +44,7 @@ export default function Home() {
                     console.log("Auth0 user fully onboarded, showing home");
                     setLoading(false);
                 }
-                // Local JWT login 
+                // Local JWT login
                 else if (localToken) {
                     console.log("Authenticated via local JWT");
 
@@ -64,14 +57,6 @@ export default function Home() {
                     const data = await res.json();
                     console.log("User data from backend:", data);
                     setUser(data);
-
-                    // vidi jel potreban reset lozinke
-                    if (data.requiresPasswordReset) {
-                        console.log("Password reset required, staying on home page");
-                        setRequiresPasswordReset(true);
-                        setLoading(false);
-                        return; 
-                    }
 
                     // vrijeme za kviz
                     if (!data.isOnboardingComplete) {
@@ -98,62 +83,6 @@ export default function Home() {
             init();
         }
     }, [isLoading, isAuthenticated, location.pathname, navigate, BACKEND_URL]);
-
-    const handlePasswordReset = async (e) => {
-        e.preventDefault();
-
-        if (passwordResetData.newPassword !== passwordResetData.confirmPassword) {
-            alert("Passwords don't match!");
-            return;
-        }
-
-        if (passwordResetData.newPassword.length < 8) {
-            alert("Password must be at least 8 characters long!");
-            return;
-        }
-
-        try {
-            const localToken = localStorage.getItem("token");
-            const res = await fetch(`${BACKEND_URL}/api/user/settings/first-time-reset`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localToken}`,
-                },
-                body: JSON.stringify({
-                    newPassword: passwordResetData.newPassword
-                }),
-            });
-
-            if (res.ok) {
-                alert("Password reset successfully!");
-                setPasswordResetData({ newPassword: "", confirmPassword: "" });
-                setRequiresPasswordReset(false);
-                
-                // opet uzimamo podatke za provjeru jel rjesia kviz
-                const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
-                    headers: { Authorization: `Bearer ${localToken}` },
-                });
-                
-                if (userRes.ok) {
-                    const userData = await userRes.json();
-                    setUser(userData);
-                    
-                    // ako nije saljemo ga da rjesi
-                    if (!userData.isOnboardingComplete) {
-                        console.log("Password reset done, redirecting to questions");
-                        navigate("/questions", { replace: true });
-                    }
-                }
-            } else {
-                const error = await res.text();
-                alert(`Password reset failed: ${error}`);
-            }
-        } catch (err) {
-            console.error("Error resetting password:", err);
-            alert("Error resetting password. Please try again.");
-        }
-    };
 
     const sendUserDataToBackend = async (auth0User) => {
         try {
@@ -195,107 +124,19 @@ export default function Home() {
         }
     };
 
-    const handlePasswordChange = (e) => {
-        const { name, value } = e.target;
-        setPasswordResetData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const renderPasswordResetForm = () => (
-        <div style={{
-            maxWidth: "500px",
-            margin: "50px auto",
-            border: "2px solid #f0ad4e",
-            padding: "30px",
-            borderRadius: "10px",
-            backgroundColor: "#fcf8e3",
-        }}>
-            <h2 style={{ marginBottom: "10px" }}>Welcome! First Time Setup</h2>
-            <p style={{ marginBottom: "20px" }}>
-                Since this is your first login, please set a new password for your account.
-            </p>
-
-            <form onSubmit={handlePasswordReset}>
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-                        New Password:
-                    </label>
-                    <input
-                        type="password"
-                        name="newPassword"
-                        value={passwordResetData.newPassword}
-                        onChange={handlePasswordChange}
-                        required
-                        minLength="8"
-                        style={{ 
-                            width: "100%", 
-                            padding: "10px", 
-                            borderRadius: "4px", 
-                            border: "1px solid #ccc",
-                            fontSize: "14px"
-                        }}
-                        placeholder="Enter new password (min 8 characters)"
-                    />
-                </div>
-
-                <div style={{ marginBottom: "20px" }}>
-                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-                        Confirm Password:
-                    </label>
-                    <input
-                        type="password"
-                        name="confirmPassword"
-                        value={passwordResetData.confirmPassword}
-                        onChange={handlePasswordChange}
-                        required
-                        minLength="8"
-                        style={{ 
-                            width: "100%", 
-                            padding: "10px", 
-                            borderRadius: "4px", 
-                            border: "1px solid #ccc",
-                            fontSize: "14px"
-                        }}
-                        placeholder="Confirm new password"
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    style={{
-                        width: "100%",
-                        backgroundColor: "#5cb85c",
-                        color: "white",
-                        padding: "12px 20px",
-                        border: "none",
-                        borderRadius: "4px",
-                        cursor: "pointer",
-                        fontSize: "16px",
-                        fontWeight: "bold"
-                    }}
-                >
-                    Set Password & Continue
-                </button>
-            </form>
-        </div>
-    );
-
     const handleLogout = () => {
         try {
-            // Clear any locally stored JWT
             localStorage.removeItem("token");
-            
+
             if (isAuthenticated) {
-            // ✅ Auth0 logout
-            import("@auth0/auth0-react").then(({ useAuth0 }) => {
-                // can't use hooks dynamically, so simpler direct redirect:
-                window.location.href = `${window.location.origin}/login`;
-            });
+                // Auth0 logout
+                import("@auth0/auth0-react").then(({ useAuth0 }) => {
+                    // can't use hooks dynamically, so simpler direct redirect:
+                    window.location.href = `${window.location.origin}/login`;
+                });
             } else {
-            // ✅ Local logout
-            navigate("/login");
+                // Local logout
+                navigate("/login");
             }
         } catch (err) {
             console.error("Logout error:", err);
@@ -400,7 +241,7 @@ export default function Home() {
                             user={user}
                             activeTab={activeTab}
                             setActiveTab={setActiveTab}
-                            handleLogout={handleLogout} 
+                            handleLogout={handleLogout}
                         />
 
                         <div className={styles.mainContent}>
@@ -421,10 +262,6 @@ export default function Home() {
 
     if (loading || isLoading) return <div>Loading...</div>;
     if (!user) return <div>No user found...</div>;
-
-    if (requiresPasswordReset) {
-        return renderPasswordResetForm();
-    }
 
     return <HomeLayout />;
 }
