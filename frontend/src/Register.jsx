@@ -77,55 +77,56 @@ function Register() {
     <CloudBackground>
       <WhiteRectangle>
         <p className="LOGIN">REGISTER</p>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={regData.email}
-            onChange={(e) => handleRegDataUpdate("email", e.target.value)}
-            required
-          />
-          {errors.email && <p className="error">{errors.email}</p>}
+        <form className="popuni" onSubmit={handleSubmit}>
+          <div className="upisi">  
+            <input
+              type="email"
+              placeholder="Email"
+              value={regData.email}
+              onChange={(e) => handleRegDataUpdate("email", e.target.value)}
+              required
+            />
+            {errors.email && <p className="error">{errors.email}</p>}
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={regData.password}
-            onChange={(e) => handleRegDataUpdate("password", e.target.value)}
-            required
-          />
-          {errors.password && <p className="error">{errors.password}</p>}
+            <input
+              type="password"
+              placeholder="Password"
+              value={regData.password}
+              onChange={(e) => handleRegDataUpdate("password", e.target.value)}
+              required
+            />
+            {errors.password && <p className="error">{errors.password}</p>}
 
-          <input
-            type="text"
-            placeholder="Name"
-            value={regData.name}
-            onChange={(e) => handleRegDataUpdate("name", e.target.value)}
-            required
-          />
-          {errors.name && <p className="error">{errors.name}</p>}
+            <input
+              type="text"
+              placeholder="Name"
+              value={regData.name}
+              onChange={(e) => handleRegDataUpdate("name", e.target.value)}
+              required
+            />
+            {errors.name && <p className="error">{errors.name}</p>}
 
-          <input
-            type="text"
-            placeholder="Surname"
-            value={regData.surname}
-            onChange={(e) => handleRegDataUpdate("surname", e.target.value)}
-            required
-          />
-          {errors.surname && <p className="error">{errors.surname}</p>}
+            <input
+              type="text"
+              placeholder="Surname"
+              value={regData.surname}
+              onChange={(e) => handleRegDataUpdate("surname", e.target.value)}
+              required
+            />
+            {errors.surname && <p className="error">{errors.surname}</p>}
 
-          <input
-            type="date"
-            value={regData.dateOfBirth}
-            onChange={(e) => handleRegDataUpdate("dateOfBirth", e.target.value)}
-            required
-          />
-          {errors.dateOfBirth && <p className="error">{errors.dateOfBirth}</p>}
-
-          <button type="submit" className="submit-btn" disabled={loading}>
+            <input
+              type="date"
+              value={regData.dateOfBirth}
+              onChange={(e) => handleRegDataUpdate("dateOfBirth", e.target.value)}
+              required
+            />
+            {errors.dateOfBirth && <p className="error">{errors.dateOfBirth}</p>}
+          </div>
+          <button type="submit" className="reg-btn" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </button>
-
+          
           {message && <p className="info-message">{message}</p>}
         </form>
       </WhiteRectangle>

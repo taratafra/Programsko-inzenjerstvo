@@ -61,7 +61,7 @@ function Login() {
       <WhiteRectangle>
         <p className="LOGIN">LOGIN</p>
         <div className="register-step-content1">
-          <form onSubmit={handleLogin}>
+          <form className="forma" onSubmit={handleLogin}>
             <div className="email">
               <input
                 type="email"
