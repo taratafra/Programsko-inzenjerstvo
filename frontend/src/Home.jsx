@@ -259,7 +259,7 @@ export default function Home() {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
                     audience: `${BACKEND_URL}`,
-                    scope: "openid profile email",
+                    scope: "openid profile email",q
                 },
             });
 
