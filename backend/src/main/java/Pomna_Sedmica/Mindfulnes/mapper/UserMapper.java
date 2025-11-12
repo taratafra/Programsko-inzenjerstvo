@@ -12,20 +12,6 @@ import java.time.LocalDateTime;
 @UtilityClass
 public class UserMapper {
 
-    public User toEntity(SaveAuth0UserRequestDTO request) {
-        User user = new User();
-        user.setAuth0Id(request.auth0Id());
-        user.setEmail(request.email());
-        user.setName(request.name());
-        user.setSurname(request.surname());
-        user.setRole(Role.USER); // stavljamo da je ovo default
-        user.setSocialLogin(true);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setLastLogin(LocalDateTime.now());
-        user.setBio("");
-        user.setProfilePictureUrl("");
-        return user;
-    }
 
     public User toNewEntity(SaveAuth0UserRequestDTO request) {
         User user = new User();
@@ -33,10 +19,12 @@ public class UserMapper {
         user.setEmail(request.email());
         user.setName(request.name());
         user.setSurname(request.surname());
-        user.setRole(Role.USER); // stavljamo da je ovo default
-        user.setSocialLogin(request.auth0Id() != null && !request.auth0Id().isEmpty());
+        user.setRole(Role.USER);
+        user.setSocialLogin(request.isSocialLogin());
         user.setCreatedAt(LocalDateTime.now());
         user.setLastLogin(LocalDateTime.now());
+        user.setOnboardingComplete(false);
+        user.setRequiresPasswordReset(false);
         user.setFirstLogin(true);
         user.setBio("");
         user.setProfilePictureUrl("");
@@ -49,7 +37,7 @@ public class UserMapper {
         existingUser.setAuth0Id(request.auth0Id());
         existingUser.setSocialLogin(request.isSocialLogin());
         existingUser.setLastLogin(LocalDateTime.now());
-        existingUser.setFirstLogin(false); // Not first login anymore
+        existingUser.setFirstLogin(false);
         return existingUser;
     }
 
@@ -61,12 +49,12 @@ public class UserMapper {
                 user.getEmail(),
                 user.getRole(),
                 user.isSocialLogin(),
-                user.isFirstLogin(),
+                user.isOnboardingComplete(),
+                user.isRequiresPasswordReset(),
                 user.getLastLogin(),
                 user.getDateOfBirth(),
                 user.getBio(),
-                user.getProfilePictureUrl(),
-                user.isFirstLogin()
+                user.getProfilePictureUrl()
         );
     }
 }

@@ -26,8 +26,8 @@ public class SecurityConfigProd {
 
         return http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/user/settings/**").authenticated()
+                        .requestMatchers("/api/users/**", "/onboarding/**", "/messages/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())

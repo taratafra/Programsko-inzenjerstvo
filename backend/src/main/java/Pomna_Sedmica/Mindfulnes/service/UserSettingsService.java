@@ -52,7 +52,8 @@ public class UserSettingsService {
                 user.getBio(),
                 user.getProfilePictureUrl(),
                 user.isSocialLogin(),
-                user.isFirstLogin()
+                user.isFirstLogin(),
+                user.isRequiresPasswordReset()
         );
 
         log.info("Returning user settings for: '{}'", email);
@@ -97,7 +98,8 @@ public class UserSettingsService {
                 savedUser.getBio(),
                 savedUser.getProfilePictureUrl(),
                 savedUser.isSocialLogin(),
-                savedUser.isFirstLogin()
+                savedUser.isFirstLogin(),
+                savedUser.isRequiresPasswordReset()
         );
     }
 

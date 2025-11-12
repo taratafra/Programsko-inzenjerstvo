@@ -42,7 +42,11 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "onboarding_complete")
+    private boolean onboardingComplete = false;
 
+    @Column(name = "requires_password_reset")
+    private boolean requiresPasswordReset = false;
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
