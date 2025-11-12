@@ -8,7 +8,8 @@ public record UserSettingsResponseDTO(
         String bio,
         String profilePictureUrl,
         boolean isSocialLogin,
-        boolean firstLogin
+        boolean firstLogin,
+        boolean requiresPasswordReset
 ) {
 }
 

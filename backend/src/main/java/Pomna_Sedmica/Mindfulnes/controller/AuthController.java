@@ -132,6 +132,9 @@ public class AuthController {
         );
 
         user.setCreatedAt(LocalDateTime.now());
+        user.setRequiresPasswordReset(true);
+        user.setOnboardingComplete(false);
+
         userRepository.save(user);
 
         return ResponseEntity.ok("Registered successfully");

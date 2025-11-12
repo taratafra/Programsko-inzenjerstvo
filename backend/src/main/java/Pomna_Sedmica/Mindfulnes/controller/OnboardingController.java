@@ -1,11 +1,12 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
-import Pomna_Sedmica.Mindfulnes.controller.dto.OnboardingSurveyRequest;
-import Pomna_Sedmica.Mindfulnes.controller.dto.OnboardingSurveyResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.OnboardingSurveyRequest;
+import Pomna_Sedmica.Mindfulnes.domain.dto.OnboardingSurveyResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository;
-import Pomna_Sedmica.Mindfulnes.security.CurrentUserService;
+import Pomna_Sedmica.Mindfulnes.service.CurrentUserService;
+import Pomna_Sedmica.Mindfulnes.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,13 +21,13 @@ import java.time.Instant;
 public class OnboardingController {
 
     private final OnboardingSurveyRepository surveys;
-    private final CurrentUserService currentUserService;
+    private final UserService userService;
 
-    public OnboardingController(OnboardingSurveyRepository surveys,
-                                CurrentUserService currentUserService) {
+    public OnboardingController(OnboardingSurveyRepository surveys, UserService userService) {
         this.surveys = surveys;
-        this.currentUserService = currentUserService;
+        this.userService = userService;
     }
+
 
     // ---------- Stare rute s {userId} (korisno za dev/M2M test) ----------
 
@@ -84,7 +85,7 @@ public class OnboardingController {
     /** Vrati moj upitnik (204 ako ne postoji). Radi samo s USER tokenom (ne M2M). */
     @GetMapping("/survey/me")
     public ResponseEntity<OnboardingSurveyResponse> getMySurvey(@AuthenticationPrincipal Jwt jwt) {
-        User me = currentUserService.getOrCreate(jwt);
+        User me = userService.getOrCreateUserFromJwt(jwt);
         return surveys.findByUserId(me.getId())
                 .map(OnboardingSurveyResponse::from)
                 .map(ResponseEntity::ok)
@@ -95,7 +96,7 @@ public class OnboardingController {
     @PostMapping("/survey/me")
     public ResponseEntity<OnboardingSurveyResponse> createMySurvey(@AuthenticationPrincipal Jwt jwt,
                                                                    @Valid @RequestBody OnboardingSurveyRequest req) {
-        User me = currentUserService.getOrCreate(jwt);
+        User me = userService.getOrCreateUserFromJwt(jwt);
         if (surveys.existsByUserId(me.getId())) {
             return ResponseEntity.status(409).build();
         }
@@ -117,7 +118,7 @@ public class OnboardingController {
     @PutMapping("/survey/me")
     public ResponseEntity<OnboardingSurveyResponse> updateMySurvey(@AuthenticationPrincipal Jwt jwt,
                                                                    @Valid @RequestBody OnboardingSurveyRequest req) {
-        User me = currentUserService.getOrCreate(jwt);
+        User me = userService.getOrCreateUserFromJwt(jwt);
         var survey = surveys.findByUserId(me.getId()).orElse(null);
         if (survey == null) return ResponseEntity.notFound().build();
 

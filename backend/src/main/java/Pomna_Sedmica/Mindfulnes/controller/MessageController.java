@@ -1,9 +1,9 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
-import Pomna_Sedmica.Mindfulnes.controller.dto.MessageResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.MessageResponse;
 import Pomna_Sedmica.Mindfulnes.domain.enums.TimeOfDay;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
-import Pomna_Sedmica.Mindfulnes.security.CurrentUserService;
+import Pomna_Sedmica.Mindfulnes.service.CurrentUserService;
 import Pomna_Sedmica.Mindfulnes.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

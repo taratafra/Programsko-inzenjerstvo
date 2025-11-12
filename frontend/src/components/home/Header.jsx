@@ -1,4 +1,5 @@
 import styles from "../../Home.module.css";
+import DailyMessages from "./DailyMessages";
 
 export default function Header({ navigate, user }) {
   return (
@@ -7,9 +8,9 @@ export default function Header({ navigate, user }) {
         <h1 className={styles.logo} onClick={() => navigate("/home")}>
           Modly
         </h1>
-        <p className={styles.headerQuote}>
-          "Ovdje će se uskoro pojaviti motivacijski citati..."
-        </p>
+        <div className={styles.headerQuote}>
+          <DailyMessages user={user} />
+        </div>
       </div>
 
       <div className={styles.headerActions}>

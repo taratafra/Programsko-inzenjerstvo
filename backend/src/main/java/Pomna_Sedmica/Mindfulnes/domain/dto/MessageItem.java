@@ -1,3 +1,3 @@
-package Pomna_Sedmica.Mindfulnes.controller.dto;
+package Pomna_Sedmica.Mindfulnes.domain.dto;
 
 public record MessageItem(String goal, String text) {}

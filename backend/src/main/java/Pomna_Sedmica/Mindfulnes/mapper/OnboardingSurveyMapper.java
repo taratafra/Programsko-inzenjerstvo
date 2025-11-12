@@ -1,7 +1,7 @@
 package Pomna_Sedmica.Mindfulnes.mapper;
 
-import Pomna_Sedmica.Mindfulnes.controller.dto.OnboardingSurveyRequest;
-import Pomna_Sedmica.Mindfulnes.controller.dto.OnboardingSurveyResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.OnboardingSurveyRequest;
+import Pomna_Sedmica.Mindfulnes.domain.dto.OnboardingSurveyResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ public class OnboardingSurveyMapper {
     public OnboardingSurvey toEntity(Long userId, OnboardingSurveyRequest req) {
         if (req == null) return null;
         return OnboardingSurvey.builder()
-                .userId(userId)
+                .id(userId)
                 .stressLevel(req.stressLevel())
                 .sleepQuality(req.sleepQuality())
                 .meditationExperience(req.meditationExperience())

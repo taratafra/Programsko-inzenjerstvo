@@ -18,9 +18,8 @@ export default function Questionnaire() {
 
     try {
       const formData = new FormData(e.target);
-      const data = Object.fromEntries(formData);
       
-      // uzimamo token
+      // Get token (either from Auth0 or localStorage)
       let token;
       const localToken = localStorage.getItem("token");
       
@@ -39,9 +38,101 @@ export default function Questionnaire() {
         return;
       }
 
+      // Process goals - collect all checked checkboxes and map to enum values
+      const goalMapping = {
+        "reduce-anxiety": "REDUCE_ANXIETY",
+        "improve-sleep": "IMPROVE_SLEEP",
+        "increase-focus": "INCREASE_FOCUS",
+        "stress-management": "STRESS_MANAGEMENT",
+        "build-habit": "BUILD_HABIT"
+      };
       
-      // saljemo na backend 
-      const response = await fetch(`${BACKEND_URL}/api/users/complete-onboarding`, {
+      const goals = [];
+      formData.getAll("goals").forEach(goal => {
+        const enumValue = goalMapping[goal];
+        if (enumValue) {
+          goals.push(enumValue);
+        }
+      });
+      
+      // If user added a custom goal in "other", we can add it as a note
+      const otherGoal = formData.get("goal-other");
+      let noteText = formData.get("notes") || "";
+      if (otherGoal && otherGoal.trim()) {
+        noteText = noteText ? `${noteText}\n\nOther goal: ${otherGoal.trim()}` : `Other goal: ${otherGoal.trim()}`;
+      }
+
+      // Map meditation experience to enum
+      const experienceMapping = {
+        "beginner": "BEGINNER",
+        "intermediate": "INTERMEDIATE",
+        "advanced": "ADVANCED"
+      };
+
+      const experience = formData.get("experience");
+      if (!experience) {
+        setError("Please select your meditation experience level");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare survey data matching OnboardingSurveyRequest DTO
+      const surveyData = {
+        stressLevel: parseInt(formData.get("stress")),
+        sleepQuality: parseInt(formData.get("sleep")),
+        meditationExperience: experienceMapping[experience],
+        goals: goals, // Backend expects Set<Goal> enum as array
+        note: noteText
+      };
+
+      console.log("Submitting survey data:", surveyData);
+
+      // Submit questionnaire to backend
+      const surveyResponse = await fetch(`${BACKEND_URL}/onboarding/survey/me`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(surveyData)
+      });
+
+      if (!surveyResponse.ok) {
+        const errorText = await surveyResponse.text();
+        console.error("Survey submission error:", {
+          status: surveyResponse.status,
+          statusText: surveyResponse.statusText,
+          body: errorText
+        });
+
+        if (surveyResponse.status === 409) {
+          // Survey already exists, try updating instead
+          console.log("Survey exists, attempting update...");
+          const updateResponse = await fetch(`${BACKEND_URL}/onboarding/survey/me`, {
+            method: "PUT",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(surveyData)
+          });
+
+          if (!updateResponse.ok) {
+            const updateErrorText = await updateResponse.text();
+            console.error("Survey update error:", {
+              status: updateResponse.status,
+              statusText: updateResponse.statusText,
+              body: updateErrorText
+            });
+            throw new Error(`Failed to update survey: ${updateResponse.status} - ${updateErrorText}`);
+          }
+        } else {
+          throw new Error(`Failed to submit survey: ${surveyResponse.status} - ${errorText}`);
+        }
+      }
+
+      // Mark onboarding as complete
+      const onboardingResponse = await fetch(`${BACKEND_URL}/api/users/complete-onboarding`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -49,13 +140,14 @@ export default function Questionnaire() {
         },
       });
 
-      if (!response.ok) {
+      if (!onboardingResponse.ok) {
         throw new Error("Failed to complete onboarding");
       }
 
-      console.log("Onboarding completed successfully!");
+      const updatedUser = await onboardingResponse.json();
+      console.log("Onboarding completed successfully!", updatedUser);
       
-      // vracamo ljude na home
+      // Navigate to home
       navigate("/home", { replace: true });
       
     } catch (err) {
@@ -96,32 +188,37 @@ export default function Questionnaire() {
         <legend>Wellbeing</legend>
 
         <div>
-          <label htmlFor="stress">Stress level (0–10) <span aria-hidden="true">*</span></label>
+          <label htmlFor="stress">Stress level (1–5) <span aria-hidden="true">*</span></label>
           <input
             id="stress"
             name="stress"
             type="range"
-            min="0"
-            max="10"
+            min="1"
+            max="5"
             step="1"
-            defaultValue="5"
+            defaultValue="3"
             required
             aria-describedby="stress-help"
           />
-          <div id="stress-help">0 = no stress, 10 = extremely high stress</div>
+          <div id="stress-help">1 = no stress, 5 = extremely high stress</div>
         </div>
 
         <div>
-          <label htmlFor="sleep">Sleep quality <span aria-hidden="true">*</span></label>
-          <select id="sleep" name="sleep" required defaultValue="">
-            <option value="" disabled>Choose…</option>
-            <option value="very-poor">Very poor</option>
-            <option value="poor">Poor</option>
-            <option value="average">Average</option>
-            <option value="good">Good</option>
-            <option value="excellent">Excellent</option>
-          </select>
+          <label htmlFor="sleep">Sleep quality (1–5) <span aria-hidden="true">*</span></label>
+          <input
+            id="sleep"
+            name="sleep"
+            type="range"
+            min="1"
+            max="5"
+            step="1"
+            defaultValue="3"
+            required
+            aria-describedby="sleep-help"
+          />
+          <div id="sleep-help">1 = Very poor, 2 = Poor, 3 = Average, 4 = Good, 5 = Excellent</div>
         </div>
+
       </fieldset>
 
       {/* Meditation experience */}
@@ -167,6 +264,11 @@ export default function Questionnaire() {
         <div>
           <label>
             <input type="checkbox" name="goals" value="stress-management" /> Better stress management
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="checkbox" name="goals" value="build-habit" /> Build a meditation habit
           </label>
         </div>
         <div>

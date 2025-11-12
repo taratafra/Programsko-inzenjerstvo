@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation} from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./Home.module.css";
 
 import Header from "./components/home/Header";
@@ -10,9 +10,8 @@ import DashboardTabs from "./components/home/DashboardTabs";
 import GeneralInfoGrid from "./components/home/GeneralInfoGrid";
 
 export default function Home() {
-    const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated } = useAuth0();
+    const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
     const [user, setUser] = useState(null);
-    const [responseFromServer, setResponse] = useState("");
     const [loading, setLoading] = useState(true);
     const [requiresPasswordReset, setRequiresPasswordReset] = useState(false);
     const [passwordResetData, setPasswordResetData] = useState({
@@ -20,6 +19,8 @@ export default function Home() {
         confirmPassword: ""
     });
     const navigate = useNavigate();
+    const location = useLocation();
+    const hasNavigatedToQuestions = useRef(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
@@ -28,62 +29,75 @@ export default function Home() {
             const localToken = localStorage.getItem("token");
 
             try {
-                // Auth0 login
+                // Auth0 login Google i to
                 if (isAuthenticated && auth0User) {
                     console.log("Authenticated via Auth0:", auth0User);
                     setUser(auth0User);
 
-                    await sendUserDataToBackend(auth0User);
-                    await fetchProtectedResource(); // SDK provides token internally
+                    const userResponse = await sendUserDataToBackend(auth0User);
 
-                    // Auth0 ne treba reset
                     setRequiresPasswordReset(false);
-                }
-                // Local JWT login
-                else if (localToken) {
-                    console.log("Authenticated via local JWT");
 
-
-                    const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
-                        headers: { Authorization: `Bearer ${localToken}` },
-                    });
-
-                    if (!userRes.ok) throw new Error("Failed to fetch user info");
-
-                    const userData = await userRes.json();
-                    console.log("User data from backend:", userData); // Debug log
-                    setUser(userData);
-
-
-                    if (userData.firstLogin !== undefined) {
-                        console.log("First login status:", userData.firstLogin);
-                        setRequiresPasswordReset(userData.firstLogin);
-                    } else {
-                        console.warn("firstLogin field not found in user data");
-                        try {
-                            const resetRes = await fetch(`${BACKEND_URL}/api/user/settings/check-first-login`, {
-                                headers: { Authorization: `Bearer ${localToken}` },
-                            });
-                            if (resetRes.ok) {
-                                const requiresReset = await resetRes.json();
-                                setRequiresPasswordReset(requiresReset);
-                            }
-                        } catch (fallbackError) {
-                            console.error("Fallback check also failed:", fallbackError);
+                    // provjera za jel rjesia kviz
+                    if (userResponse && !userResponse.isOnboardingComplete) {
+                        if (!hasNavigatedToQuestions.current) {
+                            console.log("Onboarding not complete, redirecting to questions");
+                            hasNavigatedToQuestions.current = true;
+                            navigate("/questions", { replace: true });
+                            return;
                         }
                     }
 
-                    await fetchProtectedResource(localToken);
+                    console.log("Auth0 user fully onboarded, showing home");
+                    setLoading(false);
                 }
-                setLoading(false);
+                // Local JWT login 
+                else if (localToken) {
+                    console.log("Authenticated via local JWT");
+
+                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                        headers: { Authorization: `Bearer ${localToken}` },
+                    });
+
+                    if (!res.ok) throw new Error("Failed to fetch user info");
+
+                    const data = await res.json();
+                    console.log("User data from backend:", data);
+                    setUser(data);
+
+                    // vidi jel potreban reset lozinke
+                    if (data.requiresPasswordReset) {
+                        console.log("Password reset required, staying on home page");
+                        setRequiresPasswordReset(true);
+                        setLoading(false);
+                        return; 
+                    }
+
+                    // vrijeme za kviz
+                    if (!data.isOnboardingComplete) {
+                        if (!hasNavigatedToQuestions.current) {
+                            console.log("Onboarding not complete, redirecting to questions");
+                            hasNavigatedToQuestions.current = true;
+                            navigate("/questions", { replace: true });
+                            return;
+                        }
+                    }
+
+                    console.log("Local user fully set up, showing home");
+                    setLoading(false);
+                } else {
+                    setLoading(false);
+                }
             } catch (err) {
                 console.error("Error initializing user:", err);
                 setLoading(false);
             }
         };
 
-        init();
-    }, [auth0User, isAuthenticated, navigate, BACKEND_URL]);
+        if (!isLoading) {
+            init();
+        }
+    }, [isLoading, isAuthenticated, location.pathname, navigate, BACKEND_URL]);
 
     const handlePasswordReset = async (e) => {
         e.preventDefault();
@@ -112,9 +126,25 @@ export default function Home() {
             });
 
             if (res.ok) {
-                setRequiresPasswordReset(false);
-                alert("Password reset successfully! You can now use your new password.");
+                alert("Password reset successfully!");
                 setPasswordResetData({ newPassword: "", confirmPassword: "" });
+                setRequiresPasswordReset(false);
+                
+                // opet uzimamo podatke za provjeru jel rjesia kviz
+                const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
+                    headers: { Authorization: `Bearer ${localToken}` },
+                });
+                
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    setUser(userData);
+                    
+                    // ako nije saljemo ga da rjesi
+                    if (!userData.isOnboardingComplete) {
+                        console.log("Password reset done, redirecting to questions");
+                        navigate("/questions", { replace: true });
+                    }
+                }
             } else {
                 const error = await res.text();
                 alert(`Password reset failed: ${error}`);
@@ -154,43 +184,14 @@ export default function Home() {
                 body: JSON.stringify(payload),
             });
 
-            if (!res.ok) {
-                console.error("Failed to send user data:", res.statusText);
-            } else {
-                console.log("User data synced successfully with backend");
-            }
+            if (!res.ok) return null;
+
+            const userData = await res.json();
+            console.log("User data synced successfully:", userData);
+            return userData;
         } catch (err) {
             console.error("Error sending user data to backend:", err);
-        }
-    };
-
-    const fetchProtectedResource = async (localToken) => {
-        try {
-            let token;
-
-            if (localToken) {
-                token = localToken; // local JWT
-            } else {
-                // Auth0 token
-                token = await getAccessTokenSilently({
-                    authorizationParams: {
-                        audience: `${BACKEND_URL}`,
-                        scope: "openid profile email",
-                    },
-                });
-            }
-
-            const res = await fetch(`${BACKEND_URL}/protected`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (!res.ok) throw new Error("Failed to fetch protected resource");
-
-            const data = await res.text();
-            setResponse(data);
-        } catch (err) {
-            console.error("Error fetching protected resource:", err);
-            setResponse("Error fetching protected resource");
+            return null;
         }
     };
 
@@ -204,18 +205,21 @@ export default function Home() {
 
     const renderPasswordResetForm = () => (
         <div style={{
+            maxWidth: "500px",
+            margin: "50px auto",
             border: "2px solid #f0ad4e",
-            padding: "20px",
+            padding: "30px",
             borderRadius: "10px",
             backgroundColor: "#fcf8e3",
-            margin: "20px 0"
         }}>
-            <h3>First Login - Password Reset Required</h3>
-            <p>Since this is your first login, you need to set a new password for your account.</p>
+            <h2 style={{ marginBottom: "10px" }}>Welcome! First Time Setup</h2>
+            <p style={{ marginBottom: "20px" }}>
+                Since this is your first login, please set a new password for your account.
+            </p>
 
             <form onSubmit={handlePasswordReset}>
                 <div style={{ marginBottom: "15px" }}>
-                    <label style={{ display: "block", marginBottom: "5px" }}>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
                         New Password:
                     </label>
                     <input
@@ -225,13 +229,19 @@ export default function Home() {
                         onChange={handlePasswordChange}
                         required
                         minLength="8"
-                        style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
+                        style={{ 
+                            width: "100%", 
+                            padding: "10px", 
+                            borderRadius: "4px", 
+                            border: "1px solid #ccc",
+                            fontSize: "14px"
+                        }}
                         placeholder="Enter new password (min 8 characters)"
                     />
                 </div>
 
-                <div style={{ marginBottom: "15px" }}>
-                    <label style={{ display: "block", marginBottom: "5px" }}>
+                <div style={{ marginBottom: "20px" }}>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
                         Confirm Password:
                     </label>
                     <input
@@ -241,7 +251,13 @@ export default function Home() {
                         onChange={handlePasswordChange}
                         required
                         minLength="8"
-                        style={{ width: "100%", padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
+                        style={{ 
+                            width: "100%", 
+                            padding: "10px", 
+                            borderRadius: "4px", 
+                            border: "1px solid #ccc",
+                            fontSize: "14px"
+                        }}
                         placeholder="Confirm new password"
                     />
                 </div>
@@ -249,34 +265,46 @@ export default function Home() {
                 <button
                     type="submit"
                     style={{
+                        width: "100%",
                         backgroundColor: "#5cb85c",
                         color: "white",
-                        padding: "10px 20px",
+                        padding: "12px 20px",
                         border: "none",
                         borderRadius: "4px",
-                        cursor: "pointer"
+                        cursor: "pointer",
+                        fontSize: "16px",
+                        fontWeight: "bold"
                     }}
                 >
-                    Reset Password
+                    Set Password & Continue
                 </button>
             </form>
         </div>
     );
 
-    const renderLoginStatus = () => {
-        if (auth0User) {
-            return <p style={{ color: "#5bc0de", fontStyle: "italic" }}>OAuth Login (No password reset required)</p>;
-        } else if (user && !requiresPasswordReset) {
-            return <p style={{ color: "#5cb85c", fontStyle: "italic" }}>Not first login - Regular local account</p>;
+    const handleLogout = () => {
+        try {
+            // Clear any locally stored JWT
+            localStorage.removeItem("token");
+            
+            if (isAuthenticated) {
+            // ✅ Auth0 logout
+            import("@auth0/auth0-react").then(({ useAuth0 }) => {
+                // can't use hooks dynamically, so simpler direct redirect:
+                window.location.href = `${window.location.origin}/login`;
+            });
+            } else {
+            // ✅ Local logout
+            navigate("/login");
+            }
+        } catch (err) {
+            console.error("Logout error:", err);
+            navigate("/login");
         }
-        return null;
     };
 
     function HomeLayout() {
-        const location = useLocation();
-
-
-        const [activeTab, setActiveTab] = useState('Fokus');
+        const [activeTab, setActiveTab] = useState('Personalized recomendations');
 
         const renderTabContent = () => {
             switch (activeTab) {
@@ -359,22 +387,20 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
-
                 {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
                 <div id="o3"></div>
 
                 <div className={styles.dashboardContentWrapper}>
-
                     <Header navigate={navigate} user={user} />
 
                     <div className={styles.mainGrid}>
                         <LeftSidebar
                             user={user}
-                            //handleLogout={handleLogout}
                             activeTab={activeTab}
                             setActiveTab={setActiveTab}
+                            handleLogout={handleLogout} 
                         />
 
                         <div className={styles.mainContent}>
@@ -391,34 +417,14 @@ export default function Home() {
                 </div>
             </div>
         );
-
     }
 
-
-
-    // 🔹 Render logic
     if (loading || isLoading) return <div>Loading...</div>;
     if (!user) return <div>No user found...</div>;
 
-    return (
-        <div style={{ padding: "20px" }}>
-            {/* <h1>Login Successful!</h1>
-            <h2>Welcome, {user.name || user.given_name || user.email}!</h2>
-            <p>Email: {user.email}</p> */}
+    if (requiresPasswordReset) {
+        return renderPasswordResetForm();
+    }
 
-            {/* {renderLoginStatus()} */}
-
-            {requiresPasswordReset && renderPasswordResetForm()}
-
-            {/* {responseFromServer && (
-                <div style={{ marginTop: "20px" }}>
-                    <h3>Protected Resource Response:</h3>
-                    <p>{responseFromServer}</p>
-                </div>
-            )} */}
-
-            {!requiresPasswordReset && <HomeLayout />}
-
-        </div>
-    );
+    return <HomeLayout />;
 }

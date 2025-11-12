@@ -1,7 +1,7 @@
 package Pomna_Sedmica.Mindfulnes.service;
 
-import Pomna_Sedmica.Mindfulnes.controller.dto.MessageItem;
-import Pomna_Sedmica.Mindfulnes.controller.dto.MessageResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.MessageItem;
+import Pomna_Sedmica.Mindfulnes.domain.dto.MessageResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey;
 import Pomna_Sedmica.Mindfulnes.domain.enums.TimeOfDay;
 import Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository;

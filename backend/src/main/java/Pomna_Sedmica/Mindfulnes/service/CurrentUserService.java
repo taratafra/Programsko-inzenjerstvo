@@ -1,4 +1,4 @@
-package Pomna_Sedmica.Mindfulnes.security;
+package Pomna_Sedmica.Mindfulnes.service;
 
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;

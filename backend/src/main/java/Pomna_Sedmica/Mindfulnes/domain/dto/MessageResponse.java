@@ -1,4 +1,4 @@
-package Pomna_Sedmica.Mindfulnes.controller.dto;
+package Pomna_Sedmica.Mindfulnes.domain.dto;
 
 import Pomna_Sedmica.Mindfulnes.domain.enums.TimeOfDay;
 import java.util.List;
