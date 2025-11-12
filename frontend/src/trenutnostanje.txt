@@ -1,5 +1,0 @@
-maknuta mogucnost upisivanja lozinke ali nije postavljena automatska lozinka
-steka obavijest ako se ne unese datum rodenja
-vise se ne koriste tabovi biraj nacin registracije i zadnji slajd za odabran nacin registracije putem googlea
-velicina fonta na koracima registracije se sjebala
-SEJVAJ NEGDJE POSTAVKE ZA GOOGLE GUMB JER JE TARA TO PROMJENILA SA SVOJIM PUSHOM, kobirat cu u sticky notes
