@@ -1,13 +1,13 @@
 # ────────────── DEFAULT / COMMON SETTINGS ──────────────
 spring:
   application:
-    name: ${spring.application.name}
+    name: mindfulness-app
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
   profiles:
-    active: ${spring.profiles.active:dev} # fallback if not defined
+    active: ${spring.profiles.active:prod} # fallback if not defined
 
 ---
 
