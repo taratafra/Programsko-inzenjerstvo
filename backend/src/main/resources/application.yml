@@ -13,23 +13,25 @@ spring:
 
 # ────────────── AUTH0 & SECURITY SETTINGS ──────────────
 auth0:
-  domain: ${auth0.domain}
-  clientId: ${auth0.clientId}
-  clientSecret: ${auth0.clientSecret}
-  audience: ${auth0.audience}
+  domain: ${AUTH0_DOMAIN}
+  clientId: ${AUTH0_CLIENT_ID}
+  clientSecret: ${AUTH0_CLIENT_SECRET}
+  audience: ${AUTH0_AUDIENCE}
 
 jwt:
-  secret: ${jwt.secret}
+  # Reads JWT_SECRET from env
+  secret: ${JWT_SECRET}
 
 cors:
-  allowed-origin: ${cors.allowed-origin}
+  # Reads CORS_ALLOWED_ORIGIN from env
+  allowed-origin: ${CORS_ALLOWED_ORIGIN}
 
 spring:
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${auth0.domain}
+          issuer-uri: ${AUTH0_DOMAIN}
 
 ---
 
@@ -65,11 +67,15 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: ${db.url}
+    url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
-    username: ${db.user}
-    password: ${db.password}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
