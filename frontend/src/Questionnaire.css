@@ -202,6 +202,16 @@ p{
     flex:0.6;
 }
 
+.BasicInfo input:focus, .Practice select:focus, .Practice textarea:focus, .otherGoal input:focus{
+    box-shadow: 0 0 9px rgba(245, 245, 245, 0.6);
+    outline: none; 
+    background-color: #f0f8ffd7;
+}
+
+.Practice select{
+    color:#727171;
+}
+
 
 .input-wrapper{ /*u wellbeing*/
     flex:1;

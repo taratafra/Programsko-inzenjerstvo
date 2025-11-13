@@ -10,11 +10,14 @@
     text-align:center;
     padding:20px;
     width:40vw;
-    height: 40vh;
+    height: 45vh;
 
     position:relative;
     padding-top: 10vh;
-    justify-content:flex-start ;
+    justify-content:flex-start;
+
+    backdrop-filter: blur(10px);  /*zamuti pozadinu*/
+    -webkit-backdrop-filter: blur(10px);  /*odmuti sve oko okvira s tekstom*/
 
 }
 

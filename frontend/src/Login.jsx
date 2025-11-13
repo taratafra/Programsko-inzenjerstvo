@@ -36,19 +36,30 @@ function Login() {
         body: JSON.stringify({ email, password, socialLogin: false }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Login failed");
+      let data;
+      const text=await response.text();
+      try{
+        data=JSON.parse(text);
+      }catch{
+        data={message: text};
       }
 
-      const data = await response.json();
-      localStorage.setItem("token", data.access_token);
+      if (!response.ok) {
+        if (response.status === 404 || response.status === 500 && data.message?.toLowerCase().includes("user not found")) {
+          throw new Error("Email does not exist");
+        }
+        if (response.status === 401 || data.error === "InvalidPassword" || data.message?.toLowerCase().includes("invalid password")){
+          throw new Error("Incorrect Password");
+        }              
+        throw new Error(data.error || data.message || "Login failed. Please try again.");
+      }
+      if (data.access_token) localStorage.setItem("token", data.access_token);
 
       setMessage("Login successful!");
       navigate("/home");
     } catch (error) {
-      console.error("Error:", error);
-      setMessage(error.message || "Failed to connect to backend");
+      console.error("Login error:", error);
+      setMessage(error.message);
     } finally {
       setLoading(false);
     }

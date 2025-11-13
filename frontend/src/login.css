@@ -3,6 +3,7 @@
 }
 
 .forma{
+    margin-top: 5%;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -108,4 +109,7 @@
 
  .error{
     font-size: 1rem  !important;
- }
+    margin-bottom:0;
+    margin-top: 5%;
+    white-space: nowrap;
+}
