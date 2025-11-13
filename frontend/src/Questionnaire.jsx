@@ -97,9 +97,12 @@ export default function Questionnaire() {
                     headers: { Authorization: `Bearer ${localToken}` },
                 });
 
+
                 if (userRes.ok) {
                     const userData = await userRes.json();
-                    if ((userData.requiresPasswordReset || userData.firstLogin) &&! userData.requiresPasswordReset &&! userData.isOnboardingComplete) {
+                    console.log(userData)
+                    if (userData.firstLogin)
+                    {
                         setRequiresPasswordReset(true);
                     } else {
                         setRequiresPasswordReset(false);

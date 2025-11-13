@@ -54,7 +54,8 @@ public class UserMapper {
                 user.getLastLogin(),
                 user.getDateOfBirth(),
                 user.getBio(),
-                user.getProfilePictureUrl()
+                user.getProfilePictureUrl(),
+                user.isFirstLogin()
         );
     }
 }
