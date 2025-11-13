@@ -1,0 +1,297 @@
+{
+  "version": "1.1",
+  "buckets": {
+    "stress": { "LOW": [1, 2], "MEDIUM": [3], "HIGH": [4, 5] },
+    "sleep":  { "POOR": [1, 2], "OK": [3], "GOOD": [4, 5] }
+  },
+  "timeOfDay": ["MORNING", "MIDDAY", "EVENING"],
+
+  "baseByGoalAndTime": {
+    "REDUCE_ANXIETY": {
+      "MORNING": [
+        "Dobro jutro — tri sporija izdaha (6–8) i ramena dolje.",
+        "Prvih 90 sekundi dana bez ekrana: samo disanje i istezanje vrata.",
+        "Zamisli da dišeš u područje gdje osjetiš napetost i izdahneš napetost van.",
+        "Krug ‘box’ disanja (4–4–4–4) za stabilan start.",
+        "Prošeći do prozora, pogled u daljinu 30 s, pa 5 svjesnih udaha.",
+        "Napiši jednu brigu na papir i privremeno je odloži u ‘kutiju za kasnije’.",
+        "Oslušni tijelo od stopala do tjemena — 60 s skeniranja tijela.",
+        "Podsjeti se: ‘Danas biram sporiji ritam.’"
+      ],
+      "MIDDAY": [
+        "Minuta tišine prije nastavka posla — samo udah/izdah.",
+        "Istraži osjećaj u trbuhu: opusti 10% više s dugim izdahom.",
+        "Ako misli jure, usidri pogled u jednu točku i diši u jednakom ritmu.",
+        "Odmori oči, spusti ramena, 5 sporih izdisaja.",
+        "Stani, imenuj emociju (‘napetost’, ‘briga’) i dopusti joj da prođe.",
+        "Mikro-šetnja od 2 minute bez mobitela — broji korake do 60.",
+        "Pauza dlan na prsa: 5 udaha kroz nos, izdah kroz usta.",
+        "Podsjeti se: ‘Ne moram sve odjednom.’"
+      ],
+      "EVENING": [
+        "Ritual smirivanja: 6 sporih izdisaja i lagano istezanje ramena.",
+        "Zabilježi tri sitnice koje su danas prošle dobro.",
+        "Ako brige naviru, prelij ih na papir 2 minute bez uređivanja.",
+        "Dah 4–7–8 prije spavanja, 4 kruga.",
+        "Utišaj prostor: prigušeno svjetlo, tiha glazba, opuštanje vilice.",
+        "Otpusti dan rečenicom: ‘Danas je bilo dovoljno.’",
+        "Lagani sken tijela od prstiju stopala do tjemena, 3 minute.",
+        "Prije sna, jedan dugi izdah s uzdahom olakšanja."
+      ]
+    },
+
+    "IMPROVE_SLEEP": {
+      "MORNING": [
+        "Ustani u slično vrijeme — ritam pomaže dubini sna.",
+        "Jutarnje svjetlo 3–5 min ‘resetira’ unutarnji sat.",
+        "Čaša vode i kratko istezanje leđa — nježan start.",
+        "Dah 4×4 prije prvog skrolanja — očuvaj bistrinu.",
+        "Kratka šetnja oko zgrade, fokus na zvukove.",
+        "Bilježi buđenje — konzistentnost pomaže snu večeras.",
+        "Udah u 4, izdah u 6: smiruje jutarnju napetost.",
+        "Zabilježi cilj: večeras krećem na spavanje 30 min ranije."
+      ],
+      "MIDDAY": [
+        "Zadnja kava do 14h — olakšava uspavljivanje.",
+        "Kratko istezanje nakon ručka — sprječava popodnevnu tromost.",
+        "Dnevna šetnja 5–10 min poboljšava noćni san.",
+        "Pauza od ekrana: gledaj u najdalju točku 60 s.",
+        "Hidratacija i 5 udaha kroz nos podižu energiju bez stimulansa.",
+        "Lagani ‘reset’ — 90 s disanja ujednačenog ritma.",
+        "Ako te hvata pospanost, kratko svježi zrak umjesto šećera.",
+        "Zapiši navečer mini-ritual: tuš, knjiga ili tišina."
+      ],
+      "EVENING": [
+        "Sat vremena prije sna manje ekrana, više tišine.",
+        "Topli tuš ili kupka signalizira tijelu: ‘Vrijeme je za san.’",
+        "Ako ne zaspiš 20 min, ustani, pročitaj par stranica.",
+        "Dah 4–7–8, 6 krugova — smanji mentalnu buku.",
+        "Priguši svjetla, prozrači sobu, pripremi postelju.",
+        "Zapiši 3 misli i odloži ih za sutra.",
+        "Kratko istezanje kukova/stražnje lože, 2–3 min.",
+        "Podsjeti se: odmor je investicija, ne nagrada."
+      ]
+    },
+
+    "INCREASE_FOCUS": {
+      "MORNING": [
+        "Postavi dnevnu namjeru u jednoj rečenici.",
+        "Prvi blok fokusa 25 min (Pomodoro) bez notifikacija.",
+        "Sredi radni prostor 60 s — čisti stol, čista glava.",
+        "Napiši 3 prioriteta; odaberi 1 i kreni odmah.",
+        "2 minute disanja u nos prije rada za bistrinu.",
+        "Zatvori nepotrebne tabove i prognoziraj sljedeći korak.",
+        "Podesi timer i nagradi se kratkom pauzom nakon bloka.",
+        "Umjesto multitaskinga — lista čekanja za ideje."
+      ],
+      "MIDDAY": [
+        "Jedan ‘single-task’ sprint 20 min, sve ostalo na čekanje.",
+        "Mikro-reset: 10 svjesnih udaha, pa najteža stavka.",
+        "Provjeri: gdje mi bježi pažnja? Ukloni jedan ‘šum’.",
+        "Stani, definiraj prvu mjerljivu radnju.",
+        "Pauza tijelo: ustani, proteži se, gutljaj vode.",
+        "Brzi check prioriteta — ažuriraj listu.",
+        "Zatvori chat 15 min i završi jedan mali deliverable.",
+        "Mali ‘win’ sada štedi veliku energiju kasnije."
+      ],
+      "EVENING": [
+        "Mini-retro: što je bio ‘win’ dana?",
+        "Zapiši prvu sljedeću radnju za sutra.",
+        "2 min tišine bez ekrana kao ‘cooldown’.",
+        "Planiraj 1 fokus-blok za sutro jutro unaprijed.",
+        "Očisti stol — sutrašnji ja će ti zahvaliti.",
+        "Shvati greške kao podatke, ne presudu.",
+        "Uskladi očekivanja: i 1% napretka je napredak.",
+        "Zahvali si za uloženu pažnju danas."
+      ]
+    },
+
+    "STRESS_MANAGEMENT": {
+      "MORNING": [
+        "Odaberi jednu stvar kojoj danas kažeš ‘ne’.",
+        "Tri kruga ‘box’ disanja 4–4–4–4 za centriranje.",
+        "Dogovori 10 min za punjenje baterija (šetnja, glazba).",
+        "Omekšaj vilicu i čelo; izdahni kroz usta.",
+        "Isplaniraj pauzu unaprijed — ne čekaj izgaranje.",
+        "Sjeti se: ritam određuješ ti, ne notifikacije.",
+        "Odredi ‘tihi blok’ bez poruka i poziva.",
+        "Zapiši ‘granica dana’: što je previše, a što dovoljno?"
+      ],
+      "MIDDAY": [
+        "Provjeri napetost u ramenima i opusti 10% više.",
+        "Kad sve žuri, uspori disanje — tijelo prati ritam.",
+        "Pogled kroz prozor: 60 s fokus daljina.",
+        "Kratka pauza za protezanje podlaktica/vrata.",
+        "Podsjetnik: nije sve hitno, selektiraj.",
+        "Dubok izdah s uzdahom — reset živčanog sustava.",
+        "Mentalna pauza: imenuj 5 stvari koje vidiš.",
+        "Stavi kratki ‘Do Not Disturb’ i dovrši 1 stvar."
+      ],
+      "EVENING": [
+        "‘Dump’ misli na papir 2 minute — rastereti glavu.",
+        "Lagano istezanje ramena/vrata 3 minute.",
+        "Podsjeti se: i mali koraci su dovoljno dobri.",
+        "Dva dublja izdaha i rečenica: ‘Dan završava, odmoru se otvaram.’",
+        "Zahvali si na jednoj stvarno dobroj odluci danas.",
+        "Topli napitak bez kofeina kao signal za smiraj.",
+        "Kratka vođena relaksacija ili tiha glazba.",
+        "Pripremi sutrašnju mini-namjeru i pusti ostatak."
+      ]
+    },
+
+    "BUILD_HABIT": {
+      "MORNING": [
+        "Upari praksu s pranjem zubi: 2 min disanja odmah nakon.",
+        "Stavi podsjetnik ‘pojavim se’ na vidljivo mjesto.",
+        "Danas cilj nije savršeno, nego pojaviti se.",
+        "Najmanji korak: 60 s prisutnosti odmah sada.",
+        "Unaprijed odaberi vrijeme i mjesto navike.",
+        "Napravi ‘habit stack’: nakon kave → 2 min daha.",
+        "Zabilježi checkbox za današnji pokušaj — i to se računa.",
+        "Ako preskočiš, vrati se već sljedećom prilikom."
+      ],
+      "MIDDAY": [
+        "Brzi ‘habit check’ ✅ — kontinuitet je kralj.",
+        "Uključi okidač (alarm, bilješka, bočica vode).",
+        "Ako je teško, smanji trajanje, zadrži ritam.",
+        "Nagrada nakon ponavljanja: mali ‘high five’.",
+        "Zapiši gdje ti se navika najlakše uklapa.",
+        "Odaberi ‘najlakši sljedeći korak’, ne ‘savršeni’.",
+        "Podsjeti suigrača/prijatelja — accountability pomaže.",
+        "Jedan promašaj nije niz; nastavi odmah."
+      ],
+      "EVENING": [
+        "Zaokruži dan: jesi li se pojavio/la? Jedna minuta je dovoljna.",
+        "Pripremi okidač za sutra (bilješka, prostirka).",
+        "Zabilježi kako si se osjećao/la nakon navike.",
+        "Pohvali se za kontinuitet, koliko god mali bio.",
+        "Mini plan: kada točno sutra? Zapiši sat.",
+        "Ako si preskočio/la, napiši što bi olakšalo sljedeći put.",
+        "Slavi male serije: 2 dana zaredom je već momentum.",
+        "Poveži naviku s vrijednošću: ‘Zašto mi je ovo važno?’"
+      ]
+    }
+  },
+
+  "stressAddons": {
+    "LOW": [
+      "Već gradiš mirnu osnovu — nastavi nježno.",
+      "Primijeti sitne pauze u tijeku dana i produbi ih.",
+      "Dopusti sebi sporiji ritam i jasnije odluke.",
+      "Mir koji osjećaš prenesi na sljedeći zadatak.",
+      "Zadrži mekani pogled i dugi izdah.",
+      "Kratko skeniranje tijela održava stabilnost.",
+      "Sačuvaj energiju: reci ‘ne’ nebitnom.",
+      "Neka tvoja smirenost bude sidro i drugima."
+    ],
+    "MEDIUM": [
+      "Kad napetost poraste, vrati se na 5 ujednačenih udaha.",
+      "Daj si 60 sekundi prije iduće radnje.",
+      "Imenuj osjećaj i smanji mu moć promatranjem.",
+      "Razbij zadatak na jedan mali korak.",
+      "Spusti ramena, opusti čeljust, dugi izdah.",
+      "Napravi pauzu očiju i pogledaj u daljinu.",
+      "Podsjeti se: nije sve hitno.",
+      "Neka tempo bude tvoj, ne od drugih."
+    ],
+    "HIGH": [
+      "Usidri pogled u jednu točku i izdahni 8 s — ponovi 5×.",
+      "Radi u mikro-blokovima 30–60 s, pa pauza.",
+      "Oslobodi tjelesnu napetost kratkim istezanjem.",
+      "Smanji stimulanse i buke na minimum.",
+      "Zapiši brige 2 min, odloži papir.",
+      "Udah kroz nos, dugi izdah kroz usta uz uzdah.",
+      "Odaberi jednu stvar i sve ostalo isključi.",
+      "Podsjeti se: dovoljno je napraviti prvi mali korak."
+    ]
+  },
+
+  "sleepAddons": {
+    "POOR": [
+      "Teža noć — budi nježan/na danas i radi kraće blokove.",
+      "Svjež zrak/kratka šetnja pomažu protiv težine u glavi.",
+      "Više vode, manje kofeina – tijelo će zahvaliti.",
+      "Drži zadatke laganima kad god možeš.",
+      "Uključi mikro-pauze, 60 s disanja kad padne fokus.",
+      "Večeras kreni ranije u smirivanje.",
+      "Izbjegni kasno skrolanje — san će ti vratiti energiju.",
+      "Lagano istezanje umjesto dodatne kave."
+    ],
+    "OK": [
+      "Solidna baza — dodaj kratku šetnju za energiju.",
+      "Iskoristi stabilnost za jedan fokus-blok više.",
+      "Hidratacija i svjesno disanje podižu bistrinu.",
+      "Zadrži ritam i večeras — tijelo voli predvidljivost.",
+      "Ako kloneš, 3 duboka udaha često su dovoljna.",
+      "Zadrži rutinu: isti odlazak na spavanje.",
+      "Pauza očiju od ekrana svaka 2 sata.",
+      "Mali obrok bez šećera popodne čuva energiju."
+    ],
+    "GOOD": [
+      "Super odmor — kreni s najvažnijim zadatkom.",
+      "Dopusti si mrvu dublju meditaciju danas.",
+      "Uhvati momentum jutarnje bistrine.",
+      "Isplaniraj večeras lagani ‘cooldown’ za novi dobar san.",
+      "Dodaj 5 min fokus vježbe — imaš kapacitet.",
+      "Šetnja u prirodi multiplicira učinak dobrog sna.",
+      "Iskoristi jasnoću za jednu hrabru odluku.",
+      "Napravi dobar ‘shut down’ ritual za sutra."
+    ]
+  },
+
+  "experienceAddons": {
+    "NONE": [
+      "Kreni sa 60–120 s — samo pojaviti se je pobjeda.",
+      "Zatvori oči, osjeti stopala i udahni 5 puta.",
+      "Ne traži savršenost; traži prisutnost.",
+      "Ako misli bježe, samo primijeti i vrati pažnju.",
+      "Kratko je bolje nego nikako — danas bar minuta.",
+      "Jedna riječ nakon vježbe: kako se osjećaš?",
+      "Drži upute jednostavnima i kratkima.",
+      "Svaki pokušaj se računa."
+    ],
+    "BEGINNER": [
+      "Drži ritam kratak i jasan, ali redovit.",
+      "Bilježi kako se osjećaš — prati napredak.",
+      "Dodaj +1 min kad osjetiš stabilnost.",
+      "Prepoznaj najčešći ‘trigger’ dekoncentracije.",
+      "Vježbaj isto vrijeme par dana zaredom.",
+      "Neka bude zabavno i lagano, bez pritiska.",
+      "Podsjeti se zašto ti je ovo važno.",
+      "Upari praksu s već postojećom rutinom."
+    ],
+    "INTERMEDIATE": [
+      "Produbi fokus ili sken tijela +2–3 min.",
+      "Primijeti gdje se pažnja najčešće lomi.",
+      "Dodaj element namjere prije početka.",
+      "Eksperimentiraj s otvorenom svjesnošću.",
+      "Ritam izdaha blago dulji — smiruje sustav.",
+      "Pokušaj voditi kratku vježbu samome sebi.",
+      "Uključi kraći body-scan prije rada.",
+      "Zabilježi mikro-pomake, ne samo ‘rezultate’."
+    ],
+    "ADVANCED": [
+      "Proširi praksu na misli kao objekte pažnje.",
+      "Istraži suptilne napetosti i otpusti ih.",
+      "Uvedi tišinu bez uputa na 3–5 min.",
+      "Radi s namjerom ‘za sebe i druge’.",
+      "Kratka metta/prijateljska naklonost na kraju.",
+      "Reflektiraj odnos napora i mekoće.",
+      "Mjesto prakse učini simbolom prisutnosti.",
+      "Prenesi svjesnost u hod ili posao."
+    ]
+  },
+
+  "closing": [
+    "💡 Zapiši jednu rečenicu: kako se osjećaš sada?",
+    "👏 Svaki mikro-korak se broji — bravo!",
+    "🔁 Ako ti je koristilo, ponovi kasnije danas.",
+    "📝 Jedna riječ dana: mir, fokus ili zahvalnost?",
+    "⏱️ Dovoljno je i 60 s — bitno je pojaviti se.",
+    "🌿 Mali napredak danas, veliki učinak sutra.",
+    "📌 Podsjetnik: odaberi sljedeću malu radnju.",
+    "🫶 Budi blag/a prema sebi — to je praksa.",
+    "🎯 Vrati se cilju: zašto ti je ovo važno?",
+    "🧘 Udahni dublje još jednom — sada."
+  ]
+}
