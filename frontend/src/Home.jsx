@@ -18,6 +18,7 @@ export default function Home() {
     const hasNavigatedToQuestions = useRef(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
     useEffect(() => {
         const init = async () => {
@@ -88,7 +89,7 @@ export default function Home() {
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
-                    audience: `${BACKEND_URL}`,
+                    audience: `${AUDIENCE}`,
                     scope: "openid profile email",
                 },
             });
