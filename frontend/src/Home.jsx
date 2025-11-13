@@ -26,7 +26,7 @@ export default function Home() {
             try {
                 // Auth0 login Google i to
                 if (isAuthenticated && auth0User) {
-                    console.log("Authenticated via Auth0:", auth0User);
+                    //console.log("Authenticated via Auth0:", auth0User);
                     setUser(auth0User);
 
                     const userResponse = await sendUserDataToBackend(auth0User);
@@ -34,19 +34,19 @@ export default function Home() {
                     // provjera za jel rjesia kviz
                     if (userResponse && !userResponse.isOnboardingComplete) {
                         if (!hasNavigatedToQuestions.current) {
-                            console.log("Onboarding not complete, redirecting to questions");
+                            //console.log("Onboarding not complete, redirecting to questions");
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
                     }
 
-                    console.log("Auth0 user fully onboarded, showing home");
+                    //console.log("Auth0 user fully onboarded, showing home");
                     setLoading(false);
                 }
                 // Local JWT login
                 else if (localToken) {
-                    console.log("Authenticated via local JWT");
+                    //console.log("Authenticated via local JWT");
 
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
@@ -55,20 +55,20 @@ export default function Home() {
                     if (!res.ok) throw new Error("Failed to fetch user info");
 
                     const data = await res.json();
-                    console.log("User data from backend:", data);
+                    //console.log("User data from backend:", data);
                     setUser(data);
 
                     // vrijeme za kviz
                     if (!data.isOnboardingComplete) {
                         if (!hasNavigatedToQuestions.current) {
-                            console.log("Onboarding not complete, redirecting to questions");
+                            //console.log("Onboarding not complete, redirecting to questions");
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
                     }
 
-                    console.log("Local user fully set up, showing home");
+                    //console.log("Local user fully set up, showing home");
                     setLoading(false);
                 } else {
                     setLoading(false);
@@ -116,7 +116,7 @@ export default function Home() {
             if (!res.ok) return null;
 
             const userData = await res.json();
-            console.log("User data synced successfully:", userData);
+            //console.log("User data synced successfully:", userData);
             return userData;
         } catch (err) {
             console.error("Error sending user data to backend:", err);
@@ -129,13 +129,10 @@ export default function Home() {
             localStorage.removeItem("token");
 
             if (isAuthenticated) {
-                // Auth0 logout
                 import("@auth0/auth0-react").then(({ useAuth0 }) => {
-                    // can't use hooks dynamically, so simpler direct redirect:
                     window.location.href = `${window.location.origin}/login`;
                 });
             } else {
-                // Local logout
                 navigate("/login");
             }
         } catch (err) {

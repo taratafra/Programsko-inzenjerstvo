@@ -26,7 +26,6 @@ public class UserSettingsController {
             throw new RuntimeException("JWT token is null");
         }
 
-//        log.info("All JWT claims: {}", jwt.getClaims());
 
         String email = jwt.getSubject(); // This should be the email
         log.info("JWT subject (should be email): {}", email);

@@ -5,7 +5,6 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.OnboardingSurveyResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository;
-import Pomna_Sedmica.Mindfulnes.service.CurrentUserService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

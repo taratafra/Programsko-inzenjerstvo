@@ -17,7 +17,7 @@ public class MessageCatalogLoader {
     void load() throws Exception {
         try (InputStream in = new ClassPathResource("messages/onboarding_prompts.json").getInputStream()) {
             root = mapper.readTree(in);
-            System.out.println("✅ Poruke uspješno učitane (" + root.size() + " sekcija)");
+            System.out.println("Poruke uspješno učitane (" + root.size() + " sekcija)");
         }
     }
 

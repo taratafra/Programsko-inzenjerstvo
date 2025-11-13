@@ -1,5 +1,3 @@
-// src/components/home/LeftSidebar.jsx
-
 import styles from "../../Home.module.css";
 
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
@@ -18,7 +16,7 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
       <div className={styles.profileBox}>
         <img src={user.picture} alt="Profile" className={getAvatarClass()}
         onClick={() => setActiveTab('Account')} />
-        <p className={styles.profileName}>{user.name}</p>
+        <p className={styles.profileName}>{ user.name }</p>
         <p className={styles.profileTitle}>{user.email}</p> 
       </div>
       

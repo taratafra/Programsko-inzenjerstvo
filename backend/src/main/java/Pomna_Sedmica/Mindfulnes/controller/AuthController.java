@@ -35,7 +35,6 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    // Injected from .env / application.properties
     @Value("${auth0.domain}")
     private String auth0Domain;
 
@@ -96,7 +95,6 @@ public class AuthController {
 
             return ResponseEntity.ok(Map.of("access_token", token.getAccess_token()));
         } else {
-            // 🔹 Local login
             User user = userRepository.findByEmail(req.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 

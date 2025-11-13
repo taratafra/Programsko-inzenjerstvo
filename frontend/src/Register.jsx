@@ -1,4 +1,3 @@
-// src/Register.jsx
 import { useState } from "react";
 import "./Register.css";
 import CloudBackground from "./components/backgrounds/CloudyBackground";
@@ -9,7 +8,6 @@ function Register() {
   const navigate = useNavigate();
   const BACKEND_URL = process.env.REACT_APP_BACKEND; 
 
-  // Registration state
   const [regData, setRegData] = useState({
     email: "",
     password: "",
@@ -22,12 +20,10 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Update input fields
   const handleRegDataUpdate = (field, value) => {
     setRegData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Input validation
   const validateInputs = () => {
     const newErrors = {};
     if (!regData.email.trim()) newErrors.email = "Please enter an email.";
@@ -43,7 +39,6 @@ function Register() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit registration
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateInputs()) return;

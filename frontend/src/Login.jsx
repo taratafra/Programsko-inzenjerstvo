@@ -1,4 +1,3 @@
-// src/Login.jsx
 import { useState, useEffect } from "react";
 import './login.css';
 import CloudBackground from "./components/backgrounds/CloudyBackground";
@@ -7,23 +6,21 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 function Login() {
-  const [email, setEmail] = useState(""); // use email for clarity
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND; // example: http://localhost:8080
+  const BACKEND_URL = process.env.REACT_APP_BACKEND; 
   const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
   const navigate = useNavigate();
 
-  // Redirect to home if Auth0 is already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       navigate("/home");
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-   // Handle local login
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
@@ -108,8 +105,6 @@ function Login() {
             onClick={() =>
               loginWithRedirect({
                 appState: { returnTo: "/home" },
-                // Optional: include audience if needed
-                // authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE }
               })
             }
           >

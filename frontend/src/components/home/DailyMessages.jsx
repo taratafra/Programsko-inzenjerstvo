@@ -1,4 +1,3 @@
-// DailyMessages.jsx - Component to display personalized daily messages
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import './DailyMessages.css';
@@ -21,7 +20,6 @@ export default function DailyMessages() {
     setError("");
 
     try {
-      // Get token
       let token;
       const localToken = localStorage.getItem("token");
       
@@ -40,7 +38,6 @@ export default function DailyMessages() {
         return;
       }
 
-      // Fetch messages - your API uses count parameter for number of goals
       const response = await fetch(
         `${BACKEND_URL}/messages/me?timeOfDay=${timeOfDay}&count=3`,
         {
@@ -127,29 +124,6 @@ export default function DailyMessages() {
         <h2 style={{ margin: 0 }}>
           {getTimeOfDayEmoji(messageData?.timeOfDay)} Your daily message
         </h2>
-        {/* <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          <label htmlFor="timeOfDay" style={{ fontWeight: "500" }}>
-            Dio dana:
-          </label>
-          <select
-            id="timeOfDay"
-            value={timeOfDay}
-            onChange={(e) => setTimeOfDay(e.target.value)}
-            style={{
-              padding: "0.5rem 1rem",
-              borderRadius: "6px",
-              border: "1px solid #ddd",
-              backgroundColor: "white",
-              cursor: "pointer",
-              fontSize: "0.95rem"
-            }}
-          >
-            <option value="AUTO">Automatski (trenutno vrijeme)</option>
-            <option value="MORNING">Jutro 🌅</option>
-            <option value="MIDDAY">Dan ☀️</option>
-            <option value="EVENING">Večer 🌙</option>
-          </select>
-        </div> */}
       </div>
 
       {/* Messages */}
@@ -223,29 +197,6 @@ export default function DailyMessages() {
           <p>Nema dostupnih poruka. Molimo ispuni upitnik za početak.</p>
         </div>
       )}
-
-      {/* Refresh button
-      <button
-        onClick={fetchMessages}
-        style={{
-          marginTop: "2rem",
-          padding: "0.75rem 1.5rem",
-          backgroundColor: "#4a90e2",
-          color: "white",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontSize: "1rem",
-          fontWeight: "500",
-          transition: "background-color 0.2s",
-          width: "100%"
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#357abd"}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#4a90e2"}
-      >
-        🔄 Osvježi poruke
-      </button> */}
-
       {/* Info note */}
       <p style={{
         marginTop: "1.5rem",

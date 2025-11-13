@@ -1,4 +1,3 @@
-// Questionnaire.jszx
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -89,13 +88,11 @@ export default function Questionnaire() {
                 const localToken = localStorage.getItem("token");
 
                 if (!localToken) {
-                    // No local token means it's Auth0 user, no password reset needed
                     setRequiresPasswordReset(false);
                     setLoading(false);
                     return;
                 }
 
-                // Check if password reset is required for local users
                 const userRes = await fetch(`${BACKEND_URL}/api/users/me`, {
                     headers: { Authorization: `Bearer ${localToken}` },
                 });
@@ -215,7 +212,6 @@ export default function Questionnaire() {
                 noteText = noteText ? `${noteText}\n\nOther goal: ${otherGoal.trim()}` : `Other goal: ${otherGoal.trim()}`;
             }
 
-            // Map meditation experience to enum
             const experienceMapping = {
                 "beginner": "BEGINNER",
                 "intermediate": "INTERMEDIATE",
@@ -233,7 +229,7 @@ export default function Questionnaire() {
                 stressLevel: parseInt(formData.get("stress")),
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
-                goals: goals, // Backend expects Set<Goal> enum as array
+                goals: goals, 
                 note: noteText
             };
 
