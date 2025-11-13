@@ -1,6 +1,7 @@
 // DailyMessages.jsx - Component to display personalized daily messages
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import './DailyMessages.css';
 
 export default function DailyMessages() {
   const [messageData, setMessageData] = useState(null);
@@ -113,7 +114,7 @@ export default function DailyMessages() {
   }
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
+    <div style={{ padding: "2rem", width:"100%", margin: "0 0"}}>
       {/* Header with time selector */}
       <div style={{ 
         display: "flex", 
@@ -124,9 +125,9 @@ export default function DailyMessages() {
         gap: "1rem"
       }}>
         <h2 style={{ margin: 0 }}>
-          {getTimeOfDayEmoji(messageData?.timeOfDay)} Tvoje dnevne poruke
+          {getTimeOfDayEmoji(messageData?.timeOfDay)} Your daily message
         </h2>
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        {/* <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <label htmlFor="timeOfDay" style={{ fontWeight: "500" }}>
             Dio dana:
           </label>
@@ -148,24 +149,33 @@ export default function DailyMessages() {
             <option value="MIDDAY">Dan ☀️</option>
             <option value="EVENING">Večer 🌙</option>
           </select>
-        </div>
+        </div> */}
       </div>
 
       {/* Messages */}
       {messageData?.messages && messageData.messages.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "row", gap: "1.5rem" }}>
+        <div className="scroll-container" style={{
+          display: "flex",
+          flexDirection: "row", 
+          gap: "1rem",
+          overflowX: "auto",
+          Padding:"1rem",
+          }}>
           {messageData.messages.map((item, index) => (
             <div
               key={index}
               style={{
-                padding: "1.5rem",
+                padding: "1rem",
                 backgroundColor: "white",
                 border: "1px solid #e0e0e0",
                 borderLeft: "4px solid #4a90e2",
                 borderRadius: "8px",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                 transition: "transform 0.2s, box-shadow 0.2s",
-                cursor: "default"
+                cursor: "default",
+                whiteSpace: "normal", 
+                width:"90%",         
+                flex: "0 0 auto",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-2px)";
@@ -214,7 +224,7 @@ export default function DailyMessages() {
         </div>
       )}
 
-      {/* Refresh button */}
+      {/* Refresh button
       <button
         onClick={fetchMessages}
         style={{
@@ -234,7 +244,7 @@ export default function DailyMessages() {
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#4a90e2"}
       >
         🔄 Osvježi poruke
-      </button>
+      </button> */}
 
       {/* Info note */}
       <p style={{
@@ -242,9 +252,10 @@ export default function DailyMessages() {
         fontSize: "0.9rem",
         color: "#666",
         textAlign: "center",
-        fontStyle: "italic"
+        fontStyle: "italic",
+        whiteSpace:"normal",
       }}>
-        💡 Savjet: Poruke se personaliziraju na temelju tvojih odgovora u upitniku. 
+        💡Poruke se personaliziraju na temelju tvojih odgovora u upitniku. 
         Mijenjaju se svaki dan i prilagođavaju se dijelu dana.
       </p>
     </div>

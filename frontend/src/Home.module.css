@@ -31,7 +31,6 @@
   height: 100vh;
   padding: 0;
   color: var(--text-main);
-  overflow: hidden; 
   display: flex; 
   flex-direction: column; 
   background-color: #352081;
@@ -40,6 +39,19 @@
   background-size: cover;
   background-attachment: fixed;
   position: relative; 
+
+  overflow-y: auto;
+  overflow-x:hidden;
+  height:100vh;
+}
+
+.layoutContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.layoutContainer::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
 }
 
 .dashboardContentWrapper {
@@ -48,7 +60,7 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  overflow: hidden;
+  overflow-y: visible;
 }
 
 /* Za oblake */
@@ -98,7 +110,6 @@
 }
 
 .topBanner {
-  background-color: #352081;
   background: linear-gradient(to bottom, #35204E, #35206B);
   padding: 15px 20px;
   display: flex;
@@ -106,6 +117,14 @@
   align-items: center;
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
+}
+
+.topBanner first{
+  flex-grow:1;
+}
+
+.topBanner second{
+  flex-grow:0;
 }
 
 .logo {
@@ -496,6 +515,14 @@
   flex-grow: 1; 
 }
 
+.logoContainer first{
+  flex-grow: 0;
+}
+.logoContainer second{
+  flex-grow: 1;
+}
+
+
 .headerQuote {
   font-size: 14px;
   font-style: italic;
@@ -505,10 +532,11 @@
   border-left: 2px solid var(--text-accent);
   padding-left: 15px;
   
-  max-width: 500px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  width:100%;
+  display:block;
 }
 
 @media (max-width: 1200px) {

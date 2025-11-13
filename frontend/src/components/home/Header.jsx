@@ -6,7 +6,7 @@ export default function Header({ navigate, user }) {
     <div className={styles.topBanner}>
       <div className={styles.logoContainer}>
         <h1 className={styles.logo} onClick={() => navigate("/home")}>
-          Modly
+          Mindfulness
         </h1>
         <div className={styles.headerQuote}>
           <DailyMessages user={user} />
