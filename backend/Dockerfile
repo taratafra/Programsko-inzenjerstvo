@@ -9,7 +9,7 @@ RUN ls -la
 # RUN chmod +x ./backend/mvnw
 
 # Build your Spring Boot JAR
-RUN cd backend/ && mvn clean package 
+RUN cd backend/ && mvn clean package -Dspring.profiles.active=prod
 
 # 2) Runtime stage (Java 21 JRE)
 #FROM eclipse-temurin:21-jre-alpine
@@ -22,4 +22,4 @@ COPY --from=builder /workspace/backend/target/*.jar /app/app.jar
 EXPOSE 8080
 
 # Run the backend
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod" ,"/app/app.jar"]
