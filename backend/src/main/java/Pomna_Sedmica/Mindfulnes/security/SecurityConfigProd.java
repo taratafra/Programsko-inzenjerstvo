@@ -84,7 +84,7 @@ import java.util.Collection;
 @Configuration
 @EnableWebSecurity
 @Profile("prod")
-public class SecurityConfigDev {
+public class SecurityConfigProd {
 
     @Value("${auth0.domain}")
     private String auth0Domain;
