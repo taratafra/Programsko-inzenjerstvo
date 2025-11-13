@@ -81,6 +81,7 @@ export default function Questionnaire() {
     const { getAccessTokenSilently, isAuthenticated } = useAuth0();
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
     useEffect(() => {
         const checkPasswordResetRequirement = async () => {
@@ -181,7 +182,7 @@ export default function Questionnaire() {
             if (isAuthenticated) {
                 token = await getAccessTokenSilently({
                     authorizationParams: {
-                        audience: BACKEND_URL,
+                        audience: AUDIENCE,
                         scope: "openid profile email",
                     },
                 });
