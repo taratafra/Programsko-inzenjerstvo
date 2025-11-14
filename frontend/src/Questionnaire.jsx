@@ -5,6 +5,28 @@ import { useAuth0 } from "@auth0/auth0-react";
 import "./Questionnaire.css";
 import CloudBackground from "./components/backgrounds/CloudyBackground";
 
+const validatePasswordStrength = (password) => {
+    var isStrongEnough = true 
+    if (password.length < 8) {
+        isStrongEnough = isStrongEnough && false
+    }
+    if (!/[A-Z]/.test(password)) {
+        isStrongEnough = isStrongEnough && false
+    }
+    if (!/[a-z]/.test(password)) {
+        isStrongEnough = isStrongEnough && false
+    }
+    if (!/[0-9]/.test(password)) {
+        isStrongEnough = isStrongEnough && false
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>\-\+]/.test(password)) {
+        isStrongEnough = isStrongEnough && false
+    }
+    
+    return isStrongEnough;
+  };
+
+
 const PasswordResetModal = ({ onPasswordReset, passwordResetData, onPasswordChange }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -128,8 +150,8 @@ export default function Questionnaire() {
             return;
         }
 
-        if (passwordResetData.newPassword.length < 8) {
-            alert("Password must be at least 8 characters long!");
+        if (!validatePasswordStrength(passwordResetData.newPassword)) {
+            alert("Password must be at least 8 characters long, contain at least one smaller and upper case letter and a special symbol!");
             return;
         }
 
