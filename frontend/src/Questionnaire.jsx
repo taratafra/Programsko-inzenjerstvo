@@ -175,7 +175,12 @@ export default function Questionnaire() {
 
         try {
             const formData = new FormData(e.target);
-
+            const consentChecked = formData.get("consent");
+            if (!consentChecked) {
+                setError("You must agree to the consent terms before generating your plan.");
+                setIsSubmitting(false);
+                return;
+            }
             let token;
             const localToken = localStorage.getItem("token");
 
