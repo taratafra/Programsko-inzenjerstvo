@@ -108,7 +108,7 @@ function Login() {
               })
             }
           >
-            Login with Google / Other options
+            <FcGoogle size={20} style={{ marginRight: 8 }} />Login with Google / Other options
           </button>
 
           <div className="alternativa">
