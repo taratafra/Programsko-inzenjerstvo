@@ -23,11 +23,47 @@ function Register() {
   const handleRegDataUpdate = (field, value) => {
     setRegData((prev) => ({ ...prev, [field]: value }));
   };
+    const validatePasswordStrength = (password) => {
+    const errors = [];
+    
+    if (password.length < 8) {
+      errors.push("At least 8 characters");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("At least one uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("At least one lowercase letter");
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("At least one number");
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>\-\+]/.test(password)) {
+      errors.push("At least one special character");
+    }
+    
+    return errors;
+  };
 
   const validateInputs = () => {
     const newErrors = {};
     if (!regData.email.trim()) newErrors.email = "Please enter an email.";
     if (!regData.password.trim()) newErrors.password = "Please enter a password.";
+    if (regData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters.";
+    if (!regData.name.trim()) newErrors.name = "Please enter your name.";
+    if (!regData.surname.trim()) newErrors.surname = "Please enter your surname.";
+    if (!regData.dateOfBirth.trim())
+      newErrors.dateOfBirth = "Please enter your date of birth.";
+
+    if (!regData.password.trim()) {
+      newErrors.password = "Please enter a password.";
+    } else {
+      const passwordErrors = validatePasswordStrength(regData.password);
+      if (passwordErrors.length > 0) {
+        newErrors.password = passwordErrors.join(", ");
+      }
+    }
     if (regData.password.length < 6)
       newErrors.password = "Password must be at least 6 characters.";
     if (!regData.name.trim()) newErrors.name = "Please enter your name.";

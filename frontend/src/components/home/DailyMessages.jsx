@@ -201,7 +201,7 @@ export default function DailyMessages() {
       <p style={{
         marginTop: "1.5rem",
         fontSize: "0.9rem",
-        color: "#666",
+        color: "#fff",
         textAlign: "center",
         fontStyle: "italic",
         whiteSpace:"normal",
