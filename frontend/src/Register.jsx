@@ -62,7 +62,7 @@ function Register() {
     } else {
       const passwordErrors = validatePasswordStrength(regData.password);
       if (passwordErrors.length > 0) {
-        newErrors.password = passwordErrors.join(", ");
+        newErrors.password = passwordErrors.join(". ");
       }
     }
     if (regData.password.length < 6)
