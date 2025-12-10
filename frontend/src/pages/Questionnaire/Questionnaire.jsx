@@ -2,71 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
-import "./Questionnaire.css";
-import CloudBackground from "./components/backgrounds/CloudyBackground";
-
-const PasswordResetModal = ({ onPasswordReset, passwordResetData, onPasswordChange }) => {
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onPasswordReset(e);
-    };
-
-    const handleChange = (e) => {
-        onPasswordChange(e);
-    };
-
-    return (
-
-        <div className="Prvi">
-            <div className="Drugi">
-                <h2>
-                    Password Reset Required
-                </h2>
-                <p>
-                    This is your first login. You must set a new password before continuing to the questionnaire.
-                </p>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="newPass">
-                        <label>
-                            New Password:
-                        </label>
-                        <input
-                            type="password"
-                            name="newPassword"
-                            value={passwordResetData.newPassword}
-                            onChange={handleChange}
-                            required
-                            minLength="8"
-                            placeholder="Enter new password (min 8 characters)"
-                        />
-                    </div>
-
-                    <div className="confirmPass">
-                        <label>
-                            Confirm Password:
-                        </label>
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            value={passwordResetData.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            minLength="8"
-                            placeholder="Confirm new password"
-                        />
-                    </div>
-                    <button ClassName="PasswordResetSubmit" type="submit">
-                        Set New Password & Continue
-                    </button>
-                </form>
-                <p className="cannotContinue">
-                    You cannot continue to the questionnaire until you set a new password.
-                </p>
-            </div>
-        </div>
-    );
-};
+import styles from "./Questionnaire.module.css";
+import CloudBackground from "../../components/backgrounds/CloudyBackground";
+import PasswordResetModal from "./PasswordResetModal";
 
 export default function Questionnaire() {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -101,8 +39,7 @@ export default function Questionnaire() {
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     console.log(userData)
-                    if (userData.firstLogin)
-                    {
+                    if (userData.firstLogin) {
                         setRequiresPasswordReset(true);
                     } else {
                         setRequiresPasswordReset(false);
@@ -232,7 +169,7 @@ export default function Questionnaire() {
                 stressLevel: parseInt(formData.get("stress")),
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
-                goals: goals, 
+                goals: goals,
                 note: noteText
             };
 
@@ -306,18 +243,18 @@ export default function Questionnaire() {
 
     // upitnik
     const renderQuestionnaireForm = () => (
-        <div className="upitnik_svi">
+        <div className={styles.upitnikSvi}>
             <form onSubmit={handleSubmit} id="onboarding-form" method="post" noValidate>
-                <h1 className="Onboarding">Onboarding & Goals</h1>
+                <h1 className={styles.onboarding}>Onboarding & Goals</h1>
                 <p>Please fill out this short questionnaire so we can generate a personalized 7-day practice plan.</p>
 
                 {error && (
-                    <div className="errortext">
+                    <div className={styles.errortext}>
                         <p>{error}</p>
                     </div>
                 )}
 
-                <fieldset className="BasicInfo">
+                <fieldset className={styles.basicInfo}>
                     <legend>Basic information</legend>
 
                     <div>
@@ -331,13 +268,13 @@ export default function Questionnaire() {
                     </div>
                 </fieldset>
 
-                <fieldset className="Wellbeing">
+                <fieldset className={styles.wellbeing}>
                     <legend>Wellbeing</legend>
 
                     <div>
                         <label htmlFor="stress">Stress level (1–5) <span aria-hidden="true">*</span></label>
-                        <div className="input-wrapper">
-                            <span id="help-left">No stress</span>
+                        <div className={styles.inputWrapper}>
+                            <span className={styles.helpLeft}>No stress</span>
                             <input
                                 id="stress"
                                 name="stress"
@@ -349,15 +286,15 @@ export default function Questionnaire() {
                                 required
                                 aria-describedby="stress-help"
                             />
-                            <span id="help-right">Extremely high stress</span>
+                            <span className={styles.helpRight}>Extremely high stress</span>
                         </div>
-                        
+
                     </div>
 
                     <div>
                         <label htmlFor="sleep">Sleep quality (1–5) <span aria-hidden="true">*</span></label>
-                        <div className="input-wrapper">
-                            <span id="help-left">Very poor</span>
+                        <div className={styles.inputWrapper}>
+                            <span className={styles.helpLeft}>Very poor</span>
                             <input
                                 id="sleep"
                                 name="sleep"
@@ -369,14 +306,14 @@ export default function Questionnaire() {
                                 required
                                 aria-describedby="sleep-help"
                             />
-                            <span id="help-right">Excellent</span>
+                            <span className={styles.helpRight}>Excellent</span>
                         </div>
-                        
+
                     </div>
 
                 </fieldset>
 
-                <fieldset className="MeditationExp">
+                <fieldset className={styles.meditationExp}>
                     <legend>Meditation experience <span aria-hidden="true">*</span></legend>
 
                     <div>
@@ -396,7 +333,7 @@ export default function Questionnaire() {
                     </div>
                 </fieldset>
 
-                <fieldset className="Goals">
+                <fieldset className={styles.goals}>
                     <legend>Your goals (select all that apply)</legend>
 
                     <div>
@@ -424,13 +361,13 @@ export default function Questionnaire() {
                             <input type="checkbox" name="goals" value="build-habit" /> Build a meditation habit
                         </label>
                     </div>
-                    <div className="otherGoal">
+                    <div className={styles.otherGoal}>
                         <label htmlFor="goal-other">Other goal:</label>
                         <input id="goal-other" name="goal-other" type="text" placeholder="Describe another goal" />
                     </div>
                 </fieldset>
 
-                <fieldset className="Practice">
+                <fieldset className={styles.practice}>
                     <legend>Practice preferences</legend>
 
                     <div>
@@ -466,20 +403,20 @@ export default function Questionnaire() {
                     </div>
                 </fieldset>
 
-                <fieldset className="Consent">
+                <fieldset className={styles.consent}>
                     <legend>Consent</legend>
                     <label>
-                        <input type="checkbox" name="consent" value="agree" required /> I agree that my responses will be used to generate a personalized 7-day plan. 
+                        <input type="checkbox" name="consent" value="agree" required /> I agree that my responses will be used to generate a personalized 7-day plan.
                         <span aria-hidden="true">*</span>
                     </label>
                 </fieldset>
 
 
-                <div className="button-row">
-                    <button className="submitGoals" type="submit" disabled={isSubmitting}>
+                <div className={styles.buttonRow}>
+                    <button className={styles.submitGoals} type="submit" disabled={isSubmitting}>
                         {isSubmitting ? "Generating..." : "Generate my plan"}
                     </button>
-                    <button className="resetGoals" type="reset">Reset</button>
+                    <button className={styles.resetGoals} type="reset">Reset</button>
                 </div>
 
                 <p>Fields marked with * are required.</p>
@@ -490,8 +427,8 @@ export default function Questionnaire() {
     if (loading) return <div>Loading...</div>;
 
     return (
-        <CloudBackground>  
-            <div className="password_tab">
+        <CloudBackground>
+            <div className={styles.passwordTab}>
                 {requiresPasswordReset && (
                     <PasswordResetModal
                         onPasswordReset={handlePasswordReset}
@@ -499,12 +436,12 @@ export default function Questionnaire() {
                         onPasswordChange={handlePasswordChange}
                     />
                 )}
-            
-                <div style={requiresPasswordReset ? { filter: 'blur(5px)', pointerEvents: 'none' } : {}}>
+
+                <div className={requiresPasswordReset ? styles.formBlurred : ''}>
                     {renderQuestionnaireForm()}
                 </div>
-            </div>            
-            </CloudBackground>
+            </div>
+        </CloudBackground>
 
     );
 }

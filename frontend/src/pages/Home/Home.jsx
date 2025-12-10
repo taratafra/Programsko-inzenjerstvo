@@ -3,11 +3,11 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./Home.module.css";
 
-import Header from "./components/home/Header";
-import LeftSidebar from "./components/home/LeftSidebar";
-import RightSidebar from "./components/home/RightSidebar";
-import DashboardTabs from "./components/home/DashboardTabs";
-import GeneralInfoGrid from "./components/home/GeneralInfoGrid";
+import Header from "../../components/home/Header";
+import LeftSidebar from "../../components/home/LeftSidebar";
+import RightSidebar from "../../components/home/RightSidebar";
+import DashboardTabs from "../../components/home/DashboardTabs";
+import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();

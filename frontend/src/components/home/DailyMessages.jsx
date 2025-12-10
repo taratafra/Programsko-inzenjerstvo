@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import './DailyMessages.css';
+import styles from './DailyMessages.module.css';
 
 export default function DailyMessages() {
   const [messageData, setMessageData] = useState(null);
@@ -8,7 +8,7 @@ export default function DailyMessages() {
   const [error, setError] = useState("");
   const [timeOfDay, setTimeOfDay] = useState("AUTO");
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
-  
+
   const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function DailyMessages() {
     try {
       let token;
       const localToken = localStorage.getItem("token");
-      
+
       if (isAuthenticated) {
         token = await getAccessTokenSilently({
           authorizationParams: {
@@ -69,7 +69,7 @@ export default function DailyMessages() {
   };
 
   const getTimeOfDayEmoji = (tod) => {
-    switch(tod) {
+    switch (tod) {
       case "MORNING": return "🌅";
       case "MIDDAY": return "☀️";
       case "EVENING": return "🌙";
@@ -90,7 +90,7 @@ export default function DailyMessages() {
 
   if (loading) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
+      <div className={styles.loadingContainer}>
         <p>Učitavam tvoje personalizirane poruke...</p>
       </div>
     );
@@ -98,115 +98,48 @@ export default function DailyMessages() {
 
   if (error) {
     return (
-      <div style={{ 
-        padding: "1.5rem", 
-        backgroundColor: "#fff3cd", 
-        border: "1px solid #ffc107", 
-        borderRadius: "8px",
-        margin: "1rem"
-      }}>
-        <p style={{ color: "#856404", margin: 0 }}>{error}</p>
+      <div className={styles.errorContainer}>
+        <p className={styles.errorText}>{error}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "2rem", width:"100%", margin: "0 0"}}>
+    <div className={styles.container}>
       {/* Header with time selector */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "2rem",
-        flexWrap: "wrap",
-        gap: "1rem"
-      }}>
-        <h2 style={{ margin: 0 }}>
+      <div className={styles.header}>
+        <h2 className={styles.headerTitle}>
           {getTimeOfDayEmoji(messageData?.timeOfDay)} Your daily message
         </h2>
       </div>
 
       {/* Messages */}
       {messageData?.messages && messageData.messages.length > 0 ? (
-        <div className="scroll-container" style={{
-          display: "flex",
-          flexDirection: "row", 
-          gap: "1rem",
-          overflowX: "auto",
-          Padding:"1rem",
-          }}>
+        <div className={styles.scrollContainer}>
           {messageData.messages.map((item, index) => (
-            <div
-              key={index}
-              style={{
-                padding: "1rem",
-                backgroundColor: "white",
-                border: "1px solid #e0e0e0",
-                borderLeft: "4px solid #4a90e2",
-                borderRadius: "8px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                cursor: "default",
-                whiteSpace: "normal", 
-                width:"90%",         
-                flex: "0 0 auto",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)";
-              }}
-            >
+            <div key={index} className={styles.messageCard}>
               {/* Goal badge */}
-              <div style={{ marginBottom: "0.75rem" }}>
-                <span style={{
-                  display: "inline-block",
-                  padding: "0.25rem 0.75rem",
-                  backgroundColor: "#e3f2fd",
-                  color: "#1976d2",
-                  borderRadius: "12px",
-                  fontSize: "0.85rem",
-                  fontWeight: "500"
-                }}>
+              <div className={styles.goalBadgeContainer}>
+                <span className={styles.goalBadge}>
                   {getGoalLabel(item.goal)}
                 </span>
               </div>
-              
+
               {/* Message text */}
-              <p style={{ 
-                margin: 0, 
-                lineHeight: "1.7",
-                fontSize: "1.05rem",
-                color: "#333"
-              }}>
+              <p className={styles.messageText}>
                 {item.text}
               </p>
             </div>
           ))}
         </div>
       ) : (
-        <div style={{
-          padding: "2rem",
-          textAlign: "center",
-          backgroundColor: "#f8f9fa",
-          borderRadius: "8px"
-        }}>
+        <div className={styles.noMessagesContainer}>
           <p>Nema dostupnih poruka. Molimo ispuni upitnik za početak.</p>
         </div>
       )}
       {/* Info note */}
-      <p style={{
-        marginTop: "1.5rem",
-        fontSize: "0.9rem",
-        color: "#666",
-        textAlign: "center",
-        fontStyle: "italic",
-        whiteSpace:"normal",
-      }}>
-        💡Poruke se personaliziraju na temelju tvojih odgovora u upitniku. 
+      <p className={styles.infoNote}>
+        💡Poruke se personaliziruju na temelju tvojih odgovora u upitniku.
         Mijenjaju se svaki dan i prilagođavaju se dijelu dana.
       </p>
     </div>

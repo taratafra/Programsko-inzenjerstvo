@@ -1,0 +1,52 @@
+.deepSleepText {
+    font-size: 12px;
+    color: #999;
+}
+
+.unlockedText {
+    color: var(--text-accent);
+    text-align: center;
+}
+
+.barChartContainer {
+    height: 100px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.weeklyMoodButton {
+    padding: 5px 10px;
+    margin-bottom: 5px;
+}
+
+.wellnessSummaryContent {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin: 15px 0;
+}
+
+.moodPercentage {
+    color: var(--text-accent);
+    text-align: right;
+}
+
+.relaxationTitle {
+    margin-bottom: 10px;
+}
+
+.relaxationButton {
+    padding: 8px 15px;
+}
+
+.trendChartContainer {
+    height: 100px;
+}
+
+.averageMoodText {
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+}
