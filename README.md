@@ -1,7 +1,7 @@
 # Pomna-sedmica
 Projektni repozitorij za tim Pomna-sedmica za izradu aplikacije Mindfulness u kontekstu predmeta Programsko inžinjerstvo
 
-# Čalanovi razvojnog time
+# Članovi razvojnog time
 * Tara Tafra, tara.tafra@fer.hr
 * Ema Hofer, ema.hofer@fer.hr
 * Martin Ante Rogošić, martin-ante.rogosic@fer.hr
