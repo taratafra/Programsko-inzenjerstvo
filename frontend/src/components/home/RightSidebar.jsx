@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import homeStyles from "../../pages/Home/Home.module.css";
-import styles from "./RightSidebar.module.css";
+import styles from "../../Home.module.css";
 
 export default function RightSidebar({ navigate }) {
   const [date, setDate] = useState(new Date());
@@ -16,12 +15,12 @@ export default function RightSidebar({ navigate }) {
   };
 
   return (
-    <div className={`${homeStyles.sidebar} ${homeStyles.calendarSidebar}`}>
-      <h3 className={styles.calendarTitle}>Kalendar</h3>
+    <div className={`${styles.sidebar} ${styles.calendarSidebar}`}>
+      <h3 style={{ textAlign: 'center', margin: '0 0 15px 0' }}>Kalendar</h3>
       <Calendar
         onChange={handleDateChange}
         value={date}
-        className={homeStyles.reactCalendar}
+        className={styles.reactCalendar}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import styles from "../../pages/Home/Home.module.css";
+import styles from "../../Home.module.css";
 import DailyMessages from "./DailyMessages";
 
 export default function Header({ navigate, user }) {

@@ -15,7 +15,7 @@ public class WebCorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
-        config.addAllowedOrigin("http://localhost:3000");
+        config.addAllowedOrigin("https://pomna-sedmica.onrender.com");
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

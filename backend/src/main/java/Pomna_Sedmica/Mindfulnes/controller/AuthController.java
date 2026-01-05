@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Map;
 
-@Profile("dev")
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "${CORS_ALLOWED_ORIGIN:http://localhost:3000}")
