@@ -8,6 +8,9 @@ spring:
     show-sql: true
   profiles:
     active: ${spring.profiles.active:prod} # fallback if not defined
+  reminders:
+    pollDelayMs: 30000
+
 
 ---
 

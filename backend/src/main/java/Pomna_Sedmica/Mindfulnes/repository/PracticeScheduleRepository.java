@@ -14,5 +14,8 @@ public interface PracticeScheduleRepository extends JpaRepository<PracticeSchedu
 
     void deleteByIdAndUserId(Long id, Long userId);
 
-    List<PracticeSchedule> findAllByEnabledTrue();
+    List<PracticeSchedule> findByEnabledTrue();
+
+    List<PracticeSchedule> findByUserIdAndEnabledTrue(Long userId);
+
 }
