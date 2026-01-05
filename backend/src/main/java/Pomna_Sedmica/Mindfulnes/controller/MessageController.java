@@ -3,7 +3,7 @@ package Pomna_Sedmica.Mindfulnes.controller;
 import Pomna_Sedmica.Mindfulnes.domain.dto.MessageResponse;
 import Pomna_Sedmica.Mindfulnes.domain.enums.TimeOfDay;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
-import Pomna_Sedmica.Mindfulnes.service.CurrentUserService;
+import Pomna_Sedmica.Mindfulnes.service.UserService;
 import Pomna_Sedmica.Mindfulnes.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ import java.time.ZoneId;
 public class MessageController {
 
     private final MessageService service;
-    private final CurrentUserService currentUserService;
+    private final UserService userService;
 
     // ---------------------- STARA RUTA (s userId) ----------------------
     /**
@@ -60,7 +60,7 @@ public class MessageController {
                                                          @RequestParam(required = false) String seed) {
 
         // Dohvati korisnika iz Auth0 JWT-a (ili kreiraj ako ne postoji)
-        User me = currentUserService.getOrCreate(jwt);
+        User me = userService.getOrCreateUserFromJwt(jwt);
 
         TimeOfDay tod = resolveTimeOfDay(timeOfDay);
         String finalSeed = (seed != null && !seed.isBlank())
