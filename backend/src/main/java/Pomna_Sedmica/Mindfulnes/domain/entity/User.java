@@ -9,11 +9,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor
-@Table(name = "users")
 public class User {
+    public User() {}
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

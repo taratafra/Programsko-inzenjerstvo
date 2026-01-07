@@ -1,7 +1,10 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import homeStyles from "../../pages/Home/Home.module.css";
 import styles from "./LeftSidebar.module.css";
 
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const getNavItemClass = (tabName) => {
     const isActive = (tabName === 'Home' && activeTab === 'General Information') || activeTab === tabName;
@@ -12,18 +15,29 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
     return `${homeStyles.profileAvatar} ${activeTab === 'Account' ? homeStyles.profileAvatarActive : ""}`;
   };
 
+  const handleHomeClick = () => {
+    if (location.pathname === '/home') {
+      setActiveTab('General Information');
+    } else {
+      navigate('/home');
+    }
+  };
+
   return (
     <div className={homeStyles.sidebar}>
       <div className={homeStyles.profileBox}>
-        <img src={user.picture} alt="Profile" className={getAvatarClass()}
+        <img src={user.profilePictureUrl || user.picture} alt="Profile" className={getAvatarClass()}
           onClick={() => setActiveTab('Account')} />
         <p className={homeStyles.profileName}>{user.name}</p>
         <p className={homeStyles.profileTitle}>{user.email}</p>
       </div>
 
       <ul className={homeStyles.navList}>
-        <li className={getNavItemClass("Home")} onClick={() => setActiveTab('General Information')}>
+        <li className={getNavItemClass("Home")} onClick={handleHomeClick}>
           🏠 Home
+        </li>
+        <li className={getNavItemClass("Videos")} onClick={() => navigate('/videos')}>
+          🎥 Videos
         </li>
         <li className={getNavItemClass("Calendar")} onClick={() => setActiveTab('Calendar')}>
           📅 Calendar
@@ -34,7 +48,7 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics
         </li>
-        <li classNameG={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
+        <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
           <span className={homeStyles.navItemLogout}>⚙️ Settings</span>
         </li>
         <li className={homeStyles.navItem} onClick={handleLogout}>

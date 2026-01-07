@@ -35,12 +35,22 @@ public class UserController {
     public ResponseEntity<UserDTOResponse> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) return ResponseEntity.status(401).build();
 
-        String email = jwt.getClaimAsString("email");
-        if (email == null) email = jwt.getSubject();
+        String sub = jwt.getSubject();
+        if (sub != null) {
+            var userBySub = userService.getUserByAuth0Id(sub);
+            if (userBySub.isPresent()) {
+                return ResponseEntity.ok(userBySub.get());
+            }
+        }
 
-        return userService.getUserByEmail(email)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.status(404).build());
+        String email = jwt.getClaimAsString("email");
+        if (email != null) {
+            return userService.getUserByEmail(email)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.status(404).build());
+        }
+
+        return ResponseEntity.status(404).build();
     }
 
 
@@ -49,9 +59,9 @@ public class UserController {
     public ResponseEntity<UserDTOResponse> completeOnboarding(@AuthenticationPrincipal Jwt jwt) {
 
         if (jwt == null) {
-            System.out.println("No JWT token found");
             return ResponseEntity.status(401).build();
         }
+
 
         String claim = extractEmailFromJwt(jwt);
 

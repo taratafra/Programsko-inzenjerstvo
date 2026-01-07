@@ -67,7 +67,6 @@ public class SecurityConfigProd {
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())
-                // JWT Resource Server with custom decoder and converter
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(customJwtDecoder())
@@ -78,21 +77,6 @@ public class SecurityConfigProd {
         return http.build();
     }
 
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        http.csrf(AbstractHttpConfigurer::disable);
-//
-//        return http
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/user/settings/**").authenticated()
-//                        .requestMatchers("/api/**", "/onboarding/**", "/messages/**").authenticated()
-//                        .anyRequest().permitAll()
-//                )
-//                .cors(Customizer.withDefaults())
-//                .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
-//                .build();
-//    }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -100,17 +84,14 @@ public class SecurityConfigProd {
 
     @Bean
     public JwtDecoder customJwtDecoder() {
-        // Auth0 decoder
         NimbusJwtDecoder auth0Decoder = JwtDecoders.fromIssuerLocation(
                 auth0Domain.endsWith("/") ? auth0Domain : auth0Domain + "/"
         );
 
-        // Local HMAC decoder
         NimbusJwtDecoder localDecoder = NimbusJwtDecoder
                 .withSecretKey(new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256"))
                 .build();
 
-        // Try Auth0 first, fallback to local
         return token -> {
             try {
                 return auth0Decoder.decode(token);
@@ -123,17 +104,14 @@ public class SecurityConfigProd {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         return new JwtAuthenticationConverter() {
-            // No @Override — works across Spring Security versions
             protected Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
                 Collection<GrantedAuthority> authorities = new ArrayList<>();
 
-                // Local JWT "role" claim
                 Object role = jwt.getClaim("role");
                 if (role != null) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toString()));
                 }
 
-                // Auth0 scopes (optional)
                 Object scope = jwt.getClaim("scope");
                 if (scope instanceof String scopeStr) {
                     for (String s : scopeStr.split(" ")) {
@@ -145,19 +123,4 @@ public class SecurityConfigProd {
             }
         };
     }
-
-//    @Bean
-//    public JwtDecoder jwtDecoder() {
-//        String jwkSetUri = "https://mindfulness.eu.auth0.com/.well-known/jwks.json";
-//
-//        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-//
-//        OAuth2TokenValidator<Jwt> audienceValidator = new AudienceValidator("http://localhost:8080");
-//        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer("https://mindfulness-application.eu.auth0.com/");
-//        OAuth2TokenValidator<Jwt> withAudience = new DelegatingOAuth2TokenValidator<>(withIssuer, audienceValidator);
-//
-//        jwtDecoder.setJwtValidator(withAudience);
-//
-//        return jwtDecoder;
-//    }
 }

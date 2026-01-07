@@ -24,14 +24,24 @@ import java.util.Set;
         name = "onboarding_surveys",
         uniqueConstraints = @UniqueConstraint(name = "uq_onboarding_user", columnNames = "user_id")
 )
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
-@Builder
+@Getter
+@Setter
 public class OnboardingSurvey {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    public OnboardingSurvey() {}
+
+    public OnboardingSurvey(Long userId, Integer stressLevel, Integer sleepQuality, MeditationExperience meditationExperience, Set<Goal> goals, String note) {
+        this.userId = userId;
+        this.stressLevel = stressLevel;
+        this.sleepQuality = sleepQuality;
+        this.meditationExperience = meditationExperience;
+        this.goals = goals;
+        this.note = note;
+    }
 
     @NotNull
     @Column(name = "user_id", nullable = false)
@@ -81,4 +91,6 @@ public class OnboardingSurvey {
     void onUpdate() {
         updatedAt = Instant.now();
     }
+
 }
+

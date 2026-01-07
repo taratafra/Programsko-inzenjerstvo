@@ -170,7 +170,8 @@ export default function Questionnaire() {
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
                 goals: goals,
-                note: noteText
+                note: noteText,
+                isTrainer: formData.get("isTrainer") === "true"
             };
 
             console.log("Submitting survey data:", surveyData);
@@ -401,6 +402,13 @@ export default function Questionnaire() {
                             rows={5}
                         />
                     </div>
+                </fieldset>
+
+                <fieldset className={styles.trainer}>
+                    <legend>Trainer Account (Testing)</legend>
+                    <label>
+                        <input type="checkbox" name="isTrainer" value="true" /> I am a trainer (Enable video uploads)
+                    </label>
                 </fieldset>
 
                 <fieldset className={styles.consent}>

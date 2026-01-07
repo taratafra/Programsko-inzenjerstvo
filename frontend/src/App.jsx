@@ -6,6 +6,7 @@ import Register from "./pages/Register/Register";
 import Home from "./pages/Home/Home";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Questionnaire from "./pages/Questionnaire/Questionnaire";
+import Videos from "./pages/Videos/Videos";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
+        <Route path="/videos" element={<Videos />} />
       </Route>
     </Routes>
   );

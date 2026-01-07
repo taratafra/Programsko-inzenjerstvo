@@ -18,11 +18,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    public User saveUser(User user) {
+        return userRepository.save(user);
+    }
 
     @Transactional
     public UserDTOResponse saveOrUpdateUser(SaveAuth0UserRequestDTO dto) {

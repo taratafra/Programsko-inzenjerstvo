@@ -1,15 +1,21 @@
 package Pomna_Sedmica.Mindfulnes.domain.dto;
 
-public record UserSettingsResponseDTO(
-        Long id,
-        String email,
-        String name,
-        String surname,
-        String bio,
-        String profilePictureUrl,
-        boolean isSocialLogin,
-        boolean firstLogin,
-        boolean requiresPasswordReset
-) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserSettingsResponseDTO {
+    private Long id;
+    private String email;
+    private String name;
+    private String surname;
+    private String bio;
+    private String profilePictureUrl;
+    private boolean isSocialLogin;
+    private boolean firstLogin;
+    private boolean requiresPasswordReset;
 }
 

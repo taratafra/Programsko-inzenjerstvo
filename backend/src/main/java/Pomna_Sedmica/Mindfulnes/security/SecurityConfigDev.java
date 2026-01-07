@@ -52,7 +52,6 @@ public class SecurityConfigDev {
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())
-                // JWT Resource Server with custom decoder and converter
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(customJwtDecoder())
@@ -65,17 +64,14 @@ public class SecurityConfigDev {
 
     @Bean
     public JwtDecoder customJwtDecoder() {
-        // Auth0 decoder
         NimbusJwtDecoder auth0Decoder = JwtDecoders.fromIssuerLocation(
                 auth0Domain.endsWith("/") ? auth0Domain : auth0Domain + "/"
         );
 
-        // Local HMAC decoder
         NimbusJwtDecoder localDecoder = NimbusJwtDecoder
                 .withSecretKey(new SecretKeySpec(jwtSecret.getBytes(), "HmacSHA256"))
                 .build();
 
-        // Try Auth0 first, fallback to local
         return token -> {
             try {
                 return auth0Decoder.decode(token);
@@ -88,17 +84,14 @@ public class SecurityConfigDev {
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         return new JwtAuthenticationConverter() {
-            // No @Override — works across Spring Security versions
             protected Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
                 Collection<GrantedAuthority> authorities = new ArrayList<>();
 
-                // Local JWT "role" claim
                 Object role = jwt.getClaim("role");
                 if (role != null) {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.toString()));
                 }
 
-                // Auth0 scopes (optional)
                 Object scope = jwt.getClaim("scope");
                 if (scope instanceof String scopeStr) {
                     for (String s : scopeStr.split(" ")) {
@@ -110,6 +103,7 @@ public class SecurityConfigDev {
             }
         };
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

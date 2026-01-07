@@ -11,14 +11,14 @@ public class OnboardingSurveyMapper {
     /** Kreiraj novi entitet iz DTO-a + userId iz rute. */
     public OnboardingSurvey toEntity(Long userId, OnboardingSurveyRequest req) {
         if (req == null) return null;
-        return OnboardingSurvey.builder()
-                .id(userId)
-                .stressLevel(req.stressLevel())
-                .sleepQuality(req.sleepQuality())
-                .meditationExperience(req.meditationExperience())
-                .goals(req.goals())
-                .note(req.note())
-                .build();
+        return new OnboardingSurvey(
+                userId,
+                req.stressLevel(),
+                req.sleepQuality(),
+                req.meditationExperience(),
+                req.goals(),
+                req.note()
+        );
     }
 
     /** Ažuriraj postojeći entitet iz DTO-a. */

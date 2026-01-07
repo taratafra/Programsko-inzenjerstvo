@@ -9,11 +9,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-@UtilityClass
 public class UserMapper {
 
-
-    public User toNewEntity(SaveAuth0UserRequestDTO request) {
+    public static User toNewEntity(SaveAuth0UserRequestDTO request) {
         User user = new User();
         user.setAuth0Id(request.auth0Id());
         user.setEmail(request.email());
@@ -31,7 +29,7 @@ public class UserMapper {
         return user;
     }
 
-    public User updateExisting(User existingUser, SaveAuth0UserRequestDTO request) {
+    public static User updateExisting(User existingUser, SaveAuth0UserRequestDTO request) {
         existingUser.setName(request.name());
         existingUser.setSurname(request.surname());
         existingUser.setAuth0Id(request.auth0Id());
@@ -41,7 +39,7 @@ public class UserMapper {
         return existingUser;
     }
 
-    public UserDTOResponse toDTO(User user) {
+    public static UserDTOResponse toDTO(User user) {
         return new UserDTOResponse(
                 user.getId(),
                 user.getName(),
