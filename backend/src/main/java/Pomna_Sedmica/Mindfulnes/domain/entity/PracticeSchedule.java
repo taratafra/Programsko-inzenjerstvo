@@ -16,73 +16,63 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(
-        name = "practice_schedules",
-        indexes = {
-                @Index(name = "idx_practice_schedules_user_id", columnList = "user_id"),
-                @Index(name = "idx_practice_schedules_trainer_id", columnList = "trainer_id")
-        }
-)
+@Table(name = "practice_schedule")
 public class PracticeSchedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // schedule pripada useru
-    @Column(name = "user_id", nullable = false)
+    // vlasnik schedule-a
+    @Column(nullable = false)
     private Long userId;
 
-    // OBAVEZNO: schedule mora imati trenera
-    @Column(name = "trainer_id", nullable = false)
+    // obavezno: povezani trener (primarni ili override)
+    @Column(nullable = false)
     private Long trainerId;
 
     @Column(nullable = false)
     private String title;
 
-    // "08:00"
-    @Column(name = "start_time", nullable = false)
+    @Column(nullable = false)
     private LocalTime startTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "repeat_type", nullable = false)
+    @Column(nullable = false)
     private RepeatType repeatType;
 
-    /**
-     * Koristi se samo kad je repeatType = WEEKLY.
-     */
+    // kod DAILY može biti prazno, kod WEEKLY mora imati dane
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "practice_schedule_days",
-            joinColumns = @JoinColumn(name = "schedule_id")
-    )
+    @CollectionTable(name = "practice_schedule_days", joinColumns = @JoinColumn(name = "schedule_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week", nullable = false)
+    @Column(name = "day_of_week")
     private Set<DayOfWeek> daysOfWeek = new HashSet<>();
 
     @Column(nullable = false)
     private String timezone;
 
-    @Column(name = "reminder_minutes_before", nullable = false)
+    @Column(nullable = false)
     private Integer reminderMinutesBefore;
 
     @Column(nullable = false)
     private boolean enabled;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(nullable = false)
     private Instant updatedAt;
 
     @PrePersist
     void prePersist() {
         Instant now = Instant.now();
-        if (createdAt == null) createdAt = now;
-        if (updatedAt == null) updatedAt = now;
+        createdAt = now;
+        updatedAt = now;
 
         if (reminderMinutesBefore == null) reminderMinutesBefore = 10;
         if (timezone == null || timezone.isBlank()) timezone = "Europe/Zagreb";
+        // enabled default
+        // (builder može setati, ali ovo spašava greške)
     }
 
     @PreUpdate

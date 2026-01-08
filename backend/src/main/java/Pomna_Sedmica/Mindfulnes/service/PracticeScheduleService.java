@@ -4,6 +4,7 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.PracticeScheduleRequest;
 import Pomna_Sedmica.Mindfulnes.domain.entity.PracticeSchedule;
 import Pomna_Sedmica.Mindfulnes.domain.enums.RepeatType;
 import Pomna_Sedmica.Mindfulnes.repository.PracticeScheduleRepository;
+import Pomna_Sedmica.Mindfulnes.repository.UserTrainerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class PracticeScheduleService {
     public static final String DEFAULT_TZ = "Europe/Zagreb";
 
     private final PracticeScheduleRepository repo;
-    private final TrainerLinkService trainerLinks;
+    private final UserTrainerRepository userTrainers;
 
     public List<PracticeSchedule> listForUser(Long userId) {
         return repo.findAllByUserIdOrderByStartTimeAsc(userId);
@@ -29,12 +30,10 @@ public class PracticeScheduleService {
 
     public PracticeSchedule createForUser(Long userId, PracticeScheduleRequest req) {
         validate(req);
-
-        Long trainerId = resolveTrainerIdOrThrow(userId, req.trainerId());
+        enforceHasTrainer(userId);
 
         PracticeSchedule s = PracticeSchedule.builder()
                 .userId(userId)
-                .trainerId(trainerId)
                 .title(req.title().trim())
                 .startTime(req.startTime())
                 .repeatType(req.repeatType())
@@ -49,13 +48,11 @@ public class PracticeScheduleService {
 
     public PracticeSchedule updateForUser(Long userId, Long scheduleId, PracticeScheduleRequest req) {
         validate(req);
+        enforceHasTrainer(userId);
 
         PracticeSchedule s = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
-        Long trainerId = resolveTrainerIdOrThrow(userId, req.trainerId());
-
-        s.setTrainerId(trainerId);
         s.setTitle(req.title().trim());
         s.setStartTime(req.startTime());
         s.setRepeatType(req.repeatType());
@@ -73,6 +70,14 @@ public class PracticeScheduleService {
         repo.deleteByIdAndUserId(scheduleId, userId);
     }
 
+    private void enforceHasTrainer(Long userId) {
+        boolean hasTrainer = userTrainers.existsByUserId(userId);
+        if (!hasTrainer) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "User must be linked to a trainer before scheduling practice");
+        }
+    }
+
     private void validate(PracticeScheduleRequest req) {
         if (req.repeatType() == RepeatType.WEEKLY) {
             if (req.daysOfWeek() == null || req.daysOfWeek().isEmpty()) {
@@ -83,17 +88,8 @@ public class PracticeScheduleService {
 
     private Set<DayOfWeek> normalizeDays(RepeatType type, Set<DayOfWeek> days) {
         if (type == RepeatType.DAILY) {
-            return new HashSet<>();
+            return new HashSet<>(); // ignoriramo
         }
         return days == null ? new HashSet<>() : new HashSet<>(days);
-    }
-
-    private Long resolveTrainerIdOrThrow(Long userId, Long trainerIdFromReq) {
-        if (trainerIdFromReq != null) return trainerIdFromReq;
-
-        Long primary = trainerLinks.getPrimaryTrainerIdOrNull(userId);
-        if (primary != null) return primary;
-
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You must select a trainer before scheduling a practice");
     }
 }

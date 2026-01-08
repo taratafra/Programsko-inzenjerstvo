@@ -17,4 +17,13 @@ public interface UserTrainerRepository extends JpaRepository<UserTrainer, Long> 
     Optional<UserTrainer> findByUserIdAndPrimaryTrainerTrue(Long userId);
 
     void deleteByUserIdAndTrainerId(Long userId, Long trainerId);
+
+    Optional<UserTrainer> findByUserId(Long userId);
+
+    void deleteByUserId(Long userId);
+
+    boolean existsByUserId(Long userId);
 }
+
+
+

@@ -28,47 +28,55 @@ public class TrainerLinkService {
         return links.findAllByTrainerId(trainerId);
     }
 
+    /**
+     * Link user -> trainer.
+     * Ako makePrimary=true: postavlja tog trenera kao primary (i gasi prethodnog primary ako postoji).
+     */
     @Transactional
     public UserTrainer linkTrainer(Long userId, Long trainerId, boolean makePrimary) {
-        // provjeri da trainer postoji i da je stvarno TRAINER
+
+        // 1) Provjeri da trainer postoji i da je TRAINER
         User trainer = users.findById(trainerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
-
         if (trainer.getRole() != Role.TRAINER) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selected user is not a TRAINER");
         }
 
+        // 2) Ako link već postoji -> samo eventualno promijeni primary
         UserTrainer ut = links.findByUserIdAndTrainerId(userId, trainerId)
-                .orElseGet(() -> UserTrainer.builder()
-                        .userId(userId)
-                        .trainerId(trainerId)
-                        .primaryTrainer(false)
-                        .build()
-                );
+                .orElseGet(() -> {
+                    UserTrainer created = new UserTrainer();
+                    created.setUserId(userId);
+                    created.setTrainerId(trainerId);
+                    created.setPrimaryTrainer(false);
+                    return created;
+                });
 
-        ut = links.save(ut);
-
+        // 3) Ako treba primary, ugasi stari + upali novi
         if (makePrimary) {
-            setPrimaryTrainer(userId, trainerId);
+            links.findByUserIdAndPrimaryTrainerTrue(userId).ifPresent(existing -> {
+                if (!existing.getTrainerId().equals(trainerId)) {
+                    existing.setPrimaryTrainer(false);
+                    links.save(existing);
+                }
+            });
             ut.setPrimaryTrainer(true);
         }
 
-        return ut;
+        return links.save(ut);
     }
 
     @Transactional
     public void unlinkTrainer(Long userId, Long trainerId) {
-        // ako briše primary, samo ga brišemo (user poslije mora postaviti novog)
         links.deleteByUserIdAndTrainerId(userId, trainerId);
     }
 
     @Transactional
     public void setPrimaryTrainer(Long userId, Long trainerId) {
-        // mora postojati link
+
         UserTrainer target = links.findByUserIdAndTrainerId(userId, trainerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer link not found"));
 
-        // ugasi stari primary
         links.findByUserIdAndPrimaryTrainerTrue(userId).ifPresent(existing -> {
             if (!existing.getTrainerId().equals(trainerId)) {
                 existing.setPrimaryTrainer(false);
@@ -76,7 +84,6 @@ public class TrainerLinkService {
             }
         });
 
-        // upali novi primary
         target.setPrimaryTrainer(true);
         links.save(target);
     }
@@ -85,5 +92,15 @@ public class TrainerLinkService {
         return links.findByUserIdAndPrimaryTrainerTrue(userId)
                 .map(UserTrainer::getTrainerId)
                 .orElse(null);
+    }
+
+    /**
+     * Za schedule: user smije koristiti samo trenera na kojeg je linkan.
+     */
+    public void assertUserLinkedToTrainer(Long userId, Long trainerId) {
+        boolean exists = links.findByUserIdAndTrainerId(userId, trainerId).isPresent();
+        if (!exists) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User is not linked to selected trainer");
+        }
     }
 }

@@ -1,19 +1,17 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
-import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerLinkRequest;
-import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerLinkResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.service.TrainerLinkService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/trainers")
@@ -23,76 +21,87 @@ public class TrainerLinkController {
     private final TrainerLinkService trainerLinks;
     private final UserService userService;
 
+    // ---------------------- REAL (Auth0 USER token) ----------------------
+
     /**
-     * USER -> list trenere na koje je spojen
-     * GET /trainers/me
+     * User odabere primarnog trenera.
+     * POST /trainers/me/primary
+     * body: {"trainerId": 5}
      */
-    @GetMapping("/me")
-    public ResponseEntity<List<TrainerLinkResponse>> myTrainers(@AuthenticationPrincipal Jwt jwt) {
+    @PostMapping("/me/primary")
+    public ResponseEntity<Void> setMyPrimaryTrainer(@AuthenticationPrincipal Jwt jwt,
+                                                    @RequestBody Map<String, Object> body) {
         User me = userService.getOrCreateUserFromJwt(jwt);
 
-        var out = trainerLinks.listMyTrainers(me.getId()).stream()
-                .map(TrainerLinkResponse::from)
+        Object raw = body.get("trainerId");
+        if (raw == null) return ResponseEntity.badRequest().build();
+
+        Long trainerId = Long.valueOf(String.valueOf(raw));
+        trainerLinks.linkTrainer(me.getId(), trainerId, true);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * GET /trainers/me/primary -> {"trainerId": 5} ili {"trainerId": null}
+     */
+    @GetMapping("/me/primary")
+    public ResponseEntity<Map<String, Object>> getMyPrimaryTrainer(@AuthenticationPrincipal Jwt jwt) {
+        User me = userService.getOrCreateUserFromJwt(jwt);
+        Long trainerId = trainerLinks.getPrimaryTrainerIdOrNull(me.getId());
+        return ResponseEntity.ok(Map.of("trainerId", trainerId));
+    }
+
+    /**
+     * Ako sam ja trener: vrati userId-e koji su spojeni na mene.
+     * GET /trainers/me/users
+     */
+    @GetMapping("/me/users")
+    public ResponseEntity<List<Long>> getUsersForMeAsTrainer(@AuthenticationPrincipal Jwt jwt) {
+        User me = userService.getOrCreateUserFromJwt(jwt);
+
+        var userIds = trainerLinks.listForTrainer(me.getId())
+                .stream()
+                .map(link -> link.getUserId())
+                .distinct()
                 .toList();
 
-        return ResponseEntity.ok(out);
+        return ResponseEntity.ok(userIds);
     }
 
-    /**
-     * USER -> poveži trenera (i opcionalno set primary)
-     * POST /trainers/me
-     */
-    @PostMapping("/me")
-    public ResponseEntity<TrainerLinkResponse> linkTrainer(@AuthenticationPrincipal Jwt jwt,
-                                                           @Valid @RequestBody TrainerLinkRequest req) {
-        User me = userService.getOrCreateUserFromJwt(jwt);
 
-        boolean makePrimary = req.primary() != null && req.primary();
-        var created = trainerLinks.linkTrainer(me.getId(), req.trainerId(), makePrimary);
-
-        return ResponseEntity
-                .created(URI.create("/trainers/me"))
-                .body(TrainerLinkResponse.from(created));
-    }
+    // ---------------------- DEV/TEST (H2/Postman bez user tokena) ----------------------
+    // Ove metode postoje SAMO kad je aktivan "dev" profil.
 
     /**
-     * USER -> postavi primary trenera (mora već biti linkan)
-     * PUT /trainers/me/primary/{trainerId}
+     * POST /trainers/{userId}/primary
+     * body: {"trainerId": 5}
      */
-    @PutMapping("/me/primary/{trainerId}")
-    public ResponseEntity<Void> setPrimary(@AuthenticationPrincipal Jwt jwt,
-                                           @PathVariable Long trainerId) {
-        User me = userService.getOrCreateUserFromJwt(jwt);
+    @Profile("dev")
+    @PostMapping("/{userId}/primary")
+    public ResponseEntity<Void> setPrimaryDev(@PathVariable Long userId,
+                                              @RequestBody Map<String, Object> body) {
 
-        trainerLinks.setPrimaryTrainer(me.getId(), trainerId);
+        Object raw = body.get("trainerId");
+        if (raw == null) return ResponseEntity.badRequest().build();
+
+        Long trainerId = Long.valueOf(String.valueOf(raw));
+        trainerLinks.linkTrainer(userId, trainerId, true);
+
         return ResponseEntity.noContent().build();
     }
 
     /**
-     * USER -> unlink trenera
-     * DELETE /trainers/me/{trainerId}
+     * GET /trainers/{trainerId}/users  (dev-only)
      */
-    @DeleteMapping("/me/{trainerId}")
-    public ResponseEntity<Void> unlink(@AuthenticationPrincipal Jwt jwt,
-                                       @PathVariable Long trainerId) {
-        User me = userService.getOrCreateUserFromJwt(jwt);
-
-        trainerLinks.unlinkTrainer(me.getId(), trainerId);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * TRAINER (ili admin) -> list usere koji su spojeni na trenera
-     * GET /trainers/{trainerId}/users
-     *
-     * (Za sada nema role-guard u ovom kontroleru; možete kasnije dodati u SecurityConfig.)
-     */
+    @Profile("dev")
     @GetMapping("/{trainerId}/users")
-    public ResponseEntity<List<TrainerLinkResponse>> usersForTrainer(@PathVariable Long trainerId) {
-        var out = trainerLinks.listUsersForTrainer(trainerId).stream()
-                .map(TrainerLinkResponse::from)
+    public ResponseEntity<List<Long>> usersForTrainerDev(@PathVariable Long trainerId) {
+        var ids = trainerLinks.listForTrainer(trainerId)
+                .stream()
+                .map(link -> link.getUserId())
+                .distinct()
                 .toList();
-
-        return ResponseEntity.ok(out);
+        return ResponseEntity.ok(ids);
     }
 }

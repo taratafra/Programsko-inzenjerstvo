@@ -17,7 +17,7 @@ public record PracticeScheduleRequest(
         @NotNull(message = "repeatType is required")
         RepeatType repeatType,
 
-        // Za DAILY moze biti null ili prazno
+        // Za WEEKLY mora biti popunjeno; za DAILY moze biti null/prazno
         Set<DayOfWeek> daysOfWeek,
 
         // Optional, default Europe/Zagreb
@@ -31,10 +31,9 @@ public record PracticeScheduleRequest(
         Boolean enabled,
 
         /**
-         * Optional:
-         * - ako dođe -> koristi ga (override)
-         * - ako ne dođe -> uzmi primary trainer iz user_trainer
-         * - ako nema ni primary -> 400 (ne može schedule bez trenera)
+         * Trainer kojeg user bira u UI-u (override).
+         * Ako je null, backend ce probati koristiti primary trainer (ako postoji).
+         * Ako nema ni trainerId ni primary -> 400.
          */
         Long trainerId
 ) {}
