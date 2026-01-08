@@ -28,5 +28,13 @@ public record PracticeScheduleRequest(
         Integer reminderMinutesBefore,
 
         // Optional; default true
-        Boolean enabled
+        Boolean enabled,
+
+        /**
+         * Optional:
+         * - ako dođe -> koristi ga (override)
+         * - ako ne dođe -> uzmi primary trainer iz user_trainer
+         * - ako nema ni primary -> 400 (ne može schedule bez trenera)
+         */
+        Long trainerId
 ) {}

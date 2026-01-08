@@ -21,6 +21,7 @@ public class PracticeScheduleService {
     public static final String DEFAULT_TZ = "Europe/Zagreb";
 
     private final PracticeScheduleRepository repo;
+    private final TrainerLinkService trainerLinks;
 
     public List<PracticeSchedule> listForUser(Long userId) {
         return repo.findAllByUserIdOrderByStartTimeAsc(userId);
@@ -29,8 +30,11 @@ public class PracticeScheduleService {
     public PracticeSchedule createForUser(Long userId, PracticeScheduleRequest req) {
         validate(req);
 
+        Long trainerId = resolveTrainerIdOrThrow(userId, req.trainerId());
+
         PracticeSchedule s = PracticeSchedule.builder()
                 .userId(userId)
+                .trainerId(trainerId)
                 .title(req.title().trim())
                 .startTime(req.startTime())
                 .repeatType(req.repeatType())
@@ -49,6 +53,9 @@ public class PracticeScheduleService {
         PracticeSchedule s = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
+        Long trainerId = resolveTrainerIdOrThrow(userId, req.trainerId());
+
+        s.setTrainerId(trainerId);
         s.setTitle(req.title().trim());
         s.setStartTime(req.startTime());
         s.setRepeatType(req.repeatType());
@@ -61,7 +68,6 @@ public class PracticeScheduleService {
     }
 
     public void deleteForUser(Long userId, Long scheduleId) {
-        // provjeri ownership
         repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
         repo.deleteByIdAndUserId(scheduleId, userId);
@@ -73,15 +79,21 @@ public class PracticeScheduleService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "daysOfWeek is required for WEEKLY schedules");
             }
         }
-        if (req.repeatType() == RepeatType.DAILY) {
-            // daysOfWeek može biti prazno/null -> ok
-        }
     }
 
     private Set<DayOfWeek> normalizeDays(RepeatType type, Set<DayOfWeek> days) {
         if (type == RepeatType.DAILY) {
-            return new HashSet<>(); // ignoriramo
+            return new HashSet<>();
         }
         return days == null ? new HashSet<>() : new HashSet<>(days);
+    }
+
+    private Long resolveTrainerIdOrThrow(Long userId, Long trainerIdFromReq) {
+        if (trainerIdFromReq != null) return trainerIdFromReq;
+
+        Long primary = trainerLinks.getPrimaryTrainerIdOrNull(userId);
+        if (primary != null) return primary;
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You must select a trainer before scheduling a practice");
     }
 }

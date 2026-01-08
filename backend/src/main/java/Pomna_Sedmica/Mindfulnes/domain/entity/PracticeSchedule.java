@@ -16,9 +16,11 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "practice_schedules",
+@Table(
+        name = "practice_schedules",
         indexes = {
-                @Index(name = "idx_practice_schedules_user_id", columnList = "user_id")
+                @Index(name = "idx_practice_schedules_user_id", columnList = "user_id"),
+                @Index(name = "idx_practice_schedules_trainer_id", columnList = "trainer_id")
         }
 )
 public class PracticeSchedule {
@@ -27,9 +29,13 @@ public class PracticeSchedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Vezemo schedule za usera preko njegovog ID-a (kao i OnboardingSurvey)
+    // schedule pripada useru
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    // OBAVEZNO: schedule mora imati trenera
+    @Column(name = "trainer_id", nullable = false)
+    private Long trainerId;
 
     @Column(nullable = false)
     private String title;
@@ -44,7 +50,6 @@ public class PracticeSchedule {
 
     /**
      * Koristi se samo kad je repeatType = WEEKLY.
-     * Spremamo kao stringove (MONDAY, TUESDAY...) radi jednostavnosti.
      */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
@@ -55,10 +60,6 @@ public class PracticeSchedule {
     @Column(name = "day_of_week", nullable = false)
     private Set<DayOfWeek> daysOfWeek = new HashSet<>();
 
-    /**
-     * IANA timezone string, npr. "Europe/Zagreb".
-     * Default postavljamo u service/controller ako ne dođe u requestu.
-     */
     @Column(nullable = false)
     private String timezone;
 
@@ -82,8 +83,6 @@ public class PracticeSchedule {
 
         if (reminderMinutesBefore == null) reminderMinutesBefore = 10;
         if (timezone == null || timezone.isBlank()) timezone = "Europe/Zagreb";
-        // enabled default ako netko zaboravi poslati
-        // (builder može setati, ali ovo spašava greške)
     }
 
     @PreUpdate
