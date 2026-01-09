@@ -46,7 +46,23 @@ function Register() {
     return errors;
   };
 
-    const validateInputs = () => {
+  const isOlderThan12= (dateString) => {
+    const today= new Date();
+    const birthDate=new Date(dateString);
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age >= 12;
+  };
+
+  const validateInputs = () => {
     const newErrors = {};
     if (!regData.email.trim()) newErrors.email = "Please enter an email.";
     if (!regData.password.trim()) newErrors.password = "Please enter a password.";
@@ -56,7 +72,9 @@ function Register() {
     if (!regData.surname.trim()) newErrors.surname = "Please enter your surname.";
     if (!regData.dateOfBirth.trim())
       newErrors.dateOfBirth = "Please enter your date of birth.";
-
+    if(!isOlderThan12(regData.dateOfBirth)){
+      newErrors.dateOfBirth ="You must be at least 12 years old.";
+    }
     if (!regData.password.trim()) {
       newErrors.password = "Please enter a password.";
     } else {

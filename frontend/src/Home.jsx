@@ -9,6 +9,8 @@ import RightSidebar from "./components/home/RightSidebar";
 import DashboardTabs from "./components/home/DashboardTabs";
 import GeneralInfoGrid from "./components/home/GeneralInfoGrid";
 
+import Settings from "./components/home/tabPanel/Settings";
+
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
     const [user, setUser] = useState(null);
@@ -218,6 +220,10 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
+                
+                case 'Settings':
+                    return <Settings />;
+                
 
                 default:
                     return <GeneralInfoGrid />;

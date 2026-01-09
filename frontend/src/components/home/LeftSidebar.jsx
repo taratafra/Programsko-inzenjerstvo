@@ -1,7 +1,5 @@
 import styles from "../../Home.module.css";
-
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
-  
   const getNavItemClass = (tabName) => {
     const isActive = (tabName === 'Home' && activeTab === 'General Information') || activeTab === tabName;
     return `${styles.navItem} ${isActive ? styles.navItemActive : ""}`;
@@ -33,7 +31,7 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("Statistics")} onClick={() => setActiveTab('Statistics')} style={{ marginBottom: "80px" }}>
           📈 Statistics
         </li>
-        <li classNameG={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
+        <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
           <span className={styles.navItemLogout}>⚙️ Settings</span>
         </li>
         <li className={styles.navItem} onClick={handleLogout}>
