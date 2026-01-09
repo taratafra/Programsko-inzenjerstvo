@@ -262,12 +262,27 @@ export default function Questionnaire() {
                         <input id="name" name="name" type="text" placeholder="e.g., Ana Horvat" autoComplete="name" />
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label htmlFor="email">Email</label>
                         <input id="email" name="email" type="email" placeholder="e.g., ana@example.com" autoComplete="email" />
-                    </div>
-                </fieldset>
+                    </div> */}
 
+                    {/* <div className="register-step-content">             
+                        <p>What type of account would you like to create?</p>             
+                        <div className="register-account-type">                 
+                            <label className="account-option">                     
+                                <input type="radio" name="accountType" value="user" checked={accountType === "user"} 
+                                    onChange={(e) => onChange("accountType", e.target.value)}/>                     
+                                <span>User</span>                 
+                            </label>                 
+                            <label className="account-option">                     
+                                <input type="radio" name="accountType" value="trainer" checked={accountType === "trainer"}
+                                    onChange={(e) => onChange("accountType", e.target.value)}/>                     
+                                <span>Trainer</span>                 
+                            </label>             
+                        </div>   
+                    </div> */}
+                </fieldset>
                 <fieldset className={styles.wellbeing}>
                     <legend>Wellbeing</legend>
 

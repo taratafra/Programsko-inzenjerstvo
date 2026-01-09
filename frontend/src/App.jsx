@@ -1,5 +1,4 @@
 import { useState } from "react";
-import './App.css';
 import Login from './Login';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Register from "./Register";
