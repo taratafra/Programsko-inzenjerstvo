@@ -50,7 +50,7 @@ public class ReminderEngineService {
             if (occOpt.isEmpty()) continue;
 
             Instant occurrenceStartAt = occOpt.get();
-            int minutesBefore = s.getReminderMinutesBefore() == null ? 10 : s.getReminderMinutesBefore();
+            int minutesBefore = (s.getReminderMinutesBefore() == null) ? 10 : s.getReminderMinutesBefore();
             Instant reminderAt = occurrenceStartAt.minus(Duration.ofMinutes(minutesBefore));
 
             // reminder je "due" ako je unutar polling prozora
@@ -58,14 +58,14 @@ public class ReminderEngineService {
                 continue;
             }
 
-            // user mora postojati
             Optional<User> userOpt = users.findById(s.getUserId());
             if (userOpt.isEmpty()) continue;
+
             User u = userOpt.get();
 
             // šaljemo oba kanala (email + in-app)
-            sendOnce(s, u, ReminderChannel.EMAIL, reminderAt, occurrenceStartAt);
-            sendOnce(s, u, ReminderChannel.PUSH, reminderAt, occurrenceStartAt);
+            sendOnce(s, u, ReminderChannel.EMAIL, reminderAt, occurrenceStartAt, minutesBefore);
+            sendOnce(s, u, ReminderChannel.PUSH, reminderAt, occurrenceStartAt, minutesBefore);
         }
     }
 
@@ -73,10 +73,12 @@ public class ReminderEngineService {
                           User u,
                           ReminderChannel channel,
                           Instant reminderAt,
-                          Instant occurrenceStartAt) {
+                          Instant occurrenceStartAt,
+                          int minutesBefore) {
 
+        // idempotent: ako je već poslano (ili pokušano), ne šalji ponovno
         if (logs.existsByScheduleIdAndChannelAndReminderAt(s.getId(), channel, reminderAt)) {
-            return; // već poslano (ili pokušano)
+            return;
         }
 
         ReminderLog log = ReminderLog.builder()
@@ -84,16 +86,18 @@ public class ReminderEngineService {
                 .scheduleId(s.getId())
                 .channel(channel)
                 .status(ReminderStatus.PENDING)
-                .reminderAt(reminderAt)
+                .sentAt(reminderAt)
                 .build();
 
         log = logs.save(log);
 
         try {
+            String messageText = buildReminderText(s, occurrenceStartAt, minutesBefore);
+
             if (channel == ReminderChannel.EMAIL) {
-                emailSender.send(u, s, occurrenceStartAt);
+                emailSender.send(u, messageText);     // ✅ novo sučelje
             } else {
-                pushSender.send(u, s, occurrenceStartAt);
+                pushSender.send(u, messageText);      // ✅ novo sučelje
             }
 
             log.setStatus(ReminderStatus.SENT);
@@ -107,6 +111,12 @@ public class ReminderEngineService {
             log.setErrorMessage(ex.getMessage());
             logs.save(log);
         }
+    }
+
+    private String buildReminderText(PracticeSchedule s, Instant occurrenceStartAt, int minutesBefore) {
+        // jednostavna poruka za sad (kasnije možeš obogatiti)
+        return "Reminder: \"" + s.getTitle() + "\" starts in " + minutesBefore
+                + " minutes (at " + occurrenceStartAt + ").";
     }
 
     /**
@@ -141,7 +151,6 @@ public class ReminderEngineService {
         Set<DayOfWeek> days = s.getDaysOfWeek();
         if (days == null || days.isEmpty()) return Optional.empty();
 
-        // pogledaj od danas do +7 dana
         ZonedDateTime best = null;
         for (int i = 0; i <= 7; i++) {
             LocalDate d = now.toLocalDate().plusDays(i);
@@ -153,8 +162,6 @@ public class ReminderEngineService {
             if (best == null || cand.isBefore(best)) best = cand;
         }
 
-        // Ako ništa u idućih 7 dana (npr. sad je nakon vremena na zadani dan),
-        // uzmi sljedeći tjedan za najbliži dan.
         if (best == null) {
             DayOfWeek minDay = days.stream().min(Comparator.naturalOrder()).orElse(null);
             if (minDay == null) return Optional.empty();
