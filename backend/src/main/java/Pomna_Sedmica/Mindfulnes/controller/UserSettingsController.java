@@ -4,10 +4,12 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.*;
 import Pomna_Sedmica.Mindfulnes.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
@@ -19,6 +21,10 @@ import java.util.Map;
 public class UserSettingsController {
 
     private final UserSettingsService userSettingsService;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${auth0.domain}")
+    private String auth0Domain;
 
     private String extractEmailFromJwt(Jwt jwt) {
         if (jwt == null) {
@@ -26,22 +32,74 @@ public class UserSettingsController {
             throw new RuntimeException("JWT token is null");
         }
 
+        log.info("=== JWT DEBUG INFO ===");
+        log.info("All JWT claims: {}", jwt.getClaims());
 
-        String email = jwt.getSubject(); // This should be the email
-        log.info("JWT subject (should be email): {}", email);
+        String email = null;
 
-        if (email == null || !email.contains("@")) {
-            email = jwt.getClaimAsString("email");
-            log.info("JWT email claim: {}", email);
+        // Try to get email from JWT claims first
+        email = jwt.getClaimAsString("email");
+        if (email != null && email.contains("@")) {
+            log.info("Email found in JWT 'email' claim: {}", email);
+            return email;
         }
 
-        if (email == null) {
-            log.error("Unable to extract email from JWT token. Available claims: {}", jwt.getClaims());
-            throw new RuntimeException("Unable to extract email from JWT token");
+        // Check if subject is an email
+        email = jwt.getSubject();
+        if (email != null && email.contains("@")) {
+            log.info("Email found in JWT subject: {}", email);
+            return email;
         }
 
-        log.info("Successfully extracted email from JWT: {}", email);
-        return email;
+        // For Auth0 tokens without email claim, fetch from userinfo endpoint
+        String issuer = jwt.getIssuer().toString();
+        if (issuer.contains("auth0.com")) {
+            log.info("Auth0 token detected, fetching email from userinfo endpoint");
+            return fetchEmailFromAuth0Userinfo(jwt);
+        }
+
+        log.error("Unable to extract email from JWT token. Available claims: {}", jwt.getClaims());
+        throw new RuntimeException("Unable to extract email from JWT token");
+    }
+
+    private String fetchEmailFromAuth0Userinfo(Jwt jwt) {
+        try {
+            String userinfoUrl = auth0Domain.endsWith("/")
+                    ? auth0Domain + "userinfo"
+                    : auth0Domain + "/userinfo";
+
+            log.info("Fetching user info from: {}", userinfoUrl);
+
+            // Create headers with the access token
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setBearerAuth(jwt.getTokenValue());
+
+            org.springframework.http.HttpEntity<String> entity =
+                    new org.springframework.http.HttpEntity<>(headers);
+
+            // Call Auth0 userinfo endpoint
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    userinfoUrl,
+                    org.springframework.http.HttpMethod.GET,
+                    entity,
+                    Map.class
+            );
+
+            Map<String, Object> userInfo = response.getBody();
+            log.info("Auth0 userinfo response: {}", userInfo);
+
+            if (userInfo != null && userInfo.containsKey("email")) {
+                String email = (String) userInfo.get("email");
+                log.info("Email fetched from Auth0 userinfo: {}", email);
+                return email;
+            }
+
+            throw new RuntimeException("No email in Auth0 userinfo response");
+
+        } catch (Exception e) {
+            log.error("Error fetching email from Auth0 userinfo: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to fetch email from Auth0: " + e.getMessage());
+        }
     }
 
     @GetMapping
@@ -58,17 +116,26 @@ public class UserSettingsController {
     }
 
     @PutMapping("/profile")
-    public ResponseEntity<UserSettingsResponseDTO> updateProfileSettings(
+    public ResponseEntity<?> updateProfileSettings(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody UpdateUserSettingsRequestDTO request) {
         try {
-            log.info("Updating profile settings - JWT received");
+            log.info("=== UPDATE PROFILE REQUEST ===");
             String email = extractEmailFromJwt(jwt);
+            log.info("Extracted email: {}", email);
+
             UserSettingsResponseDTO updatedSettings = userSettingsService.updateUserSettings(email, request);
+            log.info("Profile updated successfully for: {}", email);
+
             return ResponseEntity.ok(updatedSettings);
         } catch (RuntimeException e) {
-            log.error("Error updating profile settings: {}", e.getMessage());
-            return ResponseEntity.status(401).build();
+            log.error("Error updating profile settings: {}", e.getMessage(), e);
+            return ResponseEntity.status(401)
+                    .body(Map.of("error", "Authentication failed: " + e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error updating profile settings: {}", e.getMessage(), e);
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Internal server error: " + e.getMessage()));
         }
     }
 
@@ -117,7 +184,6 @@ public class UserSettingsController {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication failed: " + e.getMessage()));
         }
     }
-
 
     @GetMapping("/check-first-login")
     public ResponseEntity<?> checkFirstLogin(@AuthenticationPrincipal Jwt jwt) {
