@@ -1,11 +1,10 @@
 import { useState } from "react";
-import Login from './Login';
-import "./styles/App.css"
+import Login from './pages/Login/Login';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import Register from "./Register";
-import Home from "./Home";
-import ProtectedRoute from "./ProtectedRoute";
-import Questionnaire from "./Questionnaire";
+import Register from "./pages/Register/Register.jsx";
+import Home from "./pages/Home/Home.jsx";
+import ProtectedRoute from "./utils/ProtectedRoute";
+import Questionnaire from "./pages/Questionnaire/Questionnaire.jsx";
 
 function App() {
   return (

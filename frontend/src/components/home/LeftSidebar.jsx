@@ -1,22 +1,14 @@
-import styles from "../../Home.module.css";
-
+import styles from "../../pages/Home/Home.module.css";
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
-  
   const getNavItemClass = (tabName) => {
     const isActive = (tabName === 'Home' && activeTab === 'General Information') || activeTab === tabName;
     return `${styles.navItem} ${isActive ? styles.navItemActive : ""}`;
   };
 
-  const getAvatarClass = () => {
-    return `${styles.profileAvatar} ${activeTab === 'Account' ? styles.profileAvatarActive : ""}`;
-  };
-
   return (
     <div className={styles.sidebar}>
       <div className={styles.profileBox}>
-        <img src={user.picture} alt="Profile" className={getAvatarClass()}
-        onClick={() => setActiveTab('Account')} />
-        <p className={styles.profileName}>{ user.name }</p>
+        <p className={styles.profileName}>{ user.name } {user.surname}</p>
         <p className={styles.profileTitle}>{user.email}</p> 
       </div>
       
@@ -33,7 +25,7 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("Statistics")} onClick={() => setActiveTab('Statistics')} style={{ marginBottom: "80px" }}>
           📈 Statistics
         </li>
-        <li classNameG={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
+        <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
           <span className={styles.navItemLogout}>⚙️ Settings</span>
         </li>
         <li className={styles.navItem} onClick={handleLogout}>

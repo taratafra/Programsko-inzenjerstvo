@@ -9,6 +9,8 @@ import RightSidebar from "../../components/home/RightSidebar";
 import DashboardTabs from "../../components/home/DashboardTabs";
 import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 
+import Settings from "../../components/home/tabPanel/Settings";
+
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
     const [user, setUser] = useState(null);
@@ -18,6 +20,7 @@ export default function Home() {
     const hasNavigatedToQuestions = useRef(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
     useEffect(() => {
         const init = async () => {
@@ -30,6 +33,12 @@ export default function Home() {
                     setUser(auth0User);
 
                     const userResponse = await sendUserDataToBackend(auth0User);
+
+                    if (userResponse) {
+                        setUser(userResponse);
+                    } else {
+                        setUser(auth0User); // Fallback
+                    }
 
                     // provjera za jel rjesia kviz
                     if (userResponse && !userResponse.isOnboardingComplete) {
@@ -88,7 +97,7 @@ export default function Home() {
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
-                    audience: `${BACKEND_URL}`,
+                    audience: `${AUDIENCE}`,
                     scope: "openid profile email",
                 },
             });
@@ -143,6 +152,13 @@ export default function Home() {
 
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('Personalized recomendations');
+
+        const updateUser =(updatedFields) =>{
+            setUser(prevUser =>({
+                ...prevUser,
+                ...updatedFields
+            }));
+        };
 
         const renderTabContent = () => {
             switch (activeTab) {
@@ -217,6 +233,10 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
+                
+                case 'Settings':
+                    return <Settings user={user} updateUser={updateUser}/>;
+                
 
                 default:
                     return <GeneralInfoGrid />;
