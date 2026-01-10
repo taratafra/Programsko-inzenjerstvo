@@ -147,6 +147,13 @@ export default function Home() {
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('Personalized recomendations');
 
+        const updateUser =(updatedFields) =>{
+            setUser(prevUser =>({
+                ...prevUser,
+                ...updatedFields
+            }));
+        };
+
         const renderTabContent = () => {
             switch (activeTab) {
                 case 'Personalized recomendations':
@@ -222,7 +229,7 @@ export default function Home() {
                     );
                 
                 case 'Settings':
-                    return <Settings />;
+                    return <Settings user={user} updateUser={updateUser}/>;
                 
 
                 default:

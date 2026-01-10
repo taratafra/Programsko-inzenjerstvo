@@ -14,7 +14,7 @@ const EXPERIENCE_MAP = {  //ok ako backend vraca BEGINNER
   ADVANCED: "advanced"
 };
 
-export default function Settings({user}) {
+export default function Settings({user, updateUser}) {
     const navigate = useNavigate();
     const { getAccessTokenSilently, isAuthenticated } = useAuth0();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
@@ -22,7 +22,8 @@ export default function Settings({user}) {
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
-    
+    const [successMessage, setSuccessMessage] = useState(""); 
+
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordResetData, setPasswordResetData] = useState({
         newPassword: "",
@@ -33,6 +34,8 @@ export default function Settings({user}) {
     const [form, setForm] = useState({
         name:"",
         surname:"",
+        bio:"",
+        profilePictureUrl:"",
         stress: 3,
         sleep: 3,
         experience: "",
@@ -44,58 +47,66 @@ export default function Settings({user}) {
 
     /*auth token*/
     const getToken = async () => {
-    const localToken = localStorage.getItem("token");
+        const localToken = localStorage.getItem("token");
 
-    if (isAuthenticated) {
-      return getAccessTokenSilently({
-        authorizationParams: {
-          audience: BACKEND_URL,
-          scope: "openid profile email"
+        if (isAuthenticated) {
+            const token = await getAccessTokenSilently({
+                authorizationParams: {
+                    audience: BACKEND_URL,
+                    scope: "openid profile email"
+                }
+            });
+
+            return token
         }
-      });
-    }
 
-    if (localToken) return localToken;
-    throw new Error("Not authenticated");
-  };
+        if (localToken) return localToken;
+        throw new Error("Not authenticated");
+    };
 
   /*ucitaj postojece podatke*/
     useEffect(() => {
         const loadData = async () => {
             try {
                 const token = await getToken();
-                const res = await fetch(`${BACKEND_URL}/onboarding/survey/me`, {////////////provjeri
-                    headers: { Authorization: `Bearer ${token}` }
-            });
-
-            const data = res.ok? await res.json(): {};
-
-            setForm({
-                name:user?.name || "",
-                surname:user?.surname || "",
-                stress: data.stress ?? 3,
-                sleep: data.sleep ?? 3,
-                experience: EXPERIENCE_MAP[data.experience] || "",
-                goals: data.goals ?? [],
-                sessionLength: data.sessionLength ?? "",
-                preferredTime: data.preferredTime ?? "",
-                notes: data.notes ?? "",
-
+                
+                const surveyRes = await fetch(`${BACKEND_URL}/onboarding/survey/me`, {
+                headers: { Authorization: `Bearer ${token}` }
                 });
+                const surveyData = surveyRes.ok ? await surveyRes.json() : {};
+
+                setForm({
+                    name:user?.name || "",
+                    surname:user?.surname || "",
+                    stress: surveyData.stressLevel ?? 3,
+                    sleep: surveyData.sleepQuality ?? 3,
+                    experience: EXPERIENCE_MAP[surveyData.meditationExperience] || "",
+                    goals: surveyData.goals 
+                        ? surveyData.goals.map(g => g.toLowerCase().replace(/_/g, '-'))
+                        :[],
+                    sessionLength: surveyData.sessionLength ?? "",
+                    preferredTime: surveyData.preferredTime ?? "",
+                    notes: surveyData.note ?? "",
+                });
+
             } catch (err) {
-                console.info("Faileed to load data.");
+                console.error("Faileed to load data.");
+                setError("Failed to load your settings.");
             } finally {
                 setLoading(false);
             }
         };
 
-        loadData();
+        if(user){
+           loadData(); 
+        }  
     },[user]);
 
     
     const handleChange =(e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+        setError("");
     };
 
     const toggleGoal = (goal) => {
@@ -124,45 +135,107 @@ export default function Settings({user}) {
             return;
         }
 
+        if (passwordResetData.newPassword.length < 8) {
+            setError("Password must be at least 8 characters long.");
+            return;
+        }
+
         try {
             const token = await getToken();
 
             const res = await fetch(`${BACKEND_URL}/auth/reset-password`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                newPassword: passwordResetData.newPassword
-            })
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    newPassword: passwordResetData.newPassword
+                })
             });
 
-            if (!res.ok) throw new Error();
+            if (!res.ok) throw new Error("Password reset failed");
 
             // zatvori modal i resetiraj state
             setShowPasswordModal(false);
             setPasswordResetData({ newPassword: "", confirmPassword: "" });
-        } catch {
+            setSuccessMessage("Password changed successfully!");
+        } catch(err) {
             setError("Password reset failed.");
         }
+    };
+
+    const validateForm = () => {
+        if (!form.name || !form.name.trim()) {
+            setError("Name is required.");
+            return false;
+        }
+
+        if (!form.surname || !form.surname.trim()) {
+            setError("Surname is required.");
+            return false;
+        }
+
+        if (!form.experience) {
+            setError("Please select your meditation experience level.");
+            return false;
+        }
+
+        if (form.goals.length === 0) {
+            setError("Please select at least one goal.");
+            return false;
+        }
+
+        return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         setError("");
+        setSuccessMessage("");
+
+        if(!validateForm()){
+            setIsSubmitting(false);
+            return;
+        }
 
         try {
             const token = await getToken();
 
-            const payload = {
-                stress: Number(form.stress),
-                sleep: Number(form.sleep),
-                experience: Object.keys(EXPERIENCE_MAP)
-                .find(key => EXPERIENCE_MAP[key] === form.experience),
-                goals: form.goals,
-                notes: form.notes, ///tu sam dodala var.
+            // Update user basic info
+            const userUpdateRes = await fetch(`${BACKEND_URL}/api/user/settings/profile`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: form.name,
+                    surname: form.surname,
+                    bio: form.bio || null,
+                    profilePictureUrl: form.profilePictureUrl || null
+                })
+            });
+
+            if (!userUpdateRes.ok){
+                throw new Error("Failed to update user info");
+            }
+
+            //ažuriraj user state u Home.jsx
+            if (updateUser) {
+                updateUser({
+                    name: form.name,
+                    surname: form.surname
+                });
+            }
+
+            const surveyPayLoad = {
+                stressLevel: Number(form.stress),
+                sleepQuality: Number(form.sleep),
+                meditationExperience: Object.keys(EXPERIENCE_MAP).find(key => EXPERIENCE_MAP[key] === form.experience),
+                goals: form.goals.map(g => g.toUpperCase().replace(/-/g, '_')),
+                note: form.notes,
                 sessionLength: form.sessionLength,
                 preferredTime: form.preferredTime
             };
@@ -173,16 +246,19 @@ export default function Settings({user}) {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(surveyPayLoad)
             });
 
-            if (!res.ok) throw new Error("Save failed");
+            if (!res.ok){
+               throw new Error("Save failed"); 
+            } 
 
+            setSuccessMessage("Settings saved successfully!")
             navigate("/home", { replace: true });
-        } catch {
-        setError("Failed to save settings.");
+        } catch(err) {
+            setError("Failed to save settings.");
         } finally {
-        setIsSubmitting(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -192,7 +268,11 @@ export default function Settings({user}) {
         setError("");
     }
 
-    if (loading) return <div>Loading...</div>;
+    if (loading){
+        <div className={HomeStyles.tabPanel}>
+            return <div>Loading...</div>; 
+        </div>
+    } 
 
     return(     
         <div className={HomeStyles.tabPanel}>
@@ -203,9 +283,12 @@ export default function Settings({user}) {
                         <label htmlFor="name">Name: {""}</label>
                         <input 
                             id="name" 
+                            name="name"
                             type="text" 
                             value={form.name}
+                            onChange={handleChange}
                             autoComplete="name" 
+                            required
                         />
                     </div>
 
@@ -216,7 +299,9 @@ export default function Settings({user}) {
                             name="surname" 
                             type="text" 
                             value={form.surname}
-                            autoComplete="surname" />
+                            onChange={handleChange}
+                            autoComplete="surname" 
+                            required/>
                     </div>
                 </fieldset>
 
@@ -227,15 +312,13 @@ export default function Settings({user}) {
                         type="button"
                         className={styles.settbutton} 
                         onClick={() => setShowPasswordModal(true)}
-                    >
-                        Change password
-                    </button>
+                    >Change password</button>
                 </fieldset>
 
                 <fieldset className={styles.wellbeing}>
-                    <legend>Wellbeing</legend>
+                    <legend>Wellbeing <span aria-hidden="true">*</span></legend>
                     <div>
-                        <label htmlFor="stress">Stress level (1–5) <span aria-hidden="true">*</span></label>
+                        <label htmlFor="stress">Stress level (1–5)</label>
                         <div className={styles.inputWrapper}>
                             <span className={styles.helpLeft}>No stress</span>
                             <input
@@ -245,19 +328,16 @@ export default function Settings({user}) {
                                 min="1"
                                 max="5"
                                 step="1"
-                                defaultValue="3"
-                                required
-                                aria-describedby="stress-help"
                                 value={form.stress}
+                                aria-describedby="stress-help"
                                 onChange={handleChange}
                             />
                             <span className={styles.helpRight}>Extremely high stress</span>
                         </div>
-
                     </div>
 
                     <div>
-                        <label htmlFor="sleep">Sleep quality (1–5) <span aria-hidden="true">*</span></label>
+                        <label htmlFor="sleep">Sleep quality (1–5)</label>
                         <div className={styles.inputWrapper}>
                             <span className={styles.helpLeft}>Very poor</span>
                             <input
@@ -267,7 +347,6 @@ export default function Settings({user}) {
                                 min="1"
                                 max="5"
                                 step="1"
-                                defaultValue="3"
                                 required
                                 aria-describedby="sleep-help"
                                 value={form.sleep}
@@ -275,9 +354,7 @@ export default function Settings({user}) {
                             />
                             <span className={styles.helpRight}>Excellent</span>
                         </div>
-
                     </div>
-
                 </fieldset>
 
                 <fieldset className={styles.meditationExp}>
@@ -291,27 +368,28 @@ export default function Settings({user}) {
                                 required 
                                 checked={form.experience === lvl}
                                 onChange={handleChange}
-                                /> {lvl}
+                            /> {" "}{lvl.charAt(0).toUpperCase() + lvl.slice(1)}
                         </label>
                     ))}
                 </fieldset>
 
                 <fieldset className={styles.goals}>
-                    <legend>Your goals (select all that apply)</legend>
+                    <legend>Your goals (select all that apply)<span aria-hidden="true">*</span></legend>
                     {[
-                        "reduce-anxiety",
-                        "improve-sleep",
-                        "increase-focus",
-                        "stress-management",
-                        "build-habit"
+                        { value: "reduce-anxiety", label: "Reduce anxiety" },
+                        { value: "improve-sleep", label: "Improve sleep" },
+                        { value: "increase-focus", label: "Increase focus" },
+                        { value: "stress-management", label: "Stress management" },
+                        { value: "build-habit", label: "Build habit" }
                         ].map((g) => (
-                        <label key={g}>
+                        <label key={g.value}>
                             <input 
                                 type="checkbox" 
                                 name="goals" 
-                                checked={form.goals.includes(g)}
-                                onChange={() => toggleGoal(g)}
-                            /> {g}
+                                value={g.value}
+                                checked={form.goals.includes(g.value)}
+                                onChange={() => toggleGoal(g.value)}
+                            /> {" "}{g.label}
                         </label>
                     ))}
                 </fieldset>
@@ -324,8 +402,9 @@ export default function Settings({user}) {
                             id="preferred-time"
                             name="preferredTime" 
                             value={form.preferredTime}
-                            onChange={handleChange}>
-                            <option value="" disabled>Choose…</option>
+                            onChange={handleChange}
+                        >
+                            <option value="">Choose…</option>
                             <option value="morning">Morning</option>
                             <option value="afternoon">Afternoon</option>
                             <option value="evening">Evening</option>
@@ -340,7 +419,7 @@ export default function Settings({user}) {
                            name="sessionLength" 
                            value={form.sessionLength}
                            onChange={handleChange}>
-                            <option value="" disabled>Choose…</option>
+                            <option value="">Choose…</option>
                             <option value="5-10">5–10 minutes</option>
                             <option value="10-15">10–15 minutes</option>
                             <option value="15-20">15–20 minutes</option>
@@ -361,19 +440,13 @@ export default function Settings({user}) {
                     </div>
                 </fieldset>
                 
-                {error && <p className={styles.error}>{error}</p>}
+                {error && <p className={styles.error} role="alert">{error}</p>}
+                {successMessage && <p className={styles.success} role="status">{successMessage}</p>}
                 
                 <button className={styles.settbutton}  type="submit" disabled={isSubmitting}>
                     {isSubmitting ? "Saving…" : "Save changes"}
                 </button>
-                {/* <div className={styles.buttonRow}>
-                    <button className={styles.submitGoals} type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Generating..." : "Generate my plan"}
-                    </button>
-                    <button className={styles.resetGoals} type="reset">Reset</button>
-                </div>
-
-                <p>Fields marked with * are required.</p> */}
+                <p>Fields marked with * are required.</p>
             </form>
 
             {showPasswordModal && (
