@@ -1,4 +1,4 @@
-import styles from "../../Home.module.css";
+import styles from "../../pages/Home/Home.module.css";
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
   const getNavItemClass = (tabName) => {
     const isActive = (tabName === 'Home' && activeTab === 'General Information') || activeTab === tabName;

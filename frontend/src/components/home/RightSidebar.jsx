@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import styles from "../../Home.module.css";
+import styles from "../../pages/Home/Home.module.css";
 
 export default function RightSidebar({ navigate }) {
   const [date, setDate] = useState(new Date());

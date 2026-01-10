@@ -104,6 +104,8 @@ export default function Questionnaire() {
         }));
     }, []);
 
+    ///submit: 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -146,10 +148,10 @@ export default function Questionnaire() {
                 }
             });
 
-            const otherGoal = formData.get("goal-other");
-            let noteText = formData.get("notes") || "";
-            if (otherGoal && otherGoal.trim()) {
-                noteText = noteText ? `${noteText}\n\nOther goal: ${otherGoal.trim()}` : `Other goal: ${otherGoal.trim()}`;
+            if(goals.length===0){//dodano
+                setError("Please select at least one goal");
+                setIsSubmitting(false);
+                return;
             }
 
             const experienceMapping = {
@@ -165,12 +167,31 @@ export default function Questionnaire() {
                 return;
             }
 
+            const roleMapping ={
+                "user":"USER",
+                "coach":"COACH"
+            }
+
+            const role=formData.get("role");
+            if(!role){
+                setError("Please select your role");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const consent =formData.get("consent");
+            if (!consent) {
+                setError("You must give consent to continue.");
+                setIsSubmitting(false);
+                return;
+            }
+            
+
             const surveyData = {
                 stressLevel: parseInt(formData.get("stress")),
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
                 goals: goals,
-                note: noteText
             };
 
             console.log("Submitting survey data:", surveyData);
@@ -254,37 +275,27 @@ export default function Questionnaire() {
                     </div>
                 )}
 
-                <fieldset className={styles.basicInfo}>
-                    <legend>Basic information</legend>
-
+                <fieldset className={styles.role}>
+                    <legend>Role<span aria-hidden="true">*</span></legend>
                     <div>
-                        <label htmlFor="name">Full name</label>
-                        <input id="name" name="name" type="text" placeholder="e.g., Ana Horvat" autoComplete="name" />
+                        <label htmlFor="role">What type of account would you like to create?</label>
+                        <div>
+                            <label>
+                                <input type="radio" name="role" value="user" required /> User
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="radio" name="role" value="coach" /> Coach
+                            </label>
+                        </div>
                     </div>
+                    
 
-                    {/* <div>
-                        <label htmlFor="email">Email</label>
-                        <input id="email" name="email" type="email" placeholder="e.g., ana@example.com" autoComplete="email" />
-                    </div> */}
-
-                    {/* <div className="register-step-content">             
-                        <p>What type of account would you like to create?</p>             
-                        <div className="register-account-type">                 
-                            <label className="account-option">                     
-                                <input type="radio" name="accountType" value="user" checked={accountType === "user"} 
-                                    onChange={(e) => onChange("accountType", e.target.value)}/>                     
-                                <span>User</span>                 
-                            </label>                 
-                            <label className="account-option">                     
-                                <input type="radio" name="accountType" value="trainer" checked={accountType === "trainer"}
-                                    onChange={(e) => onChange("accountType", e.target.value)}/>                     
-                                <span>Trainer</span>                 
-                            </label>             
-                        </div>   
-                    </div> */}
+                    
                 </fieldset>
                 <fieldset className={styles.wellbeing}>
-                    <legend>Wellbeing</legend>
+                    <legend>Wellbeing<span aria-hidden="true">*</span></legend>
 
                     <div>
                         <label htmlFor="stress">Stress level (1–5) <span aria-hidden="true">*</span></label>
@@ -349,11 +360,11 @@ export default function Questionnaire() {
                 </fieldset>
 
                 <fieldset className={styles.goals}>
-                    <legend>Your goals (select all that apply)</legend>
+                    <legend>Your goals (select all that apply)<span aria-hidden="true">*</span></legend>
 
                     <div>
                         <label>
-                            <input type="checkbox" name="goals" value="reduce-anxiety" /> Reduce anxiety
+                            <input type="checkbox" name="goals" value="reduce-anxiety"/> Reduce anxiety
                         </label>
                     </div>
                     <div>
@@ -375,10 +386,6 @@ export default function Questionnaire() {
                         <label>
                             <input type="checkbox" name="goals" value="build-habit" /> Build a meditation habit
                         </label>
-                    </div>
-                    <div className={styles.otherGoal}>
-                        <label htmlFor="goal-other">Other goal:</label>
-                        <input id="goal-other" name="goal-other" type="text" placeholder="Describe another goal" />
                     </div>
                 </fieldset>
 
@@ -419,10 +426,9 @@ export default function Questionnaire() {
                 </fieldset>
 
                 <fieldset className={styles.consent}>
-                    <legend>Consent</legend>
+                    <legend>Consent<span aria-hidden="true">*</span></legend>
                     <label>
                         <input type="checkbox" name="consent" value="agree" required /> I agree that my responses will be used to generate a personalized 7-day plan.
-                        <span aria-hidden="true">*</span>
                     </label>
                 </fieldset>
 

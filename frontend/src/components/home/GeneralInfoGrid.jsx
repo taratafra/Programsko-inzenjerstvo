@@ -1,4 +1,4 @@
-import styles from "../../Home.module.css";
+import styles from "../../pages/Home/Home.module.css";
 
 export default function GeneralInfoGrid() {
   return (

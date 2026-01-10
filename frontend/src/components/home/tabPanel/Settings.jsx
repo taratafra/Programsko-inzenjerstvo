@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 //password:
-import PasswordResetModal from "../../../pages/Questionnaire/PasswordResetModal";
+import PasswordResetModal from "./PasswordResetModal";
 
 const EXPERIENCE_MAP = {  //ok ako backend vraca BEGINNER
   BEGINNER: "beginner",
@@ -14,7 +14,12 @@ const EXPERIENCE_MAP = {  //ok ako backend vraca BEGINNER
   ADVANCED: "advanced"
 };
 
-export default function Settings() {
+export default function Settings({user}) {
+    const navigate = useNavigate();
+    const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    
+    const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
     
@@ -24,12 +29,10 @@ export default function Settings() {
         confirmPassword: ""
     });
 
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
-    const { getAccessTokenSilently, isAuthenticated } = useAuth0();
-    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
-
+    
     const [form, setForm] = useState({
+        name:"",
+        surname:"",
         stress: 3,
         sleep: 3,
         experience: "",
@@ -58,34 +61,36 @@ export default function Settings() {
 
   /*ucitaj postojece podatke*/
     useEffect(() => {
-        const loadSurvey = async () => {
+        const loadData = async () => {
             try {
                 const token = await getToken();
                 const res = await fetch(`${BACKEND_URL}/onboarding/survey/me`, {////////////provjeri
                     headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (!res.ok) throw new Error();
-            const data = await res.json();
+            const data = res.ok? await res.json(): {};
 
             setForm({
+                name:user?.name || "",
+                surname:user?.surname || "",
                 stress: data.stress ?? 3,
                 sleep: data.sleep ?? 3,
-                experience: (EXPERIENCE_MAP[data.experience] || "") ?? "",
+                experience: EXPERIENCE_MAP[data.experience] || "",
                 goals: data.goals ?? [],
-                notes: data.notes ?? "",
                 sessionLength: data.sessionLength ?? "",
-                preferredTime: data.preferredTime ?? ""
+                preferredTime: data.preferredTime ?? "",
+                notes: data.notes ?? "",
+
                 });
             } catch (err) {
-                console.info("Survey not found – starting fresh");
+                console.info("Faileed to load data.");
             } finally {
                 setLoading(false);
             }
-            };
+        };
 
-            loadSurvey();
-        },[]);
+        loadData();
+    },[user]);
 
     
     const handleChange =(e) => {
@@ -142,7 +147,6 @@ export default function Settings() {
             setError("Password reset failed.");
         }
     };
-    //
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -182,6 +186,12 @@ export default function Settings() {
         }
     };
 
+    const handleClosePasswordModal=()=>{
+        setShowPasswordModal(false);
+        setPasswordResetData({ newPassword: "", confirmPassword: "" });
+        setError("");
+    }
+
     if (loading) return <div>Loading...</div>;
 
     return(     
@@ -190,13 +200,23 @@ export default function Settings() {
                 <fieldset className={styles.basicInfo}>
                     <legend>Basic information</legend>
                     <div>
-                        <label htmlFor="name">Full name</label>
-                        <input id="name" name="name" type="text" placeholder="e.g., Ana Horvat" autoComplete="name" />
+                        <label htmlFor="name">Name: {""}</label>
+                        <input 
+                            id="name" 
+                            type="text" 
+                            value={form.name}
+                            autoComplete="name" 
+                        />
                     </div>
 
                     <div>
-                        <label htmlFor="email">Email</label>
-                        <input id="email" name="email" type="email" placeholder="e.g., ana@example.com" autoComplete="email" />
+                        <label htmlFor="surname">Surname</label>
+                        <input 
+                            id="surname" 
+                            name="surname" 
+                            type="text" 
+                            value={form.surname}
+                            autoComplete="surname" />
                     </div>
                 </fieldset>
 
@@ -355,12 +375,15 @@ export default function Settings() {
 
                 <p>Fields marked with * are required.</p> */}
             </form>
-        {showPasswordModal && (
-            <PasswordResetModal
-                onPasswordReset={handlePasswordReset}
-                passwordResetData={passwordResetData}
-                onPasswordChange={handlePasswordChange}
-            />
-        )}    
+
+            {showPasswordModal && (
+                <PasswordResetModal
+                    onPasswordReset={handlePasswordReset}
+                    passwordResetData={passwordResetData}
+                    onPasswordChange={handlePasswordChange}
+                    onClose={handleClosePasswordModal}
+                />
+            )}
+ 
         </div>
 )}
