@@ -3,6 +3,7 @@ package Pomna_Sedmica.Mindfulnes.domain.dto;
 import Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Goal;
 import Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Set;
 
@@ -12,6 +13,8 @@ public record OnboardingSurveyResponse(
         Integer sleepQuality,
         MeditationExperience meditationExperience,
         Set<Goal> goals,
+        String sessionLength,
+        String preferredTime,
         String note,
         String updatedAt
 ) {
@@ -21,6 +24,8 @@ public record OnboardingSurveyResponse(
                 s.getSleepQuality(),
                 s.getMeditationExperience(),
                 s.getGoals(),
+                s.getSessionLength(),
+                s.getPreferredTime(),
                 s.getNote(),
                 s.getUpdatedAt() != null ? s.getUpdatedAt().toString() : null
         );

@@ -17,6 +17,8 @@ public class OnboardingSurveyMapper {
                 .sleepQuality(req.sleepQuality())
                 .meditationExperience(req.meditationExperience())
                 .goals(req.goals())
+                .sessionLength(req.sessionLength())
+                .preferredTime(req.preferredTime())
                 .note(req.note())
                 .build();
     }
@@ -28,6 +30,8 @@ public class OnboardingSurveyMapper {
         entity.setSleepQuality(req.sleepQuality());
         entity.setMeditationExperience(req.meditationExperience());
         entity.setGoals(req.goals());
+        entity.setSessionLength(req.sessionLength());
+        entity.setPreferredTime(req.preferredTime());
         entity.setNote(req.note());
     }
 
@@ -39,6 +43,8 @@ public class OnboardingSurveyMapper {
                 s.getSleepQuality(),
                 s.getMeditationExperience(),
                 s.getGoals(),
+                s.getSessionLength(),
+                s.getPreferredTime(),
                 s.getNote(),
                 s.getUpdatedAt() != null ? s.getUpdatedAt().toString() : null
         );

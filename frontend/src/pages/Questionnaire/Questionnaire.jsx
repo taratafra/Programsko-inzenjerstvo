@@ -192,6 +192,9 @@ export default function Questionnaire() {
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
                 goals: goals,
+                sessionLength: formData.get("session-length") || null,   
+                preferredTime: formData.get("preferred-time") || null,   
+                note: formData.get("notes") || null 
             };
 
             console.log("Submitting survey data:", surveyData);

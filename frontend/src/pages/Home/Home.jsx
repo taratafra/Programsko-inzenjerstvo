@@ -34,6 +34,12 @@ export default function Home() {
 
                     const userResponse = await sendUserDataToBackend(auth0User);
 
+                    if (userResponse) {
+                        setUser(userResponse);
+                    } else {
+                        setUser(auth0User); // Fallback
+                    }
+
                     // provjera za jel rjesia kviz
                     if (userResponse && !userResponse.isOnboardingComplete) {
                         if (!hasNavigatedToQuestions.current) {

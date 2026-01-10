@@ -15,6 +15,18 @@ const PasswordResetModal = ({ onPasswordReset, passwordResetData, onPasswordChan
             <div className={styles.modalContent}>
                 <h2>Change password</h2>
                 <form onSubmit={handleSubmit}>
+                    <div className={styles.currentPass}>
+                        <label htmlFor="currentPassword">Current Password</label>
+                        <input
+                            type="password"
+                            id="currentPassword"
+                            name="currentPassword"
+                            value={passwordResetData.currentPassword}
+                            onChange={onPasswordChange}
+                            required
+                        />
+                    </div>
+
                     <div className={styles.newPass}>
                         <label>New Password:</label>
                         <input

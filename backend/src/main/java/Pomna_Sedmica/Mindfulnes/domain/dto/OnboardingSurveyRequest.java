@@ -13,5 +13,7 @@ public record OnboardingSurveyRequest(
         @NotNull @Min(1) @Max(5) Integer sleepQuality,
         @NotNull MeditationExperience meditationExperience,
         @NotNull Set<Goal> goals,
+        String sessionLength,
+        String preferredTime,
         String note
 ) {}

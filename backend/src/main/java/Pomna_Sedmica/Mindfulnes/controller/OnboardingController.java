@@ -52,6 +52,8 @@ public class OnboardingController {
                 .sleepQuality(req.sleepQuality())
                 .meditationExperience(req.meditationExperience())
                 .goals(req.goals())
+                .sessionLength(req.sessionLength())
+                .preferredTime(req.preferredTime())
                 .note(req.note())
                 .build();
 
@@ -72,6 +74,8 @@ public class OnboardingController {
         survey.setSleepQuality(req.sleepQuality());
         survey.setMeditationExperience(req.meditationExperience());
         survey.setGoals(req.goals());
+        survey.setSessionLength(req.sessionLength());
+        survey.setPreferredTime(req.preferredTime());
         survey.setNote(req.note());
         survey.setUpdatedAt(Instant.now());
 
@@ -105,6 +109,8 @@ public class OnboardingController {
                 .sleepQuality(req.sleepQuality())
                 .meditationExperience(req.meditationExperience())
                 .goals(req.goals())
+                .sessionLength(req.sessionLength())
+                .preferredTime(req.preferredTime())
                 .note(req.note())
                 .build();
         var saved = surveys.save(entity);
@@ -125,6 +131,8 @@ public class OnboardingController {
         survey.setSleepQuality(req.sleepQuality());
         survey.setMeditationExperience(req.meditationExperience());
         survey.setGoals(req.goals());
+        survey.setSessionLength(req.sessionLength());
+        survey.setPreferredTime(req.preferredTime());
         survey.setNote(req.note());
         survey.setUpdatedAt(Instant.now());
 

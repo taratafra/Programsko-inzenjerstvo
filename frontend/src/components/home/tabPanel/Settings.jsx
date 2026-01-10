@@ -26,6 +26,7 @@ export default function Settings({user, updateUser}) {
 
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [passwordResetData, setPasswordResetData] = useState({
+        currentPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
@@ -36,6 +37,7 @@ export default function Settings({user, updateUser}) {
         surname:"",
         bio:"",
         profilePictureUrl:"",
+        isSocialLogin: false,
         stress: 3,
         sleep: 3,
         experience: "",
@@ -78,6 +80,7 @@ export default function Settings({user, updateUser}) {
                 setForm({
                     name:user?.name || "",
                     surname:user?.surname || "",
+                    isSocialLogin: user.isSocialLogin,
                     stress: surveyData.stressLevel ?? 3,
                     sleep: surveyData.sleepQuality ?? 3,
                     experience: EXPERIENCE_MAP[surveyData.meditationExperience] || "",
@@ -143,13 +146,14 @@ export default function Settings({user, updateUser}) {
         try {
             const token = await getToken();
 
-            const res = await fetch(`${BACKEND_URL}/auth/reset-password`, {
+            const res = await fetch(`${BACKEND_URL}/api/user/settings/change-password`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
+                    currentPassword: passwordResetData.currentPassword,  // ADD THIS
                     newPassword: passwordResetData.newPassword
                 })
             });
@@ -262,9 +266,9 @@ export default function Settings({user, updateUser}) {
         }
     };
 
-    const handleClosePasswordModal=()=>{
+        const handleClosePasswordModal = () => {
         setShowPasswordModal(false);
-        setPasswordResetData({ newPassword: "", confirmPassword: "" });
+        setPasswordResetData({ currentPassword: "", newPassword: "", confirmPassword: "" }); // ADD currentPassword
         setError("");
     }
 
@@ -308,11 +312,19 @@ export default function Settings({user, updateUser}) {
                 <fieldset className={styles.security}>
                     <legend>Security</legend>
 
-                    <button
-                        type="button"
-                        className={styles.settbutton} 
-                        onClick={() => setShowPasswordModal(true)}
-                    >Change password</button>
+                    {form.isSocialLogin ? (
+                        <p className={styles.infoText}>
+                            You are logged in through Google or something else that you selected. Password changes are managed through your social media account.
+                        </p>
+                    ) : (
+                        <button
+                            type="button"
+                            className={styles.settbutton} 
+                            onClick={() => setShowPasswordModal(true)}
+                        >
+                            Change password
+                        </button>
+                    )}
                 </fieldset>
 
                 <fieldset className={styles.wellbeing}>

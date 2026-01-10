@@ -5,15 +5,9 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
     return `${styles.navItem} ${isActive ? styles.navItemActive : ""}`;
   };
 
-  const getAvatarClass = () => {
-    return `${styles.profileAvatar} ${activeTab === 'Account' ? styles.profileAvatarActive : ""}`;
-  };
-
   return (
     <div className={styles.sidebar}>
       <div className={styles.profileBox}>
-        <img src={user.picture} alt="Profile" className={getAvatarClass()}
-        onClick={() => setActiveTab('Account')} />
         <p className={styles.profileName}>{ user.name } {user.surname}</p>
         <p className={styles.profileTitle}>{user.email}</p> 
       </div>

@@ -96,6 +96,14 @@
     padding: 20px;
 }
 
+.infoText {
+    color: #666;
+    font-style: italic;
+    padding: 1rem;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
 /* Questionnaire Styles */
 
 
@@ -176,7 +184,7 @@ p{
 }
 
 .practice select {
-    color: #727171;
+    color: black;
 }
 
 .inputWrapper {

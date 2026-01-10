@@ -117,13 +117,48 @@ public class UserService {
                 return userRepository.save(user);
             }
         }
+        String givenName = jwt.getClaimAsString("given_name");
+        String familyName = jwt.getClaimAsString("family_name");
+        String fullName = jwt.getClaimAsString("name");
+
+        String firstName;
+        String lastName;
+
+        // If Auth0 provides given_name and family_name, use those
+        if (givenName != null && !givenName.isBlank() && familyName != null && !familyName.isBlank()) {
+            firstName = givenName;
+            lastName = familyName;
+        }
+        // If only given_name is provided, use it as first name
+        else if (givenName != null && !givenName.isBlank()) {
+            firstName = givenName;
+            lastName = familyName != null ? familyName : "";
+        }
+        // Otherwise, try to split the full name
+        else if (fullName != null && !fullName.isBlank()) {
+            if (fullName.contains(" ")) {
+                String[] nameParts = fullName.trim().split("\\s+", 2);
+                firstName = nameParts[0];
+                lastName = nameParts.length > 1 ? nameParts[1] : "";
+            } else {
+                firstName = fullName;
+                lastName = "";
+            }
+        }
+        // Fallback
+        else {
+            firstName = "User";
+            lastName = "";
+        }
+
+
 
         User newUser = new User();
         newUser.setAuth0Id(sub);
 
         newUser.setEmail(email != null ? email : sub + "@placeholder.local");
-        newUser.setName(jwt.getClaimAsString("given_name"));
-        newUser.setSurname(jwt.getClaimAsString("family_name"));
+        newUser.setName(firstName);
+        newUser.setSurname(lastName);
         newUser.setRole(Role.USER);
         newUser.setSocialLogin(true);
         newUser.setCreatedAt(LocalDateTime.now());

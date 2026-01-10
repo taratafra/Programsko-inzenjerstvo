@@ -49,6 +49,7 @@ public class SecurityConfigDev {
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/user/settings/**").authenticated()
                         .requestMatchers("/public").permitAll()
+                        .requestMatchers("/onboarding/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())
