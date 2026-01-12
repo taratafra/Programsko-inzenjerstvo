@@ -83,7 +83,7 @@ public class AuthController {
                                 "Auth0User",
                                 "",
                                 LocalDate.now(),
-                                Role.USER,
+                                Role.USER, //ovo treba promijenit, ne moze vise default bit user
                                 true
                         );
                         return userRepository.save(u);
