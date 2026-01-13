@@ -87,6 +87,7 @@ public class ReminderEngineService {
                 .channel(channel)
                 .status(ReminderStatus.PENDING)
                 .sentAt(reminderAt)
+                .sentAt(null)
                 .build();
 
         log = logs.save(log);

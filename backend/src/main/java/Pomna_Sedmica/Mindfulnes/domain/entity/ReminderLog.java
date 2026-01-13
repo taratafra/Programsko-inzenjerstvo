@@ -17,11 +17,13 @@ import java.time.Instant;
         name = "reminder_log",
         uniqueConstraints = {
                 // Ne želimo duplikate za isti schedule i isti reminder trenutak
-                @UniqueConstraint(name = "uk_reminder_schedule_due_channel",
-                        columnNames = {"schedule_id", "due_at", "channel"})
+                @UniqueConstraint(
+                        name = "uk_reminder_schedule_reminder_channel",
+                        columnNames = {"schedule_id", "reminder_at", "channel"}
+                )
         },
         indexes = {
-                @Index(name = "idx_reminder_due_at", columnList = "due_at"),
+                @Index(name = "idx_reminder_reminder_at", columnList = "reminder_at"),
                 @Index(name = "idx_reminder_user_id", columnList = "user_id"),
                 @Index(name = "idx_reminder_schedule_id", columnList = "schedule_id")
         }
@@ -39,10 +41,10 @@ public class ReminderLog {
     private Long scheduleId;
 
     // Kada je podsjetnik trebao biti poslan (npr. 10 min prije starta)
-    @Column(name="due_at", nullable = false)
-    private Instant dueAt;
+    @Column(name="reminder_at", nullable = false)
+    private Instant reminderAt;
 
-    // Kada je stvarno poslan
+    // Kada je stvarno poslan (ili pokušano poslati)
     @Column(name="sent_at")
     private Instant sentAt;
 

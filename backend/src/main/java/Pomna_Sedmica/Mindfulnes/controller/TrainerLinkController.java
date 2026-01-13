@@ -60,7 +60,7 @@ public class TrainerLinkController {
     public ResponseEntity<List<Long>> getUsersForMeAsTrainer(@AuthenticationPrincipal Jwt jwt) {
         User me = userService.getOrCreateUserFromJwt(jwt);
 
-        var userIds = trainerLinks.listForTrainer(me.getId())
+        var userIds = trainerLinks.listUsersForTrainer(me.getId())
                 .stream()
                 .map(link -> link.getUserId())
                 .distinct()
@@ -97,7 +97,7 @@ public class TrainerLinkController {
     @Profile("dev")
     @GetMapping("/{trainerId}/users")
     public ResponseEntity<List<Long>> usersForTrainerDev(@PathVariable Long trainerId) {
-        var ids = trainerLinks.listForTrainer(trainerId)
+        var ids = trainerLinks.listUsersForTrainer(trainerId)
                 .stream()
                 .map(link -> link.getUserId())
                 .distinct()
