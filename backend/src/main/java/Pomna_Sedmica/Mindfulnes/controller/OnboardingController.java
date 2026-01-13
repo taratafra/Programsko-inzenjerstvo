@@ -103,6 +103,12 @@ public class OnboardingController {
         if (surveys.existsByUserId(me.getId())) {
             return ResponseEntity.status(409).build();
         }
+
+        if (Boolean.TRUE.equals(req.isTrainer())) {
+            me.setRole(Pomna_Sedmica.Mindfulnes.domain.enums.Role.TRAINER);
+            userService.saveUser(me);
+        }
+
         var entity = OnboardingSurvey.builder()
                 .userId(me.getId())
                 .stressLevel(req.stressLevel())
@@ -135,6 +141,11 @@ public class OnboardingController {
         survey.setPreferredTime(req.preferredTime());
         survey.setNote(req.note());
         survey.setUpdatedAt(Instant.now());
+
+        if (Boolean.TRUE.equals(req.isTrainer())) {
+            me.setRole(Pomna_Sedmica.Mindfulnes.domain.enums.Role.TRAINER);
+            userService.saveUser(me);
+        }
 
         var saved = surveys.save(survey);
         return ResponseEntity.ok(OnboardingSurveyResponse.from(saved));

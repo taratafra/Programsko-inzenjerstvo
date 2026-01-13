@@ -104,8 +104,6 @@ export default function Questionnaire() {
         }));
     }, []);
 
-    ///submit: 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -185,16 +183,17 @@ export default function Questionnaire() {
                 setIsSubmitting(false);
                 return;
             }
-            
+
 
             const surveyData = {
                 stressLevel: parseInt(formData.get("stress")),
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
                 goals: goals,
-                sessionLength: formData.get("session-length") || null,   
-                preferredTime: formData.get("preferred-time") || null,   
-                note: formData.get("notes") || null 
+                sessionLength: formData.get("session-length") || null,
+                preferredTime: formData.get("preferred-time") || null,
+                note: formData.get("notes") || null,
+                isTrainer: formData.get("isTrainer") === "true"
             };
 
             console.log("Submitting survey data:", surveyData);
@@ -293,9 +292,6 @@ export default function Questionnaire() {
                             </label>
                         </div>
                     </div>
-                    
-
-                    
                 </fieldset>
                 <fieldset className={styles.wellbeing}>
                     <legend>Wellbeing<span aria-hidden="true">*</span></legend>
@@ -426,6 +422,13 @@ export default function Questionnaire() {
                             rows={5}
                         />
                     </div>
+                </fieldset>
+
+                <fieldset className={styles.trainer}>
+                    <legend>Trainer Account (Testing)</legend>
+                    <label>
+                        <input type="checkbox" name="isTrainer" value="true" /> I am a trainer (Enable video uploads)
+                    </label>
                 </fieldset>
 
                 <fieldset className={styles.consent}>

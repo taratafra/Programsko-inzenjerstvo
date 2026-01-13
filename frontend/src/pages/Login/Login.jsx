@@ -90,18 +90,18 @@ function Login() {
                     required
                   />
                 </div>
-    
+
                 <button type="submit" className="submit-btn" disabled={loading}>
                   {loading ? "Logging in..." : "Login"}
                 </button>
-    
+
                 {message && <p className="error">{message}</p>}
               </form>
-    
+
               <div className="separator">
                 <span>or</span>
               </div>
-    
+
               <button
                 className="google-btn"
                 onClick={() =>
@@ -112,7 +112,7 @@ function Login() {
               >
                 <FcGoogle className= "FcGoogle" size={20} />Login with Google / Other options
               </button>
-    
+
               <div className="alternativa">
                 <p>
                   Don’t have an account? <Link to="/register">Register</Link>
@@ -123,9 +123,9 @@ function Login() {
         </CloudBackground>
       );
     }
-    
+
     export default Login;
-    
+
 /*
     return (
         <CloudBackground>
@@ -184,5 +184,4 @@ function Login() {
         </CloudBackground>
     );
 }
-
-export default Login;*/
+*/

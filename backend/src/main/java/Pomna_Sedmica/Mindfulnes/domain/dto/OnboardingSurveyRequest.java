@@ -15,5 +15,6 @@ public record OnboardingSurveyRequest(
         @NotNull Set<Goal> goals,
         String sessionLength,
         String preferredTime,
-        String note
+        String note,
+        Boolean isTrainer
 ) {}

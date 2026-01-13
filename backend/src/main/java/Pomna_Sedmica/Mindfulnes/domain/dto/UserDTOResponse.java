@@ -20,4 +20,5 @@ public record UserDTOResponse(
         String bio,
         String profilePictureUrl,
         Boolean firstLogin
-) {}
+) {
+}
