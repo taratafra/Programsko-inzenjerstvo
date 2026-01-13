@@ -36,3 +36,4 @@ public class FirebaseConfig {
         return com.google.firebase.cloud.StorageClient.getInstance(firebaseApp).bucket();
     }
 }
+
