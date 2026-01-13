@@ -32,7 +32,6 @@ public class TrainerController {
         return ResponseEntity.ok(trainerService.getAllTrainers());
     }
 
-
     @GetMapping("/me")
     public ResponseEntity<UserDTOResponse> getCurrentTrainer(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) return ResponseEntity.status(401).build();
@@ -45,36 +44,23 @@ public class TrainerController {
                 .orElse(ResponseEntity.status(404).build());
     }
 
-
-
     @PostMapping("/complete-onboarding")
-    public ResponseEntity<UserDTOResponse> completeOnboarding(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<UserDTOResponse> completeTrainerOnboarding(@AuthenticationPrincipal Jwt jwt) {
+        if (jwt == null) return ResponseEntity.status(401).build();
 
-        if (jwt == null) {
-            System.out.println("No JWT token found");
-            return ResponseEntity.status(401).build();
-        }
-
-        String claim = extractEmailFromJwt(jwt);
-
-        //provjeravamo jel email ako nije onda se user prijavia preko googla il necega
+        String claim = jwt.getSubject();
         boolean isEmail = claim != null && claim.matches("^[A-Za-z0-9+_.-]+@(.+)$");
 
         if (isEmail) {
             return trainerService.completeOnboarding(claim)
                     .map(ResponseEntity::ok)
-                    .orElseGet(() -> {
-                        return ResponseEntity.status(404).build();
-                    });
+                    .orElseGet(() -> ResponseEntity.status(404).build());
         } else {
             return trainerService.completeOnboardingByAuth0Id(claim)
                     .map(ResponseEntity::ok)
-                    .orElseGet(() -> {
-                        return ResponseEntity.status(404).build();
-                    });
+                    .orElseGet(() -> ResponseEntity.status(404).build());
         }
     }
-
 
     private String extractEmailFromJwt(Jwt jwt) {
         String email = jwt.getClaimAsString("email");
@@ -93,6 +79,4 @@ public class TrainerController {
     public ResponseEntity<AudioContentDTOResponse> getAudioContent(@PathVariable("id") Long id) {
         return null;
     }
-
-
 }
