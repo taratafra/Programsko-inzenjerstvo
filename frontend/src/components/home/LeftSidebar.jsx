@@ -1,4 +1,4 @@
-import styles from "../../pages/Home/Home.module.css";
+import homeStyles from "../../pages/Home/Home.module.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./LeftSidebar.module.css";
 
