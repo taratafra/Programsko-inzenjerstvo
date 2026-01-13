@@ -1,4 +1,3 @@
-// src/components/home/DashboardTabs.jsx
 
 import styles from "../../pages/Home/Home.module.css";
 
@@ -12,6 +11,12 @@ export default function DashboardTabs({ activeTab, setActiveTab }) {
     "Gratitude",
     "Breathing",
   ];
+
+  const homeTabs = ["Personalized recomendations", "Focus", "Sleep", "Stress", "Gratitude", "Breathing", "General Information"];
+
+  if (!homeTabs.includes(activeTab)) {
+    return null;
+  }
 
   return (
     <div className={styles.tabsContainer}>

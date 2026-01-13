@@ -8,8 +8,9 @@ import LeftSidebar from "../../components/home/LeftSidebar";
 import RightSidebar from "../../components/home/RightSidebar";
 import DashboardTabs from "../../components/home/DashboardTabs";
 import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
-
 import Settings from "../../components/home/tabPanel/Settings";
+import Trainers from "../../components/home/tabPanel/Trainers";
+import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -29,7 +30,6 @@ export default function Home() {
             try {
                 // Auth0 login Google i to
                 if (isAuthenticated && auth0User) {
-                    //console.log("Authenticated via Auth0:", auth0User);
                     setUser(auth0User);
 
                     const userResponse = await sendUserDataToBackend(auth0User);
@@ -37,26 +37,22 @@ export default function Home() {
                     if (userResponse) {
                         setUser(userResponse);
                     } else {
-                        setUser(auth0User); // Fallback
+                        setUser(auth0User);
                     }
 
                     // provjera za jel rjesia kviz
                     if (userResponse && !userResponse.isOnboardingComplete) {
                         if (!hasNavigatedToQuestions.current) {
-                            //console.log("Onboarding not complete, redirecting to questions");
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
                     }
 
-                    //console.log("Auth0 user fully onboarded, showing home");
                     setLoading(false);
                 }
                 // Local JWT login
                 else if (localToken) {
-                    //console.log("Authenticated via local JWT");
-
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
@@ -64,20 +60,17 @@ export default function Home() {
                     if (!res.ok) throw new Error("Failed to fetch user info");
 
                     const data = await res.json();
-                    //console.log("User data from backend:", data);
                     setUser(data);
 
                     // vrijeme za kviz
                     if (!data.isOnboardingComplete) {
                         if (!hasNavigatedToQuestions.current) {
-                            //console.log("Onboarding not complete, redirecting to questions");
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
                     }
 
-                    //console.log("Local user fully set up, showing home");
                     setLoading(false);
                 } else {
                     setLoading(false);
@@ -125,7 +118,6 @@ export default function Home() {
             if (!res.ok) return null;
 
             const userData = await res.json();
-            //console.log("User data synced successfully:", userData);
             return userData;
         } catch (err) {
             console.error("Error sending user data to backend:", err);
@@ -153,8 +145,8 @@ export default function Home() {
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('Personalized recomendations');
 
-        const updateUser =(updatedFields) =>{
-            setUser(prevUser =>({
+        const updateUser = (updatedFields) => {
+            setUser(prevUser => ({
                 ...prevUser,
                 ...updatedFields
             }));
@@ -197,20 +189,12 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Calendar':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Calendar Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Calendar.</p>
-                        </div>
-                    );
-                case 'Journal':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Journal Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Journal.</p>
-                        </div>
-                    );
+                case 'Trainers':
+                    return <Trainers />;
+
+                case 'Make Appointment':
+                    return <MakeAppointment setActiveTab={setActiveTab} />;
+
                 case 'Statistics':
                     return (
                         <div className={styles.tabPanel}>
@@ -236,7 +220,6 @@ export default function Home() {
                 
                 case 'Settings':
                     return <Settings user={user} updateUser={updateUser}/>;
-                
 
                 default:
                     return <GeneralInfoGrid />;
@@ -270,7 +253,11 @@ export default function Home() {
                             {renderTabContent()}
                         </div>
 
-                        <RightSidebar navigate={navigate} />
+                        <RightSidebar 
+                            navigate={navigate} 
+                            setActiveTab={setActiveTab}
+                            activeTab={activeTab}
+                        />
                     </div>
                 </div>
             </div>
