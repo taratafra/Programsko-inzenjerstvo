@@ -18,9 +18,8 @@ export default function DashboardTabs({ activeTab, setActiveTab }) {
       {tabs.map((tab) => (
         <button
           key={tab}
-          className={`${styles.tabButton} ${
-            activeTab === tab ? styles.tabButtonActive : ""
-          }`}
+          className={`${styles.tabButton} ${activeTab === tab ? styles.tabButtonActive : ""
+            }`}
           onClick={() => setActiveTab(tab)}
         >
           {tab}

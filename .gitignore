@@ -291,3 +291,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,windows,maven,java,node,react,visualstudiocode,intellij
+
+backend/serviceAccountKey.json

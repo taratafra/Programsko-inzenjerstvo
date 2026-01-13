@@ -233,10 +233,10 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
-                
+
                 case 'Settings':
                     return <Settings user={user} updateUser={updateUser}/>;
-                
+
 
                 default:
                     return <GeneralInfoGrid />;
