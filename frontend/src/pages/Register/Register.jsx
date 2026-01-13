@@ -39,7 +39,7 @@ function Register() {
     if (!/[0-9]/.test(password)) {
       errors.push("At least one number");
     }
-    if (!/[!@#$%^&*(),.?":{}|<>\-\+]/.test(password)) {
+    if (!/[!@#$%^'&*(),.?":{}|<>\-\+]/.test(password)) {
       errors.push("At least one special character");
     }
     
@@ -66,8 +66,8 @@ function Register() {
     const newErrors = {};
     if (!regData.email.trim()) newErrors.email = "Please enter an email.";
     if (!regData.password.trim()) newErrors.password = "Please enter a password.";
-    if (regData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters.";
+    if (regData.password.length < 8)
+      newErrors.password = "Password must be at least 8 characters.";
     if (!regData.name.trim()) newErrors.name = "Please enter your name.";
     if (!regData.surname.trim()) newErrors.surname = "Please enter your surname.";
     if (!regData.dateOfBirth.trim())
@@ -83,8 +83,8 @@ function Register() {
         newErrors.password = passwordErrors.join(". ");
       }
     }
-    if (regData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters.";
+    if (regData.password.length < 8)
+      newErrors.password = "Password must be at least 8 characters.";
     if (!regData.name.trim()) newErrors.name = "Please enter your name.";
     if (!regData.surname.trim()) newErrors.surname = "Please enter your surname.";
     if (!regData.dateOfBirth.trim())
