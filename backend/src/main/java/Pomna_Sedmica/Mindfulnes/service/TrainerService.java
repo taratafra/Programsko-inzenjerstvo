@@ -4,14 +4,14 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
-import Pomna_Sedmica.Mindfulnes.mapper.UserMapper;
+import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,57 +36,57 @@ public class TrainerService {
             existingUser = userRepository.findByEmail(dto.email());
         }
 
-        User user = existingUser
-                .map(existing -> UserMapper.updateExisting(existing, dto))
-                .orElseGet(() -> UserMapper.toNewEntity(dto));
-
-        //ključ: ovo je TRAINER servis => uvijek enforce-aj TRAINER rolu
-        user.setRole(Role.TRAINER);
+        User user = existingUser.map(existing -> {
+            return TrainerMapper.updateExisting(existing, dto);
+        }).orElseGet(() -> {
+            return TrainerMapper.toNewEntity(dto);
+        });
 
         User savedUser = userRepository.save(user);
-        return UserMapper.toDTO(savedUser);
+        return TrainerMapper.toDTO(savedUser);
     }
 
-    public List<UserDTOResponse> getAllTrainers() {
 
-        return userRepository.findAllByRole(Role.TRAINER)
+    public List<UserDTOResponse> getAllTrainers() {
+        return userRepository.findByRole(Role.TRAINER)
                 .stream()
-                .map(UserMapper::toDTO)
+                .map(TrainerMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     public Optional<UserDTOResponse> getTrainerByEmail(String email) {
-
-        return userRepository.findByEmailAndRole(email, Role.TRAINER)
-                .map(UserMapper::toDTO);
+        return userRepository.findByEmail(email)
+                .map(TrainerMapper::toDTO);
     }
 
     public Optional<UserDTOResponse> getTrainerByAuth0Id(String auth0Id) {
-
-        return userRepository.findByAuth0IdAndRole(auth0Id, Role.TRAINER)
-                .map(UserMapper::toDTO);
+        return userRepository.findByAuth0Id(auth0Id)
+                .map(TrainerMapper::toDTO);
     }
+
+
 
     @Transactional
     public Optional<UserDTOResponse> completeOnboarding(String email) {
 
-        return userRepository.findByEmailAndRole(email, Role.TRAINER)
+        return userRepository.findByEmail(email)
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     user.setRequiresPasswordReset(false);
                     User savedUser = userRepository.save(user);
-                    return UserMapper.toDTO(savedUser);
+                    //log.info("Onboarding completed for user: {}", email);
+                    return TrainerMapper.toDTO(savedUser);
                 });
     }
 
     @Transactional
     public Optional<UserDTOResponse> completeOnboardingByAuth0Id(String auth0Id) {
 
-        return userRepository.findByAuth0IdAndRole(auth0Id, Role.TRAINER)
+        return userRepository.findByAuth0Id(auth0Id)
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     User savedUser = userRepository.save(user);
-                    return UserMapper.toDTO(savedUser);
+                    return TrainerMapper.toDTO(savedUser);
                 });
     }
 
@@ -99,19 +99,13 @@ public class TrainerService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 'sub' claim is required");
         }
 
-        // 1) prvo probaj po auth0Id + TRAINER
         Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub);
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
-
-            // enforce TRAINER ako koristimo ovaj servis
-            if (user.getRole() != Role.TRAINER) user.setRole(Role.TRAINER);
-
             user.setLastLogin(LocalDateTime.now());
             return userRepository.save(user);
         }
 
-        // 2) ako nema po auth0Id, probaj po emailu
         if (email != null && !email.isBlank()) {
             Optional<User> byEmail = userRepository.findByEmail(email);
             if (byEmail.isPresent()) {
@@ -119,26 +113,25 @@ public class TrainerService {
                 if (user.getAuth0Id() == null || user.getAuth0Id().isEmpty()) {
                     user.setAuth0Id(sub);
                 }
-
-
-                if (user.getRole() != Role.TRAINER) user.setRole(Role.TRAINER);
-
                 user.setLastLogin(LocalDateTime.now());
                 return userRepository.save(user);
             }
         }
 
-        // 3) kreiraj novog TRAINER usera
-        User user = new User();
-        user.setAuth0Id(sub);
-        user.setEmail(email);
-        user.setRole(Role.TRAINER);
-        user.setSocialLogin(true);
-        user.setFirstLogin(true);
-        user.setOnboardingComplete(false);
-        user.setRequiresPasswordReset(false);
-        user.setLastLogin(LocalDateTime.now());
+        User newUser = new User();
+        newUser.setAuth0Id(sub);
 
-        return userRepository.save(user);
+        newUser.setEmail(email != null ? email : sub + "@placeholder.local");
+        newUser.setName(jwt.getClaimAsString("given_name"));
+        newUser.setSurname(jwt.getClaimAsString("family_name"));
+        newUser.setRole(Role.TRAINER);
+        newUser.setSocialLogin(true);
+        newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setLastLogin(LocalDateTime.now());
+        newUser.setFirstLogin(true);
+        newUser.setOnboardingComplete(false);
+        newUser.setRequiresPasswordReset(false);
+
+        return userRepository.save(newUser);
     }
 }
