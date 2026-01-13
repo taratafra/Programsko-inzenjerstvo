@@ -86,6 +86,7 @@
 //}
 package Pomna_Sedmica.Mindfulnes.controller;
 
+import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.mapper.UserMapper;
@@ -161,5 +162,11 @@ public class UserController {
         return userService.completeOnboardingByAuth0Id(user.getAuth0Id())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<UserDTOResponse> saveOrUpdateUser(@RequestBody SaveAuth0UserRequestDTO request) {
+        UserDTOResponse savedUser = userService.saveOrUpdateUser(request);
+        return ResponseEntity.ok(savedUser);
     }
 }
