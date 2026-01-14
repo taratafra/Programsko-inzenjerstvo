@@ -5,6 +5,7 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
+import Pomna_Sedmica.Mindfulnes.repository.TrainerRepository;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class TrainerService {
 
     private final UserRepository userRepository;
+    private final TrainerRepository trainerRepository;
 
     @Transactional
     public UserDTOResponse saveOrUpdateTrainer(SaveAuth0UserRequestDTO dto) {
@@ -42,7 +44,12 @@ public class TrainerService {
             return TrainerMapper.toNewEntity(dto);
         });
 
-        User savedUser = userRepository.save(user);
+        User savedUser = userRepository.saveAndFlush(user);
+
+        if (!trainerRepository.existsById(savedUser.getId())) {
+            userRepository.promoteToTrainer(savedUser.getId(), false);
+        }
+
         return TrainerMapper.toDTO(savedUser);
     }
 
@@ -74,7 +81,12 @@ public class TrainerService {
                     user.setOnboardingComplete(true);
                     user.setRequiresPasswordReset(false);
                     user.setRole(Role.TRAINER);
-                    User savedUser = userRepository.save(user);
+                    User savedUser = userRepository.saveAndFlush(user);
+
+                    if (!trainerRepository.existsById(savedUser.getId())) {
+                        userRepository.promoteToTrainer(savedUser.getId(), false);
+                    }
+
                     //log.info("Onboarding completed for user: {}", email);
                     return TrainerMapper.toDTO(savedUser);
                 });
@@ -87,7 +99,12 @@ public class TrainerService {
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     user.setRole(Role.TRAINER);
-                    User savedUser = userRepository.save(user);
+                    User savedUser = userRepository.saveAndFlush(user);
+
+                    if (!trainerRepository.existsById(savedUser.getId())) {
+                        userRepository.promoteToTrainer(savedUser.getId(), false);
+                    }
+
                     return TrainerMapper.toDTO(savedUser);
                 });
     }
@@ -134,6 +151,12 @@ public class TrainerService {
         newUser.setOnboardingComplete(false);
         newUser.setRequiresPasswordReset(false);
 
-        return userRepository.save(newUser);
+        User savedUser = userRepository.saveAndFlush(newUser);
+
+        if (!trainerRepository.existsById(savedUser.getId())) {
+            userRepository.promoteToTrainer(savedUser.getId(), false);
+        }
+
+        return savedUser;
     }
 }
