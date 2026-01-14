@@ -27,18 +27,18 @@ public class TrainerSettingsService {
 
         User trainer = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    String allUsers = userRepository.findAll().stream()
-                            .map(u -> String.format("User[id=%d, email='%s', role='%s', name='%s']",
+                    String allTrainers = userRepository.findByRole(Role.TRAINER).stream()
+                            .map(u -> String.format("Trainer[id=%d, email='%s', role='%s', name='%s']",
                                     u.getId(), u.getEmail(), u.getRole(), u.getName()))
                             .collect(Collectors.joining(", "));
 
-                    log.error("User not found with email: '{}'. Available users: [{}]", email, allUsers);
-                    return new RuntimeException("User not found with email: " + email);
+                    log.error("Trainer not found with email: '{}'. Available trainers: [{}]", email, allTrainers);
+                    return new RuntimeException("Trainer not found with email: " + email);
                 });
 
         // ✅ KLJUČ: mora biti TRAINER
         if (trainer.getRole() != Role.TRAINER) {
-            log.error("User '{}' exists but is not TRAINER (role={})", email, trainer.getRole());
+            log.error("Trainer '{}' exists but is not TRAINER (role={})", email, trainer.getRole());
             throw new RuntimeException("Forbidden: user is not a trainer");
         }
 
@@ -48,7 +48,7 @@ public class TrainerSettingsService {
         return trainer;
     }
 
-    public UserSettingsResponseDTO getUserSettings(String email) {
+    public UserSettingsResponseDTO getTrainerSettings(String email) {
         log.info("Getting trainer settings for email: '{}'", email);
         User user = findTrainerByEmailOrThrow(email);
 
@@ -69,33 +69,33 @@ public class TrainerSettingsService {
     }
 
     @Transactional
-    public UserSettingsResponseDTO updateUserSettings(String email, UpdateUserSettingsRequestDTO request) {
+    public UserSettingsResponseDTO updateTrainerSettings(String email, UpdateUserSettingsRequestDTO request) {
         log.info("Updating trainer settings for email: '{}'", email);
-        User user = findTrainerByEmailOrThrow(email);
+        User trainer = findTrainerByEmailOrThrow(email);
 
         log.info("Update request - name: '{}', surname: '{}', bio: '{}', profilePictureUrl: '{}'",
                 request.name(), request.surname(), request.bio(), request.profilePictureUrl());
 
         if (request.name() != null) {
-            log.info("Updating name from '{}' to '{}'", user.getName(), request.name());
-            user.setName(request.name());
+            log.info("Updating name from '{}' to '{}'", trainer.getName(), request.name());
+            trainer.setName(request.name());
         }
         if (request.surname() != null) {
-            log.info("Updating surname from '{}' to '{}'", user.getSurname(), request.surname());
-            user.setSurname(request.surname());
+            log.info("Updating surname from '{}' to '{}'", trainer.getSurname(), request.surname());
+            trainer.setSurname(request.surname());
         }
         if (request.bio() != null) {
-            log.info("Updating bio from '{}' to '{}'", user.getBio(), request.bio());
-            user.setBio(request.bio());
+            log.info("Updating bio from '{}' to '{}'", trainer.getBio(), request.bio());
+            trainer.setBio(request.bio());
         }
         if (request.profilePictureUrl() != null) {
             log.info("Updating profile picture URL from '{}' to '{}'",
-                    user.getProfilePictureUrl(), request.profilePictureUrl());
-            user.setProfilePictureUrl(request.profilePictureUrl());
+                    trainer.getProfilePictureUrl(), request.profilePictureUrl());
+            trainer.setProfilePictureUrl(request.profilePictureUrl());
         }
 
-        user.setLastModifiedAt(LocalDateTime.now());
-        User savedUser = userRepository.save(user);
+        trainer.setLastModifiedAt(LocalDateTime.now());
+        User savedUser = userRepository.save(trainer);
 
         log.info("Trainer settings updated successfully for: '{}'", email);
         return new UserSettingsResponseDTO(
@@ -114,17 +114,17 @@ public class TrainerSettingsService {
     @Transactional
     public boolean resetFirstTimePassword(String email, FirstTimePasswordResetRequestDTO request) {
         log.info("Attempting first-time password reset for trainer email: '{}'", email);
-        User user = findTrainerByEmailOrThrow(email);
+        User trainer = findTrainerByEmailOrThrow(email);
 
-        log.info("User conditions - firstLogin: {}, socialLogin: {}",
-                user.isFirstLogin(), user.isSocialLogin());
+        log.info("Trainer conditions - firstLogin: {}, socialLogin: {}",
+                trainer.isFirstLogin(), trainer.isSocialLogin());
 
-        if (!user.isFirstLogin()) {
+        if (!trainer.isFirstLogin()) {
             log.warn("Password reset failed - not first login for trainer: '{}'", email);
             return false;
         }
 
-        if (user.isSocialLogin()) {
+        if (trainer.isSocialLogin()) {
             log.warn("Password reset failed - trainer is social login: '{}'", email);
             return false;
         }
@@ -134,11 +134,11 @@ public class TrainerSettingsService {
             return false;
         }
 
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setFirstLogin(false);
-        user.setLastModifiedAt(LocalDateTime.now());
+        trainer.setPassword(passwordEncoder.encode(request.newPassword()));
+        trainer.setFirstLogin(false);
+        trainer.setLastModifiedAt(LocalDateTime.now());
 
-        userRepository.save(user);
+        userRepository.save(trainer);
         log.info("First-time password reset successful for trainer: '{}'", email);
         return true;
     }
@@ -146,9 +146,9 @@ public class TrainerSettingsService {
     @Transactional
     public boolean changePassword(String email, ChangePasswordRequestDTO request) {
         log.info("Attempting password change for trainer email: '{}'", email);
-        User user = findTrainerByEmailOrThrow(email);
+        User trainer = findTrainerByEmailOrThrow(email);
 
-        if (user.isSocialLogin()) {
+        if (trainer.isSocialLogin()) {
             log.warn("Password change failed - trainer is social login: '{}'", email);
             return false;
         }
@@ -158,7 +158,7 @@ public class TrainerSettingsService {
             return false;
         }
 
-        boolean passwordMatches = passwordEncoder.matches(request.currentPassword(), user.getPassword());
+        boolean passwordMatches = passwordEncoder.matches(request.currentPassword(), trainer.getPassword());
         log.info("Current password matches: {}", passwordMatches);
 
         if (!passwordMatches) {
@@ -166,19 +166,19 @@ public class TrainerSettingsService {
             return false;
         }
 
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setLastModifiedAt(LocalDateTime.now());
+        trainer.setPassword(passwordEncoder.encode(request.newPassword()));
+        trainer.setLastModifiedAt(LocalDateTime.now());
 
-        userRepository.save(user);
+        userRepository.save(trainer);
         log.info("Password change successful for trainer: '{}'", email);
         return true;
     }
 
     public boolean isFirstLoginRequired(String email) {
         log.info("Checking first login requirement for trainer email: '{}'", email);
-        User user = findTrainerByEmailOrThrow(email);
+        User trainer = findTrainerByEmailOrThrow(email);
 
-        boolean requiresReset = user.isFirstLogin() && !user.isSocialLogin();
+        boolean requiresReset = trainer.isFirstLogin() && !trainer.isSocialLogin();
         log.info("First login required for '{}': {}", email, requiresReset);
 
         return requiresReset;

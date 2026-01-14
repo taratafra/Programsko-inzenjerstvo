@@ -48,6 +48,9 @@ public class User{
     @Column(name = "requires_password_reset")
     private boolean requiresPasswordReset = false;
 
+    @Column(name = "approved_trainer")
+    private boolean approvedTrainer = false;
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 

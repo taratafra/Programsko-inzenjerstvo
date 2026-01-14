@@ -73,6 +73,7 @@ public class TrainerService {
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     user.setRequiresPasswordReset(false);
+                    user.setRole(Role.TRAINER);
                     User savedUser = userRepository.save(user);
                     //log.info("Onboarding completed for user: {}", email);
                     return TrainerMapper.toDTO(savedUser);
@@ -85,6 +86,7 @@ public class TrainerService {
         return userRepository.findByAuth0Id(auth0Id)
                 .map(user -> {
                     user.setOnboardingComplete(true);
+                    user.setRole(Role.TRAINER);
                     User savedUser = userRepository.save(user);
                     return TrainerMapper.toDTO(savedUser);
                 });

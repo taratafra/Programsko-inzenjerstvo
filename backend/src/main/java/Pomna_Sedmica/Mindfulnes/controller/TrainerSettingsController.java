@@ -48,7 +48,7 @@ public class TrainerSettingsController {
         try {
             log.info("Get trainer settings request - JWT received");
             String email = extractEmailFromJwt(jwt);
-            UserSettingsResponseDTO response = trainerSettingsService.getUserSettings(email);
+            UserSettingsResponseDTO response = trainerSettingsService.getTrainerSettings(email);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             log.error("Error getting settings: {}", e.getMessage());
@@ -63,7 +63,7 @@ public class TrainerSettingsController {
         try {
             log.info("Update trainer settings request - JWT received");
             String email = extractEmailFromJwt(jwt);
-            UserSettingsResponseDTO response = trainerSettingsService.updateUserSettings(email, request);
+            UserSettingsResponseDTO response = trainerSettingsService.updateTrainerSettings(email, request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             log.error("Error updating settings: {}", e.getMessage());
