@@ -9,8 +9,8 @@ export default function MakeAppointment({ setActiveTab }) {
     const [selectedTime, setSelectedTime] = useState(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [appointmentData, setAppointmentData] = useState({
-        firstName: '',
-        lastName: '',
+        fullName: '',
+        email: '',
         trainerId: null
     });
     const [loading, setLoading] = useState(true);
@@ -43,23 +43,19 @@ export default function MakeAppointment({ setActiveTab }) {
                 const subscribedIds = await subsResponse.json();
                 
                 if (subscribedIds.length > 0) {
-                    // Fetch details for each trainer
-                    const trainerPromises = subscribedIds.map(async (trainerId) => {
-                        const trainerResponse = await fetch(`${BACKEND_URL}/api/users/${trainerId}`, {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        
-                        if (trainerResponse.ok) {
-                            return await trainerResponse.json();
+                    // Fetch ALL trainers
+                    const trainersResponse = await fetch(`${BACKEND_URL}/api/trainers`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
                         }
-                        return null;
                     });
                     
-                    const trainers = await Promise.all(trainerPromises);
-                    const validTrainers = trainers.filter(t => t !== null);
-                    setSubscribedTrainers(validTrainers);
+                    if (trainersResponse.ok) {
+                        const allTrainers = await trainersResponse.json();
+                        // Filter to only subscribed trainers
+                        const subscribed = allTrainers.filter(t => subscribedIds.includes(t.id));
+                        setSubscribedTrainers(subscribed);
+                    }
                 }
             }
             
@@ -118,7 +114,7 @@ export default function MakeAppointment({ setActiveTab }) {
     };
 
     const handleSubmitAppointment = async () => {
-        if (!appointmentData.firstName || !appointmentData.lastName || !appointmentData.trainerId) {
+        if (!appointmentData.fullName || !appointmentData.email || !appointmentData.trainerId) {
             alert('Please fill in all fields');
             return;
         }
@@ -126,18 +122,21 @@ export default function MakeAppointment({ setActiveTab }) {
         try {
             const token = await getAccessTokenSilently();
             
-            const startDateTime = new Date(selectedDate);
-            const [hours] = selectedTime.hour24.split(':');
-            startDateTime.setHours(parseInt(hours), 0, 0, 0);
+            // Format time as HH:mm:ss for LocalTime (e.g., "10:00:00")
+            const timeOnly = selectedTime.hour24 + ':00';
+            
+            // Get day of week for the selected date (MONDAY, TUESDAY, etc.)
+            const dayOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][selectedDate.getDay()];
 
             const scheduleRequest = {
-                title: `Appointment: ${appointmentData.firstName} ${appointmentData.lastName}`,
-                startTime: startDateTime.toISOString(),
+                title: `Appointment: ${appointmentData.fullName} (${appointmentData.email}) - ${selectedDate.toLocaleDateString()}`,
+                startTime: timeOnly,
                 repeatType: 'ONCE',
                 daysOfWeek: [],
                 timezone: 'Europe/Zagreb',
                 reminderMinutesBefore: 30,
-                enabled: true
+                enabled: true,
+                trainerId: appointmentData.trainerId
             };
 
             const response = await fetch(`${BACKEND_URL}/api/schedules/me`, {
@@ -154,7 +153,7 @@ export default function MakeAppointment({ setActiveTab }) {
                 
                 setSelectedDate(null);
                 setSelectedTime(null);
-                setAppointmentData({ firstName: '', lastName: '', trainerId: null });
+                setAppointmentData({ fullName: '', email: '', trainerId: null });
             } else {
                 const error = await response.json();
                 alert(`Failed to schedule appointment: ${error.message || 'Unknown error'}`);
@@ -269,24 +268,24 @@ export default function MakeAppointment({ setActiveTab }) {
                     
                     <div className={styles.formGrid}>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>First Name</label>
+                            <label className={styles.label}>Full Name</label>
                             <input
                                 type="text"
-                                value={appointmentData.firstName}
-                                onChange={(e) => setAppointmentData({...appointmentData, firstName: e.target.value})}
+                                value={appointmentData.fullName}
+                                onChange={(e) => setAppointmentData({...appointmentData, fullName: e.target.value})}
                                 className={styles.input}
-                                placeholder="Enter your first name"
+                                placeholder="Enter your full name"
                             />
                         </div>
 
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Last Name</label>
+                            <label className={styles.label}>Email</label>
                             <input
-                                type="text"
-                                value={appointmentData.lastName}
-                                onChange={(e) => setAppointmentData({...appointmentData, lastName: e.target.value})}
+                                type="email"
+                                value={appointmentData.email}
+                                onChange={(e) => setAppointmentData({...appointmentData, email: e.target.value})}
                                 className={styles.input}
-                                placeholder="Enter your last name"
+                                placeholder="Enter your email"
                             />
                         </div>
 
@@ -312,7 +311,8 @@ export default function MakeAppointment({ setActiveTab }) {
                         <div className={styles.summaryContent}>
                             <p><strong>Date:</strong> {selectedDate.toLocaleDateString()}</p>
                             <p><strong>Time:</strong> {selectedTime.time}</p>
-                            <p><strong>Name:</strong> {appointmentData.firstName} {appointmentData.lastName}</p>
+                            <p><strong>Name:</strong> {appointmentData.fullName}</p>
+                            <p><strong>Email:</strong> {appointmentData.email}</p>
                             <p><strong>Trainer:</strong> {
                                 subscribedTrainers.find(t => t.id === appointmentData.trainerId)?.name || 'Not selected'
                             }</p>
