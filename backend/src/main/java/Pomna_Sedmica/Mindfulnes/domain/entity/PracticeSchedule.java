@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,20 +17,15 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "practice_schedule")
+@Table(name = "practice_schedules")
 public class PracticeSchedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // vlasnik schedule-a
     @Column(nullable = false)
     private Long userId;
-
-    // obavezno: povezani trener (primarni ili override)
-    @Column(nullable = false)
-    private Long trainerId;
 
     @Column(nullable = false)
     private String title;
@@ -41,12 +37,18 @@ public class PracticeSchedule {
     @Column(nullable = false)
     private RepeatType repeatType;
 
-    // kod DAILY može biti prazno, kod WEEKLY mora imati dane
+
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "practice_schedule_days", joinColumns = @JoinColumn(name = "schedule_id"))
+    @CollectionTable(
+            name = "practice_schedule_days",
+            joinColumns = @JoinColumn(name = "schedule_id")
+    )
     @Enumerated(EnumType.STRING)
-    @Column(name = "day_of_week")
+    @Column(name = "day")
+    @Builder.Default
     private Set<DayOfWeek> daysOfWeek = new HashSet<>();
+
+    private LocalDate date;
 
     @Column(nullable = false)
     private String timezone;
@@ -54,8 +56,10 @@ public class PracticeSchedule {
     @Column(nullable = false)
     private Integer reminderMinutesBefore;
 
+
     @Column(nullable = false)
-    private boolean enabled;
+    @Builder.Default
+    private boolean enabled = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -71,8 +75,6 @@ public class PracticeSchedule {
 
         if (reminderMinutesBefore == null) reminderMinutesBefore = 10;
         if (timezone == null || timezone.isBlank()) timezone = "Europe/Zagreb";
-        // enabled default
-        // (builder može setati, ali ovo spašava greške)
     }
 
     @PreUpdate
