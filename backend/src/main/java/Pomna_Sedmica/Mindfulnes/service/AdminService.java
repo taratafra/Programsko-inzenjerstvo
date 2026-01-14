@@ -48,7 +48,7 @@ public class AdminService {
 
 
     public List<UserDTOResponse> getAllTrainers() {
-        return userRepository.findByRole(Role.TRAINER)
+        return userRepository.findAllByRole(Role.TRAINER)
                 .stream()
                 .map(AdminMapper::toDTO)
                 .collect(Collectors.toList());

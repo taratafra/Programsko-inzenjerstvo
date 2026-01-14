@@ -48,7 +48,7 @@ public class TrainerService {
 
 
     public List<UserDTOResponse> getAllTrainers() {
-        return userRepository.findByRole(Role.TRAINER)
+        return userRepository.findAllByRole(Role.TRAINER)
                 .stream()
                 .map(TrainerMapper::toDTO)
                 .collect(Collectors.toList());
