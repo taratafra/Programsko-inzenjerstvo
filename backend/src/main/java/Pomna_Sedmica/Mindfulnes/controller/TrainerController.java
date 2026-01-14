@@ -1,9 +1,7 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
-import Pomna_Sedmica.Mindfulnes.domain.dto.AudioContentDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
-import Pomna_Sedmica.Mindfulnes.domain.dto.VideoContentDTOResponse;
 import Pomna_Sedmica.Mindfulnes.service.TrainerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -68,15 +66,5 @@ public class TrainerController {
             email = jwt.getSubject();
         }
         return email;
-    }
-
-    @GetMapping("/video/{id}")
-    public ResponseEntity<VideoContentDTOResponse> getVideoContent(@PathVariable("id") Long id) {
-        return null;
-    }
-
-    @GetMapping("/audio/{id}")
-    public ResponseEntity<AudioContentDTOResponse> getAudioContent(@PathVariable("id") Long id) {
-        return null;
     }
 }
