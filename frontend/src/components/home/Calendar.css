@@ -1,0 +1,93 @@
+/*
+/* ------------------------------------------- */
+/* STILOVI ZA REACT-CALENDAR (Dark Mode)       */
+/* ------------------------------------------- */
+
+/* Kontejner za kalendar u desnom sidebar-u */
+.calendarSidebar {
+  padding: 20px 15px; /* Malo drugačiji padding da kalendar stane */
+  background-color: var(--bg-sidebar);
+}
+
+/* Ukupni wrapper kalendara */
+.reactCalendar {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background-color: var(--bg-card); /* Koristimo boju kartice */
+  padding: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Header kalendara (Mjesec i strelice) */
+.reactCalendar .react-calendar__navigation {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.reactCalendar .react-calendar__navigation button {
+  color: var(--text-accent); /* Akcentna boja za strelice i mjesec */
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  flex-grow: 1;
+  padding: 5px 0;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+}
+
+.reactCalendar .react-calendar__navigation button:hover {
+  background-color: #444; /* Tamnija pozadina na hover */
+}
+
+.reactCalendar .react-calendar__navigation button:disabled {
+  color: #555;
+}
+
+/* Dani u tjednu (Pon, Uto, Sri...) */
+.reactCalendar .react-calendar__month-view__weekdays {
+  text-align: center;
+  font-size: 10px;
+  color: #999; /* Siva boja za dane u tjednu */
+  font-weight: bold;
+  text-transform: uppercase;
+  padding-bottom: 5px;
+}
+
+.reactCalendar .react-calendar__month-view__weekdays__weekday {
+  padding: 5px;
+}
+
+/* Glavni gumbovi za dane */
+.reactCalendar .react-calendar__tile {
+  background: none;
+  border: none;
+  color: var(--text-main); /* Svijetla boja teksta */
+  border-radius: 5px;
+  padding: 10px 5px; /* Prilagodite po potrebi */
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.reactCalendar .react-calendar__tile:hover {
+  background-color: #444; /* Tamnija pozadina na hover */
+}
+
+/* Dan koji je "danas" */
+.reactCalendar .react-calendar__tile--now {
+  background-color: #4a4a4a; /* Malo istaknut "danas" */
+  font-weight: bold;
+}
+
+/* Odabrani dan */
+.reactCalendar .react-calendar__tile--active {
+  background-color: var(--text-accent); /* Akcentna boja za odabir */
+  color: var(--text-dark); /* Tamni tekst na akcentnoj boji */
+  font-weight: bold;
+}
+
+/* Dani izvan trenutnog mjeseca */
+.reactCalendar .react-calendar__month-view__days__day--neighboringMonth {
+  color: #555; /* Jako tamna boja za susjedne dane */
+}
