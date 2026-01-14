@@ -28,7 +28,7 @@ public class VideoService {
                 .collect(Collectors.toList());
     }
 
-    public VideoResponseDTO createVideo(String title, String description, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
+    public VideoResponseDTO createVideo(String title, String description, String type, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
         String fileName = "videos/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
         
         com.google.cloud.storage.Blob blob = storageBucket.create(
@@ -44,11 +44,22 @@ public class VideoService {
         video.setDescription(description);
         video.setUrl(url);
         video.setTrainer(trainer);
+        try {
+            video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.valueOf(type));
+        } catch (Exception e) {
+            video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
+        }
         
         Video savedVideo = videoRepository.save(video);
         return mapToDTO(savedVideo);
     }
 
+
+    public VideoResponseDTO getVideoById(Long id) {
+        return videoRepository.findById(id)
+                .map(this::mapToDTO)
+                .orElseThrow(() -> new RuntimeException("Video not found with id: " + id));
+    }
 
     private VideoResponseDTO mapToDTO(Video video) {
         VideoResponseDTO dto = new VideoResponseDTO();
@@ -57,6 +68,7 @@ public class VideoService {
         dto.setDescription(video.getDescription());
         dto.setUrl(video.getUrl());
         dto.setCreatedAt(video.getCreatedAt());
+        dto.setType(video.getType() != null ? video.getType().name() : "VIDEO");
         if (video.getTrainer() != null) {
             dto.setTrainerName(video.getTrainer().getName() + " " + video.getTrainer().getSurname());
         } else {

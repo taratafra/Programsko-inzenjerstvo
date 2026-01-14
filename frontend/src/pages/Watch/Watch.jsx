@@ -5,221 +5,251 @@ import styles from "./Watch.module.css";
 
 // --- STAR RATING ---
 const StarRating = ({ onRate }) => {
-  const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
+    const [rating, setRating] = useState(0);
+    const [hover, setHover] = useState(0);
 
-  const handleRate = (value) => {
-    setRating(value);
-    if (onRate) onRate(value);
-  };
+    const handleRate = (value) => {
+        setRating(value);
+        if (onRate) onRate(value);
+    };
 
-  return (
-    <div className={styles.starRating}>
-      {[...Array(5)].map((_, index) => {
-        const ratingValue = index + 1;
-        return (
-          <span
-            key={index}
-            className={ratingValue <= (hover || rating) ? styles.starFilled : styles.starEmpty}
-            onClick={() => handleRate(ratingValue)}
-            onMouseEnter={() => setHover(ratingValue)}
-            onMouseLeave={() => setHover(0)}
-          >
-            ★
-          </span>
-        );
-      })}
-      <span className={styles.ratingText}>
-        {rating > 0 ? `You rated: ${rating}/5` : "Rate"}
-      </span>
-    </div>
-  );
+    return (
+        <div className={styles.starRating}>
+            {[...Array(5)].map((_, index) => {
+                const ratingValue = index + 1;
+                return (
+                    <span
+                        key={index}
+                        className={ratingValue <= (hover || rating) ? styles.starFilled : styles.starEmpty}
+                        onClick={() => handleRate(ratingValue)}
+                        onMouseEnter={() => setHover(ratingValue)}
+                        onMouseLeave={() => setHover(0)}
+                    >
+                        ★
+                    </span>
+                );
+            })}
+            <span className={styles.ratingText}>
+                {rating > 0 ? `You rated: ${rating}/5` : "Rate"}
+            </span>
+        </div>
+    );
 };
 
 export default function Watch() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation(); 
-  
-  const { user: auth0User, isAuthenticated } = useAuth0();
-  const [user, setUser] = useState(null);
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  // --- COMMENTS STATE ---
-  const [comments, setComments] = useState([
-    { id: 1, user: "Trainer Mike", text: "Great form on the second set!", date: "2 hours ago" },
-    { id: 2, user: "Sarah J.", text: "Can you upload the PDF version of this?", date: "1 day ago" }
-  ]);
-  const [newComment, setNewComment] = useState("");
+    const { user: auth0User, isAuthenticated } = useAuth0();
+    const [user, setUser] = useState(null);
 
-  // --- CONTENT DATA STATE ---
-  const [contentData, setContentData] = useState({
-      title: "Loading...",
-      type: location.state?.type || "VIDEO",
-      url: "",
-      textBody: ""
-  });
+    // --- COMMENTS STATE ---
+    const [comments, setComments] = useState([
+        { id: 1, user: "Trainer Mike", text: "Great form on the second set!", date: "2 hours ago" },
+        { id: 2, user: "Sarah J.", text: "Can you upload the PDF version of this?", date: "1 day ago" }
+    ]);
+    const [newComment, setNewComment] = useState("");
 
-  useEffect(() => {
-    if (isAuthenticated && auth0User) {
-        setUser(auth0User); 
-    }
-  }, [isAuthenticated, auth0User]);
+    // --- CONTENT DATA STATE ---
+    const [contentData, setContentData] = useState({
+        title: "Loading...",
+        type: location.state?.type || "VIDEO",
+        url: "",
+        textBody: ""
+    });
 
-  useEffect(() => {
-    if (contentData.type === 'BLOG') {
-        setContentData(prev => ({
-            ...prev,
-            title: "Healthy Eating Habits (Blog)",
-            textBody: "This is a placeholder for the blog content. \n\n1. Eat more greens.\n2. Drink water.\n3. Sleep well.\n\n(This text represents the uploaded .txt file content)"
-        }));
-    } else if (contentData.type === 'AUDIO') {
-        setContentData(prev => ({
-            ...prev,
-            title: "Morning Meditation (Audio)",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
-        }));
-    } else {
-        setContentData(prev => ({
-            ...prev,
-            title: "Full Body Workout (Video)",
-            url: "https://www.w3schools.com/html/mov_bbb.mp4"
-        }));
-    }
-  }, [id, contentData.type]);
+    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    const [loading, setLoading] = useState(true);
 
-  const handlePostComment = () => {
-    if (!newComment.trim()) return;
+    useEffect(() => {
+        if (isAuthenticated && auth0User) {
+            setUser(auth0User);
+        }
+    }, [isAuthenticated, auth0User]);
 
-    const commentObject = {
-        id: Date.now(),
-        user: user?.name || "Guest User",
-        text: newComment,
-        date: "Just now"
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Use type from backend, fallback to state or inference
+                    let itemType = data.type || location.state?.type;
+                    if (!itemType) {
+                        const urlLower = data.url.toLowerCase();
+                        if (urlLower.includes('.mp3') || urlLower.includes('.wav') || urlLower.includes('.ogg') || urlLower.includes('audio')) itemType = "AUDIO";
+                        else if (urlLower.includes('.txt') || urlLower.includes('.md') || urlLower.includes('.pdf') || urlLower.includes('document')) itemType = "BLOG";
+                        else itemType = "VIDEO";
+                    }
+
+                    setContentData({
+                        title: data.title,
+                        description: data.description,
+                        type: itemType,
+                        url: data.url,
+                        trainerName: data.trainerName,
+                        createdAt: data.createdAt,
+                        textBody: itemType === 'BLOG' ? "Loading blog content..." : ""
+                    });
+
+                    if (itemType === 'BLOG') {
+                        // Fetch blog text if it's a blog
+                        const textRes = await fetch(data.url);
+                        if (textRes.ok) {
+                            const text = await textRes.text();
+                            setContentData(prev => ({ ...prev, textBody: text }));
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching content:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchContent();
+    }, [id, location.state?.type, BACKEND_URL]);
+
+    const handlePostComment = () => {
+        if (!newComment.trim()) return;
+
+        const commentObject = {
+            id: Date.now(),
+            user: user?.name || "Guest User",
+            text: newComment,
+            date: "Just now"
+        };
+
+        setComments([commentObject, ...comments]);
+        setNewComment("");
     };
 
-    setComments([commentObject, ...comments]); 
-    setNewComment(""); 
-  };
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') handlePostComment();
+    };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handlePostComment();
-  };
+    const handleDeleteComment = (commentId) => {
+        setComments(comments.filter(c => c.id !== commentId));
+    };
 
-  const handleDeleteComment = (commentId) => {
-      setComments(comments.filter(c => c.id !== commentId));
-  };
+    if (loading) return <div className={styles.layoutContainer}><div className={styles.centerContainer}>Loading content...</div></div>;
 
-  return (
-    <div className={styles.layoutContainer}>
-      <div className={styles.cloud1}></div>
-      <div className={styles.cloud2}></div>
-      <div className={styles.cloud3}></div>
+    return (
+        <div className={styles.layoutContainer}>
+            <div className={styles.cloud1}></div>
+            <div className={styles.cloud2}></div>
+            <div className={styles.cloud3}></div>
 
-      <div className={styles.contentWrapper}>
-        <div className={styles.scrollableArea}>
-            <div className={styles.centerContainer}>
-                
-                <button onClick={() => navigate(-1)} className={styles.backButton}>
-                ← Back to Content Library
-                </button>
+            <div className={styles.contentWrapper}>
+                <div className={styles.scrollableArea}>
+                    <div className={styles.centerContainer}>
 
-                <div className={styles.watchCard}>
-                    
-                    {/* --- PLAYER SECTION --- */}
-                    {contentData.type === 'VIDEO' && (
-                        <div className={styles.videoPlayerWrapper}>
-                            <video controls autoPlay className={styles.videoPlayer} src={contentData.url}>
-                                Your browser does not support video.
-                            </video>
-                        </div>
-                    )}
+                        <button onClick={() => navigate(-1)} className={styles.backButton}>
+                            ← Back to Content Library
+                        </button>
 
-                    {contentData.type === 'AUDIO' && (
-                        <div className={styles.audioWrapper}>
-                            <div className={styles.audioIconLarge}>🎧</div>
-                            <audio controls src={contentData.url} className={styles.audioElement} />
-                        </div>
-                    )}
+                        <div className={styles.watchCard}>
 
-                    {contentData.type === 'BLOG' && (
-                        <div className={styles.blogTextWrapper}>
-                            {contentData.textBody.split('\n').map((line, i) => (
-                                <p key={i} className={styles.blogParagraph}>{line}</p>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* --- INFO HEADER --- */}
-                    <div className={styles.videoHeader}>
-                        <div>
-                            <h1 className={styles.videoTitle}>{contentData.title}</h1>
-                            <p className={styles.videoDate}>Posted on Oct 24, 2025</p>
-                        </div>
-                        <button className={styles.subscribeBtn}>Subscribe</button>
-                    </div>
-
-                    {/* --- REVIEWS --- */}
-                    <div className={styles.actionRow}>
-                        <div className={styles.reviewSection}>
-                            <span>Leave a Review:</span>
-                            <StarRating onRate={(val) => console.log(val)} />
-                        </div>
-                    </div>
-
-                    {/* --- DESCRIPTION --- */}
-                    <div className={styles.descriptionBox}>
-                        <h3>Description</h3>
-                        <p>This content helps you improve your lifestyle. (Placeholder description)</p>
-                    </div>
-
-                    {/* --- COMMENTS --- */}
-                    <div className={styles.commentsSection}>
-                        <h3>Comments ({comments.length})</h3>
-                        
-                        <div className={styles.commentInputWrapper}>
-                            <div className={styles.userAvatar}>
-                                {user?.picture ? 
-                                    <img src={user.picture} alt="u" className={styles.avatarImage} /> 
-                                    : "👤"
-                                }
-                            </div>
-                            <input 
-                                type="text" 
-                                placeholder="Add a comment..." 
-                                className={styles.commentInput} 
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                            />
-                            <button className={styles.postBtn} onClick={handlePostComment}>Post</button>
-                        </div>
-
-                        <div className={styles.commentList}>
-                            {comments.map((comment) => (
-                                <div key={comment.id} className={styles.comment}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                        <strong style={{ color: '#2b3674' }}>{comment.user}</strong>
-                                        <span style={{ fontSize: '0.8rem', color: '#999' }}>{comment.date}</span>
-                                    </div>
-                                    <div>{comment.text}</div>
-                                    
-                                    {comment.user === (user?.name || "Guest User") && (
-                                        <button 
-                                            onClick={() => handleDeleteComment(comment.id)}
-                                            className={styles.deleteButton}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
+                            {/* --- PLAYER SECTION --- */}
+                            {contentData.type === 'VIDEO' && (
+                                <div className={styles.videoPlayerWrapper}>
+                                    <video controls autoPlay className={styles.videoPlayer} src={contentData.url}>
+                                        Your browser does not support video.
+                                    </video>
                                 </div>
-                            ))}
+                            )}
+
+                            {contentData.type === 'AUDIO' && (
+                                <div className={styles.audioWrapper}>
+                                    <div className={styles.audioIconLarge}>🎧</div>
+                                    <audio controls src={contentData.url} className={styles.audioElement} />
+                                </div>
+                            )}
+
+                            {contentData.type === 'BLOG' && (
+                                <div className={styles.blogTextWrapper}>
+                                    {contentData.textBody.split('\n').map((line, i) => (
+                                        <p key={i} className={styles.blogParagraph}>{line}</p>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* --- INFO HEADER --- */}
+                            <div className={styles.videoHeader}>
+                                <div>
+                                    <h1 className={styles.videoTitle}>{contentData.title}</h1>
+                                    <p className={styles.videoDate}>
+                                        By {contentData.trainerName} • {contentData.createdAt ? new Date(contentData.createdAt).toLocaleDateString() : "Recently"}
+                                    </p>
+                                </div>
+                                <button className={styles.subscribeBtn}>Subscribe</button>
+                            </div>
+
+                            {/* --- REVIEWS --- */}
+                            <div className={styles.actionRow}>
+                                <div className={styles.reviewSection}>
+                                    <span>Leave a Review:</span>
+                                    <StarRating onRate={(val) => console.log(val)} />
+                                </div>
+                            </div>
+
+                            {/* --- DESCRIPTION --- */}
+                            <div className={styles.descriptionBox}>
+                                <h3>Description</h3>
+                                <p>{contentData.description || "No description provided."}</p>
+                            </div>
+
+                            {/* --- COMMENTS --- */}
+                            <div className={styles.commentsSection}>
+                                <h3>Comments ({comments.length})</h3>
+
+                                <div className={styles.commentInputWrapper}>
+                                    <div className={styles.userAvatar}>
+                                        {user?.picture ?
+                                            <img src={user.picture} alt="u" className={styles.avatarImage} />
+                                            : "👤"
+                                        }
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Add a comment..."
+                                        className={styles.commentInput}
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                    />
+                                    <button className={styles.postBtn} onClick={handlePostComment}>Post</button>
+                                </div>
+
+                                <div className={styles.commentList}>
+                                    {comments.map((comment) => (
+                                        <div key={comment.id} className={styles.comment}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                                <strong style={{ color: '#2b3674' }}>{comment.user}</strong>
+                                                <span style={{ fontSize: '0.8rem', color: '#999' }}>{comment.date}</span>
+                                            </div>
+                                            <div>{comment.text}</div>
+
+                                            {comment.user === (user?.name || "Guest User") && (
+                                                <button
+                                                    onClick={() => handleDeleteComment(comment.id)}
+                                                    className={styles.deleteButton}
+                                                >
+                                                    Delete
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

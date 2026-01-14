@@ -13,15 +13,15 @@ export default function Videos() {
     const [user, setUser] = useState(null);
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // --- UPLOAD STATES ---
     const [showUploadModal, setShowUploadModal] = useState(false);
-    const [contentType, setContentType] = useState("VIDEO"); 
+    const [contentType, setContentType] = useState("VIDEO");
     const [newVideo, setNewVideo] = useState({ title: "", description: "" });
     const [file, setFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
-    
+
     const navigate = useNavigate();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
 
@@ -31,14 +31,14 @@ export default function Videos() {
 
         if (!item.url) return "VIDEO";
         const urlLower = item.url.toLowerCase();
-        
+
         // Debugging log
         // console.log(`Checking ${item.title}:`, urlLower);
 
         if (urlLower.includes('.mp3') || urlLower.includes('.wav') || urlLower.includes('.ogg') || urlLower.includes('audio')) return "AUDIO";
         if (urlLower.includes('.txt') || urlLower.includes('.md') || urlLower.includes('.pdf') || urlLower.includes('document')) return "BLOG";
-        
-        return "VIDEO"; 
+
+        return "VIDEO";
     };
 
     const fetchVideos = useCallback(async () => {
@@ -107,7 +107,7 @@ export default function Videos() {
             const formData = new FormData();
             formData.append("title", newVideo.title);
             formData.append("description", newVideo.description);
-            formData.append("type", contentType); 
+            formData.append("type", contentType);
             formData.append("file", file);
 
             const progressInterval = setInterval(() => {
@@ -127,7 +127,7 @@ export default function Videos() {
                 setShowUploadModal(false);
                 setNewVideo({ title: "", description: "" });
                 setFile(null);
-                setContentType("VIDEO"); 
+                setContentType("VIDEO");
                 setUploadProgress(0);
                 fetchVideos();
                 alert("Upload successful!");
@@ -171,7 +171,7 @@ export default function Videos() {
                 <Header navigate={navigate} user={user} />
 
                 <div className={styles.mainGrid}>
-                    <LeftSidebar user={user} activeTab="Videos" setActiveTab={() => {}} handleLogout={handleLogout} />
+                    <LeftSidebar user={user} activeTab="Videos" setActiveTab={() => { }} handleLogout={handleLogout} />
 
                     <div className={styles.mainContent}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -185,24 +185,24 @@ export default function Videos() {
 
                         <div className={styles.videoGrid}>
                             {videos.map((item) => {
-                                const itemType = getMediaType(item); 
+                                const itemType = getMediaType(item);
 
                                 return (
                                     <div key={item.id} className={styles.videoCard}>
-                                        <div 
+                                        <div
                                             className={styles.videoThumbnail}
-                                            style={{ cursor: "pointer" }} 
+                                            style={{ cursor: "pointer" }}
                                             onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
                                             onMouseEnter={(e) => {
-                                                if(itemType === 'VIDEO') {
+                                                if (itemType === 'VIDEO') {
                                                     const v = e.currentTarget.querySelector("video");
-                                                    if(v) v.play().catch(() => {});
+                                                    if (v) v.play().catch(() => { });
                                                 }
                                             }}
                                             onMouseLeave={(e) => {
-                                                if(itemType === 'VIDEO') {
+                                                if (itemType === 'VIDEO') {
                                                     const v = e.currentTarget.querySelector("video");
-                                                    if(v) { v.pause(); v.currentTime = 0; }
+                                                    if (v) { v.pause(); v.currentTime = 0; }
                                                 }
                                             }}
                                         >
@@ -228,9 +228,15 @@ export default function Videos() {
                                                 {itemType}
                                             </span>
                                         </div>
-                                        
+
                                         <div className={styles.videoInfo}>
-                                            <div className={styles.videoTitle}>{item.title}</div>
+                                            <div
+                                                className={styles.videoTitle}
+                                                style={{ cursor: "pointer" }}
+                                                onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
+                                            >
+                                                {item.title}
+                                            </div>
                                             <div className={styles.videoDescription}>{item.description}</div>
                                             <div style={{ fontSize: '0.8rem', color: '#888' }}>
                                                 {itemType} • By {item.trainerName}
@@ -252,8 +258,8 @@ export default function Videos() {
                         <form onSubmit={handleUpload}>
                             <div className={styles.formGroup}>
                                 <label>Content Type</label>
-                                <select 
-                                    value={contentType} 
+                                <select
+                                    value={contentType}
                                     onChange={(e) => setContentType(e.target.value)}
                                     className={styles.selectInput}
                                 >
@@ -274,7 +280,7 @@ export default function Videos() {
                                 <label>File</label>
                                 <input type="file" accept={getAcceptedFileTypes()} onChange={handleFileChange} required />
                             </div>
-                            
+
                             {isUploading && (
                                 <div className={styles.progressContainer}>
                                     <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
