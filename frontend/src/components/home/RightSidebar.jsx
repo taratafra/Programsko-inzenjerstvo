@@ -1,17 +1,17 @@
-// src/components/home/RightSidebar.jsx
-
 import { useState, useEffect } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
 import styles from "./RightSidebar.module.css";
 
-export default function RightSidebar({ navigate, setActiveTab }) {
-  const { getAccessTokenSilently } = useAuth0();
+export default function RightSidebar({ navigate, setActiveTab, activeTab, onSchedulesReload }) {
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [appointments, setAppointments] = useState([]);
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDetails, setShowDetails] = useState(false);
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND;
+  const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -20,13 +20,32 @@ export default function RightSidebar({ navigate, setActiveTab }) {
 
   const dayNames = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-  useEffect(() => {
-    loadAppointments();
-  }, []);
-
-  const loadAppointments = async () => {
+  // Helper function to get token from either Auth0 or localStorage
+  const getToken = async () => {
     try {
-      const token = await getAccessTokenSilently();
+      if (isAuthenticated) {
+        return await getAccessTokenSilently({
+          authorizationParams: {
+            audience: `${AUDIENCE}`,
+            scope: "openid profile email",
+          },
+        });
+      } else {
+        const localToken = localStorage.getItem("token");
+        if (!localToken) {
+          throw new Error("No authentication token found");
+        }
+        return localToken;
+      }
+    } catch (error) {
+      console.error("Error getting token:", error);
+      throw error;
+    }
+  };
+
+  const loadSchedules = async () => {
+    try {
+      const token = await getToken();
       
       const response = await fetch(`${BACKEND_URL}/api/schedules/me`, {
         headers: {
@@ -36,21 +55,101 @@ export default function RightSidebar({ navigate, setActiveTab }) {
 
       if (response.ok) {
         const data = await response.json();
-        setAppointments(data);
+        setSchedules(data);
       }
       
       setLoading(false);
     } catch (error) {
-      console.error('Error loading appointments:', error);
+      console.error('Error loading schedules:', error);
       setLoading(false);
     }
   };
 
-  const hasAppointment = (date) => {
-    return appointments.some(apt => {
-      const aptDate = new Date(apt.startTime);
-      return aptDate.toDateString() === date.toDateString();
+  useEffect(() => {
+    loadSchedules();
+  }, []);
+
+  // Reload schedules when returning to this tab
+  useEffect(() => {
+    if (activeTab === 'Personalized recomendations' || activeTab === 'Make Appointment') {
+      loadSchedules();
+    }
+  }, [activeTab]);
+
+  // Expose loadSchedules to parent component
+  useEffect(() => {
+    if (onSchedulesReload) {
+      onSchedulesReload(loadSchedules);
+    }
+  }, [onSchedulesReload]);
+
+  // Check if a date has any schedules
+  const getSchedulesForDate = (date) => {
+    if (!date) return [];
+    
+    const dayOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][date.getDay()];
+    
+    // Normalize the date to midnight for comparison
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    
+    return schedules.filter(schedule => {
+      // ONCE type - check if date matches
+      if (schedule.repeatType === 'ONCE' && schedule.date) {
+        const scheduleDate = new Date(schedule.date);
+        scheduleDate.setHours(0, 0, 0, 0);
+        return scheduleDate.getTime() === compareDate.getTime();
+      }
+      
+      // DAILY type - check if date is after start date (and before end date if exists)
+      if (schedule.repeatType === 'DAILY') {
+        // Only show if schedule has started
+        if (schedule.date) {
+          const startDate = new Date(schedule.date);
+          startDate.setHours(0, 0, 0, 0);
+          
+          // Date must be on or after start date
+          if (compareDate.getTime() < startDate.getTime()) {
+            return false;
+          }
+        }
+        
+        // Optionally check end date if your schedule has one
+        if (schedule.endDate) {
+          const endDate = new Date(schedule.endDate);
+          endDate.setHours(0, 0, 0, 0);
+          
+          // Date must be on or before end date
+          if (compareDate.getTime() > endDate.getTime()) {
+            return false;
+          }
+        }
+        
+        return true;
+      }
+      
+      // WEEKLY type - check if day of week matches
+      if (schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek) {
+        // Check if date is after start date (if exists)
+        if (schedule.date) {
+          const startDate = new Date(schedule.date);
+          startDate.setHours(0, 0, 0, 0);
+          
+          if (compareDate.getTime() < startDate.getTime()) {
+            return false;
+          }
+        }
+        
+        // Check if day of week matches
+        return schedule.daysOfWeek.includes(dayOfWeek);
+      }
+      
+      return false;
     });
+  };
+
+  const hasSchedule = (date) => {
+    return getSchedulesForDate(date).length > 0;
   };
 
   const getDaysInMonth = (date) => {
@@ -60,19 +159,15 @@ export default function RightSidebar({ navigate, setActiveTab }) {
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     
-    // Get the day of week (0 = Sunday, 1 = Monday, etc.)
     let startingDayOfWeek = firstDay.getDay();
-    // Convert to Monday = 0, Sunday = 6
     startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
     
     const days = [];
     
-    // Add empty slots for days before the month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     
-    // Add all days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
@@ -84,13 +179,12 @@ export default function RightSidebar({ navigate, setActiveTab }) {
     if (!date) return;
     
     setSelectedDate(date);
-    console.log('Date clicked:', date);
-    console.log('Has appointment:', hasAppointment(date));
-    console.log('setActiveTab function exists:', !!setActiveTab);
+    const dateSchedules = getSchedulesForDate(date);
     
-    if (hasAppointment(date) && setActiveTab) {
-      console.log('Navigating to Make Appointment tab');
-      setActiveTab('Make Appointment');
+    if (dateSchedules.length > 0) {
+      setShowDetails(true);
+    } else {
+      setShowDetails(false);
     }
   };
 
@@ -114,20 +208,23 @@ export default function RightSidebar({ navigate, setActiveTab }) {
   };
 
   const days = getDaysInMonth(currentDate);
+  const selectedDateSchedules = getSchedulesForDate(selectedDate);
 
   return (
     <div className={styles.calendarSidebar}>
-      <h3 className={styles.calendarTitle}>Kalendar</h3>
+      <h3 className={styles.calendarTitle}>Calendar</h3>
       
       <div className={styles.calendar}>
-        {/* Calendar Header */}
+        {/* Month/Year Title - Centered */}
+        <div className={styles.monthYearTitle}>
+          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+        </div>
+
+        {/* Calendar Navigation */}
         <div className={styles.calendarHeader}>
           <button onClick={previousMonth} className={styles.navButton}>
             ‹
           </button>
-          <span className={styles.monthYear}>
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </span>
           <button onClick={nextMonth} className={styles.navButton}>
             ›
           </button>
@@ -151,13 +248,13 @@ export default function RightSidebar({ navigate, setActiveTab }) {
                 ${!date ? styles.emptyCell : ''}
                 ${isToday(date) ? styles.today : ''}
                 ${isSelected(date) ? styles.selected : ''}
-                ${date && hasAppointment(date) ? styles.hasAppointment : ''}
+                ${date && hasSchedule(date) ? styles.hasAppointment : ''}
               `}
             >
               {date && (
                 <>
                   <span className={styles.dayNumber}>{date.getDate()}</span>
-                  {hasAppointment(date) && (
+                  {hasSchedule(date) && (
                     <span className={styles.appointmentDot}></span>
                   )}
                 </>
@@ -166,10 +263,61 @@ export default function RightSidebar({ navigate, setActiveTab }) {
           ))}
         </div>
 
-        {/* Selected Date Info */}
-        {selectedDate && hasAppointment(selectedDate) && (
+        {/* Selected Date Details */}
+        {showDetails && selectedDateSchedules.length > 0 && (
+          <div className={styles.scheduleDetails}>
+            <div className={styles.detailsHeader}>
+              <h4>📅 {selectedDate.toLocaleDateString()}</h4>
+              <button 
+                onClick={() => setShowDetails(false)} 
+                className={styles.closeButton}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.schedulesList}>
+              {selectedDateSchedules.map((schedule, index) => (
+                <div key={schedule.id || index} className={styles.scheduleItem}>
+                  <div className={styles.scheduleTime}>
+                    🕐 {schedule.startTime}
+                  </div>
+                  <div className={styles.scheduleTitle}>
+                    {schedule.title}
+                  </div>
+                  <div className={styles.scheduleType}>
+                    {schedule.repeatType === 'ONCE' ? '📅 One-time' : 
+                     schedule.repeatType === 'DAILY' ? '🔄 Daily' : 
+                     '📆 Weekly'}
+                  </div>
+                  {schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek && (
+                    <div className={styles.scheduleDays}>
+                      {schedule.daysOfWeek.map(day => day.substring(0, 3)).join(', ')}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => setActiveTab('Make Appointment')}
+              className={styles.manageButton}
+            >
+              Manage Schedules
+            </button>
+          </div>
+        )}
+
+        {/* Empty state for selected date */}
+        {showDetails && selectedDateSchedules.length === 0 && (
           <div className={styles.calendarNote}>
-            <p>📅 Appointment scheduled</p>
+            <p>No schedules for this day</p>
+            <button 
+              onClick={() => setActiveTab('Make Appointment')}
+              className={styles.createButton}
+            >
+              Create Schedule
+            </button>
           </div>
         )}
       </div>

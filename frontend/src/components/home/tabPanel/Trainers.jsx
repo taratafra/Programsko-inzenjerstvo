@@ -3,15 +3,42 @@ import { useAuth0 } from "@auth0/auth0-react";
 import styles from './Trainers.module.css';
 
 export default function Trainers() {
-    const { getAccessTokenSilently } = useAuth0();
+    const { getAccessTokenSilently, isAuthenticated } = useAuth0();
     const [trainers, setTrainers] = useState([]);
     const [subscribedTrainers, setSubscribedTrainers] = useState([]);
     const [primaryTrainerId, setPrimaryTrainerId] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
-   useEffect(() => {
+    // Helper function to get token from either Auth0 or localStorage
+    const getToken = async () => {
+        try {
+            // If authenticated with Auth0 (Google login)
+            if (isAuthenticated) {
+                return await getAccessTokenSilently({
+                    authorizationParams: {
+                        audience: `${AUDIENCE}`,
+                        scope: "openid profile email",
+                    },
+                });
+            }
+            // Otherwise use local JWT token (normal registration)
+            else {
+                const localToken = localStorage.getItem("token");
+                if (!localToken) {
+                    throw new Error("No authentication token found");
+                }
+                return localToken;
+            }
+        } catch (error) {
+            console.error("Error getting token:", error);
+            throw error;
+        }
+    };
+
+    useEffect(() => {
         loadTrainers();
     }, []);
 
@@ -23,7 +50,7 @@ export default function Trainers() {
 
     const loadTrainers = async () => {
         try {
-            const token = await getAccessTokenSilently();
+            const token = await getToken();
             
             const response = await fetch(`${BACKEND_URL}/api/trainers`, {
                 headers: {
@@ -34,6 +61,8 @@ export default function Trainers() {
             if (response.ok) {
                 const allTrainers = await response.json();
                 setTrainers(allTrainers);
+            } else {
+                console.error('Failed to load trainers:', response.status);
             }
             
             setLoading(false);
@@ -45,7 +74,7 @@ export default function Trainers() {
 
     const loadSubscribedTrainers = async () => {
         try {
-            const token = await getAccessTokenSilently();
+            const token = await getToken();
             
             // Get all subscribed trainer IDs
             const subsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/subscriptions`, {
@@ -80,7 +109,7 @@ export default function Trainers() {
 
     const handleSubscribe = async (trainerId) => {
         try {
-            const token = await getAccessTokenSilently();
+            const token = await getToken();
             
             const response = await fetch(`${BACKEND_URL}/api/trainers/me/subscribe`, {
                 method: 'POST',
@@ -103,7 +132,7 @@ export default function Trainers() {
 
     const handleUnsubscribe = async (trainerId) => {
         try {
-            const token = await getAccessTokenSilently();
+            const token = await getToken();
             
             const response = await fetch(`${BACKEND_URL}/api/trainers/me/${trainerId}`, {
                 method: 'DELETE',
@@ -124,7 +153,7 @@ export default function Trainers() {
 
     const setPrimary = async (trainerId) => {
         try {
-            const token = await getAccessTokenSilently();
+            const token = await getToken();
             
             const response = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
                 method: 'POST',

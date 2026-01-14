@@ -1,89 +1,89 @@
-
 .calendarSidebar {
-  padding: 20px 15px;
-  background: linear-gradient(135deg, #4a2c7d 0%, #35205A 100%);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: rgba(53, 32, 90, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   height: fit-content;
 }
 
 .calendarTitle {
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  font-weight: bold;
+  color: white;
   text-align: center;
-  margin: 0 0 20px 0;
 }
 
 .calendar {
-  background: rgba(26, 15, 46, 0.6);
-  border-radius: 12px;
-  padding: 15px;
-  backdrop-filter: blur(10px);
+  width: 100%;
 }
 
-/* Calendar Header */
+/* Centered Month/Year Title */
+.monthYearTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 0 5px;
+}
+
+/* Navigation buttons side by side */
 .calendarHeader {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 15px;
   padding: 0 5px;
 }
 
 .monthYear {
-  color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
-  text-align: center;
-  flex: 1;
+  color: white;
 }
 
 .navButton {
-  background: rgba(187, 134, 252, 0.2);
-  border: none;
-  color: #bb86fc;
-  font-size: 1.5rem;
-  width: 35px;
-  height: 35px;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 1.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  transition: all 0.2s ease;
 }
 
 .navButton:hover {
-  background: rgba(187, 134, 252, 0.3);
-  color: #d4b3ff;
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
 }
 
-/* Day Names */
 .dayNames {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .dayName {
-  color: #bb86fc;
+  text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
-  text-align: center;
-  padding: 8px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 5px 0;
 }
 
-/* Days Grid */
 .daysGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 5px;
 }
 
 .dayCell {
@@ -92,142 +92,261 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+  color: white;
 }
 
-.dayCell:not(.emptyCell):hover {
-  background: rgba(187, 134, 252, 0.2);
+.dayCell:hover:not(.emptyCell) {
+  background: rgba(255, 255, 255, 0.15);
   transform: scale(1.05);
 }
 
 .emptyCell {
-  cursor: default;
   background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.emptyCell:hover {
+  background: transparent;
+  transform: none;
 }
 
 .dayNumber {
-  color: #e0e0e0;
-  font-size: 0.85rem;
   font-weight: 500;
-  z-index: 1;
 }
 
-/* Today styling */
 .today {
-  background: linear-gradient(135deg, #6b4de8 0%, #5a3cc9 100%);
-  box-shadow: 0 4px 12px rgba(107, 77, 232, 0.4);
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+  font-weight: bold;
 }
 
-.today .dayNumber {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.today:hover {
-  background: linear-gradient(135deg, #7c5ef5 0%, #6b4de8 100%);
-  box-shadow: 0 6px 16px rgba(107, 77, 232, 0.6);
-}
-
-/* Selected date styling */
 .selected {
-  background: linear-gradient(135deg, #bb86fc 0%, #9d6edb 100%);
-  box-shadow: 0 4px 12px rgba(187, 134, 252, 0.5);
+  background: rgba(102, 126, 234, 0.5);
+  border-color: #667eea;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
 }
 
-.selected .dayNumber {
-  color: #1a0f2e;
-  font-weight: 700;
-}
-
-.selected:hover {
-  background: linear-gradient(135deg, #d4b3ff 0%, #bb86fc 100%);
-  box-shadow: 0 6px 16px rgba(187, 134, 252, 0.7);
-}
-
-/* Appointment indicator */
 .hasAppointment {
-  border: 2px solid #ff9ecd;
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.hasAppointment:hover {
+  background: rgba(220, 38, 38, 0.3);
 }
 
 .appointmentDot {
   position: absolute;
-  bottom: 4px;
-  width: 5px;
-  height: 5px;
-  background: linear-gradient(135deg, #ff9ecd 0%, #ff6ba9 100%);
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  background: #dc2626;
   border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(255, 158, 205, 0.6);
-  animation: pulse 2s infinite;
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.8);
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.3);
-  }
-}
-
-/* Calendar note */
-.calendarNote {
+/* Schedule Details Panel */
+.scheduleDetails {
   margin-top: 15px;
-  padding: 10px;
-  background: linear-gradient(135deg, rgba(255, 158, 205, 0.2) 0%, rgba(255, 107, 169, 0.2) 100%);
-  border-radius: 8px;
-  border-left: 3px solid #ff9ecd;
-  text-align: center;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  animation: slideDown 0.3s ease;
 }
 
-.calendarNote p {
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detailsHeader h4 {
   margin: 0;
-  color: #ff9ecd;
-  font-size: 0.8rem;
+  font-size: 1rem;
+  color: white;
   font-weight: 600;
 }
 
+.closeButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.schedulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.scheduleItem {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.2s ease;
+}
+
+.scheduleItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.scheduleTime {
+  font-size: 0.9rem;
+  color: #a5b4fc;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.scheduleTitle {
+  font-size: 0.95rem;
+  color: white;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.scheduleType {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
+}
+
+.scheduleDays {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+}
+
+.manageButton,
+.createButton {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.manageButton:hover,
+.createButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.calendarNote {
+  margin-top: 15px;
+  text-align: center;
+  padding: 15px;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+}
+
+.calendarNote p {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Scrollbar styling for schedules list */
+.schedulesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.schedulesList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.schedulesList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.schedulesList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .calendarSidebar {
-    padding: 15px 10px;
+    padding: 15px;
   }
 
-  .calendar {
+  .dayCell {
+    font-size: 0.75rem;
+  }
+
+  .scheduleDetails {
     padding: 12px;
   }
+}
 
-  .dayName {
-    font-size: 0.7rem;
-    padding: 6px 0;
+@media (max-width: 768px) {
+  .calendarSidebar {
+    margin-top: 20px;
   }
 
-  .dayNumber {
-    font-size: 0.8rem;
+  .dayNames {
+    gap: 3px;
   }
 
   .daysGrid {
-    gap: 4px;
+    gap: 3px;
+  }
+
+  .dayCell {
+    font-size: 0.7rem;
   }
 
   .appointmentDot {
     width: 4px;
     height: 4px;
-    bottom: 3px;
-  }
-
-  .navButton {
-    width: 30px;
-    height: 30px;
-    font-size: 1.3rem;
-  }
-
-  .monthYear {
-    font-size: 0.9rem;
+    bottom: 2px;
   }
 }

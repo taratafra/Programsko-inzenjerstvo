@@ -30,8 +30,15 @@ public class PracticeScheduleService {
         validate(req);
         enforceHasTrainer(userId);
 
+        // Verify that the selected trainer is subscribed to by this user
+        boolean isSubscribed = userTrainerRepo.findByUserIdAndTrainerId(userId, req.trainerId()).isPresent();
+        if (!isSubscribed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not subscribed to this trainer");
+        }
+
         PracticeSchedule s = PracticeSchedule.builder()
                 .userId(userId)
+                .trainerId(req.trainerId())  // Use the trainerId from request
                 .title(req.title().trim())
                 .startTime(req.startTime())
                 .repeatType(req.repeatType())
@@ -49,9 +56,16 @@ public class PracticeScheduleService {
         validate(req);
         enforceHasTrainer(userId);
 
+        // Verify that the selected trainer is subscribed to by this user
+        boolean isSubscribed = userTrainerRepo.findByUserIdAndTrainerId(userId, req.trainerId()).isPresent();
+        if (!isSubscribed) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not subscribed to this trainer");
+        }
+
         PracticeSchedule s = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
+        s.setTrainerId(req.trainerId());  // Update with selected trainer
         s.setTitle(req.title().trim());
         s.setStartTime(req.startTime());
         s.setRepeatType(req.repeatType());

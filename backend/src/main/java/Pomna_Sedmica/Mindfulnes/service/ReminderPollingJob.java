@@ -20,7 +20,7 @@ public class ReminderPollingJob {
     @Scheduled(fixedDelayString = "${reminder.polling.delay-ms:60000}")
     public void run() {
         try {
-            engine.pollAndSend();
+            engine.tick();
         } catch (Exception ex) {
             log.error("Reminder polling failed", ex);
         }

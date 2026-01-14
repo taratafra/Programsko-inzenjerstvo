@@ -144,6 +144,8 @@ export default function Home() {
 
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('Personalized recomendations');
+        // ADD THIS LINE - state to hold the calendar reload function
+        const [reloadCalendar, setReloadCalendar] = useState(null);
 
         const updateUser = (updatedFields) => {
             setUser(prevUser => ({
@@ -193,7 +195,8 @@ export default function Home() {
                     return <Trainers />;
 
                 case 'Make Appointment':
-                    return <MakeAppointment setActiveTab={setActiveTab} />;
+                    // MODIFY THIS LINE - pass reloadCalendar to MakeAppointment
+                    return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
 
                 case 'Statistics':
                     return (
@@ -253,10 +256,12 @@ export default function Home() {
                             {renderTabContent()}
                         </div>
 
+                        {/* MODIFY THIS - pass onSchedulesReload to RightSidebar */}
                         <RightSidebar 
                             navigate={navigate} 
                             setActiveTab={setActiveTab}
                             activeTab={activeTab}
+                            onSchedulesReload={(reloadFn) => setReloadCalendar(() => reloadFn)}
                         />
                     </div>
                 </div>
