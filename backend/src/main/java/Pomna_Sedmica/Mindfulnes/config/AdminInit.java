@@ -34,4 +34,32 @@ public class AdminInit {
             }
         };
     }
+
+    @Bean
+    CommandLineRunner initTestUsers() {
+        return args -> {
+            if (userRepository.findByEmail("user@user").isEmpty()) {
+                User user = new User(
+                        "user@user",
+                        passwordEncoder.encode("admin"), //moze se prebacit u env
+                        "admin",
+                        "admin",
+                        null,
+                        Role.USER,//isto neka ostane user, a promijeni se kod onboardinga
+                        false
+                );
+                userRepository.save(user);
+                user = new User(
+                        "trainer@trainer",
+                        passwordEncoder.encode("admin"), //moze se prebacit u env
+                        "admin",
+                        "admin",
+                        null,
+                        Role.TRAINER,//isto neka ostane user, a promijeni se kod onboardinga
+                        false
+                );
+                userRepository.save(user);
+            }
+        };
+    }
 }
