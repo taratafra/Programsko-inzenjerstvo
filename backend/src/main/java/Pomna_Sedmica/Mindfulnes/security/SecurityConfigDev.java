@@ -47,8 +47,9 @@ public class SecurityConfigDev {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
-                        //.requestMatchers("/api/trainers/**").authenticated()
-                        //.requestMatchers("/api/admins/**").authenticated()
+                        .requestMatchers("/api/schedules/**").authenticated()
+                        .requestMatchers("/api/trainers/**").authenticated()
+                        .requestMatchers("/api/admins/**").authenticated()
                         .requestMatchers("/api/user/settings/**").authenticated() //trebat ce dodat jos putanje za trenera content i admina
                         .requestMatchers("/public").permitAll()
                         .requestMatchers("/onboarding/**").authenticated()

@@ -11,16 +11,21 @@ export default function Trainers() {
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
-    useEffect(() => {
+   useEffect(() => {
         loadTrainers();
-        loadSubscribedTrainers();
     }, []);
+
+    useEffect(() => {
+        if (trainers.length > 0) {
+            loadSubscribedTrainers();
+        }
+    }, [trainers]);
 
     const loadTrainers = async () => {
         try {
             const token = await getAccessTokenSilently();
             
-            const response = await fetch(`${BACKEND_URL}/api/users/trainers`, {
+            const response = await fetch(`${BACKEND_URL}/api/trainers`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -42,17 +47,31 @@ export default function Trainers() {
         try {
             const token = await getAccessTokenSilently();
             
-            const response = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
+            // Get all subscribed trainer IDs
+            const subsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/subscriptions`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.trainerId) {
-                    setPrimaryTrainerId(data.trainerId);
+            if (subsResponse.ok) {
+                const subscribedIds = await subsResponse.json();
+                
+                // Map IDs to full trainer objects from the trainers list
+                const subscribed = trainers.filter(t => subscribedIds.includes(t.id));
+                setSubscribedTrainers(subscribed);
+            }
+
+            // Get primary trainer ID
+            const primaryResponse = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
+            });
+
+            if (primaryResponse.ok) {
+                const data = await primaryResponse.json();
+                setPrimaryTrainerId(data.trainerId);
             }
         } catch (error) {
             console.error('Error loading subscribed trainers:', error);
@@ -63,7 +82,7 @@ export default function Trainers() {
         try {
             const token = await getAccessTokenSilently();
             
-            const response = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
+            const response = await fetch(`${BACKEND_URL}/api/trainers/me/subscribe`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,13 +92,7 @@ export default function Trainers() {
             });
 
             if (response.ok) {
-                const trainer = trainers.find(t => t.id === trainerId);
-                setSubscribedTrainers(prev => [...prev, { ...trainer, isSubscribed: true }]);
-                
-                if (!primaryTrainerId) {
-                    setPrimaryTrainerId(trainerId);
-                }
-                
+                // Reload to get updated subscription list
                 await loadSubscribedTrainers();
             }
         } catch (error) {
@@ -100,11 +113,8 @@ export default function Trainers() {
             });
 
             if (response.ok || response.status === 204) {
-                setSubscribedTrainers(prev => prev.filter(t => t.id !== trainerId));
-                
-                if (primaryTrainerId === trainerId) {
-                    setPrimaryTrainerId(null);
-                }
+                // Reload to get updated subscription list
+                await loadSubscribedTrainers();
             }
         } catch (error) {
             console.error('Error unsubscribing:', error);

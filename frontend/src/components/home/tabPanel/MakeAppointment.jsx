@@ -32,27 +32,34 @@ export default function MakeAppointment({ setActiveTab }) {
         try {
             const token = await getAccessTokenSilently();
             
-            // Get primary trainer
-            const response = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
+            // Get all subscribed trainer IDs
+            const subsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/subscriptions`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.trainerId) {
-                    // Fetch trainer details
-                    const trainerResponse = await fetch(`${BACKEND_URL}/api/users/${data.trainerId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
+            if (subsResponse.ok) {
+                const subscribedIds = await subsResponse.json();
+                
+                if (subscribedIds.length > 0) {
+                    // Fetch details for each trainer
+                    const trainerPromises = subscribedIds.map(async (trainerId) => {
+                        const trainerResponse = await fetch(`${BACKEND_URL}/api/users/${trainerId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (trainerResponse.ok) {
+                            return await trainerResponse.json();
                         }
+                        return null;
                     });
                     
-                    if (trainerResponse.ok) {
-                        const trainer = await trainerResponse.json();
-                        setSubscribedTrainers([trainer]);
-                    }
+                    const trainers = await Promise.all(trainerPromises);
+                    const validTrainers = trainers.filter(t => t !== null);
+                    setSubscribedTrainers(validTrainers);
                 }
             }
             
