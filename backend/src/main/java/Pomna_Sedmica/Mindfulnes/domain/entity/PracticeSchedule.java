@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -48,6 +49,8 @@ public class PracticeSchedule {
     @Column(name = "day_of_week")
     private Set<DayOfWeek> daysOfWeek = new HashSet<>();
 
+    private LocalDate date;
+
     @Column(nullable = false)
     private String timezone;
 
@@ -55,7 +58,8 @@ public class PracticeSchedule {
     private Integer reminderMinutesBefore;
 
     @Column(nullable = false)
-    private boolean enabled;
+    @Builder.Default
+    private boolean enabled = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

@@ -5,6 +5,7 @@ import Pomna_Sedmica.Mindfulnes.domain.enums.RepeatType;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ public record PracticeScheduleResponse(
         LocalTime startTime,
         RepeatType repeatType,
         Set<DayOfWeek> daysOfWeek,
+        LocalDate date,
         String timezone,
         Integer reminderMinutesBefore,
         boolean enabled,
@@ -29,6 +31,7 @@ public record PracticeScheduleResponse(
                 s.getStartTime(),
                 s.getRepeatType(),
                 s.getDaysOfWeek(),
+                s.getDate(),
                 s.getTimezone(),
                 s.getReminderMinutesBefore(),
                 s.isEnabled(),

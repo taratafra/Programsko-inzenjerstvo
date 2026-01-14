@@ -27,43 +27,40 @@ public class ReminderEngineService {
     private final UserRepository users;
     private final ReminderLogRepository logs;
 
-    // “kanali” (email + in-app)
     private final EmailReminderSenderStub emailSender;
     private final PushReminderSenderStub pushSender;
 
     /**
-     * Polling metoda: poziva se svakih N sekundi iz ReminderPollingJob.
-     * Gleda sve enabled schedule-e i šalje reminder ako je "due".
+     * Glavni entrypoint koji se može zvati iz schedulera (npr. @Scheduled).
+     * Ide kroz enabled schedule-ove i šalje reminder(e) ako treba.
      */
-    public void pollAndSend() {
+    public void tick() {
         Instant now = Instant.now();
-
-        // Window tolerancija: ako job kasni malo, i dalje ćemo uhvatiti reminder
-        Duration window = Duration.ofSeconds(75);
-        Instant windowEnd = now.plus(window);
 
         List<PracticeSchedule> enabled = schedules.findByEnabledTrue();
         for (PracticeSchedule s : enabled) {
-            if (!s.isEnabled()) continue;
+            Optional<User> uOpt = users.findById(s.getUserId());
+            if (uOpt.isEmpty()) continue;
 
+            User u = uOpt.get();
+
+            // 1) izračunaj sljedeći start termina (u schedule tz)
             Optional<Instant> occOpt = computeNextOccurrenceStart(s, now);
             if (occOpt.isEmpty()) continue;
 
             Instant occurrenceStartAt = occOpt.get();
-            int minutesBefore = (s.getReminderMinutesBefore() == null) ? 10 : s.getReminderMinutesBefore();
-            Instant reminderAt = occurrenceStartAt.minus(Duration.ofMinutes(minutesBefore));
 
-            // reminder je "due" ako je unutar polling prozora
-            if (reminderAt.isBefore(now) || reminderAt.isAfter(windowEnd)) {
+            // 2) reminder time = start - minutesBefore
+            Integer minutesBeforeObj = s.getReminderMinutesBefore();
+            int minutesBefore = minutesBeforeObj == null ? 10 : minutesBeforeObj;
+            Instant reminderAt = occurrenceStartAt.minusSeconds(minutesBefore * 60L);
+
+            // 3) šaljemo samo ako je "sad" nakon reminderAt (ili unutar prozora koji ti želiš)
+            if (now.isBefore(reminderAt)) {
                 continue;
             }
 
-            Optional<User> userOpt = users.findById(s.getUserId());
-            if (userOpt.isEmpty()) continue;
-
-            User u = userOpt.get();
-
-            // šaljemo oba kanala (email + in-app)
+            // 4) pošalji za svaki channel koji podržavaš
             sendOnce(s, u, ReminderChannel.EMAIL, reminderAt, occurrenceStartAt, minutesBefore);
             sendOnce(s, u, ReminderChannel.PUSH, reminderAt, occurrenceStartAt, minutesBefore);
         }
@@ -86,7 +83,9 @@ public class ReminderEngineService {
                 .scheduleId(s.getId())
                 .channel(channel)
                 .status(ReminderStatus.PENDING)
-                .sentAt(reminderAt)
+                // planirani trenutak slanja (koristi se za idempotency check)
+                .reminderAt(reminderAt)
+                // stvarni trenutak slanja ostaje null dok se zaista ne pošalje
                 .sentAt(null)
                 .build();
 
@@ -96,9 +95,9 @@ public class ReminderEngineService {
             String messageText = buildReminderText(s, occurrenceStartAt, minutesBefore);
 
             if (channel == ReminderChannel.EMAIL) {
-                emailSender.send(u, messageText);     // ✅ novo sučelje
+                emailSender.send(u, messageText);
             } else {
-                pushSender.send(u, messageText);      // ✅ novo sučelje
+                pushSender.send(u, messageText);
             }
 
             log.setStatus(ReminderStatus.SENT);
@@ -115,13 +114,13 @@ public class ReminderEngineService {
     }
 
     private String buildReminderText(PracticeSchedule s, Instant occurrenceStartAt, int minutesBefore) {
-        // jednostavna poruka za sad (kasnije možeš obogatiti)
         return "Reminder: \"" + s.getTitle() + "\" starts in " + minutesBefore
                 + " minutes (at " + occurrenceStartAt + ").";
     }
 
     /**
      * Izračun “sljedećeg starta” termina u vremenskoj zoni schedule-a.
+     * ONCE: s.date u startTime ako je u budućnosti.
      * DAILY: danas u startTime ako nije prošlo; inače sutra.
      * WEEKLY: najbliži idući od daysOfWeek (u max 7 dana).
      */
@@ -141,6 +140,15 @@ public class ReminderEngineService {
 
         LocalTime startTime = s.getStartTime();
         if (startTime == null) return Optional.empty();
+
+        // ONCE: exactly on s.date at startTime (schedule timezone)
+        if (s.getRepeatType() == RepeatType.ONCE) {
+            LocalDate date = s.getDate();
+            if (date == null) return Optional.empty();
+
+            ZonedDateTime onceAt = date.atTime(startTime).atZone(zone);
+            return onceAt.isAfter(now) ? Optional.of(onceAt.toInstant()) : Optional.empty();
+        }
 
         if (s.getRepeatType() == RepeatType.DAILY) {
             ZonedDateTime today = now.toLocalDate().atTime(startTime).atZone(zone);
