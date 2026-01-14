@@ -2,6 +2,7 @@ package Pomna_Sedmica.Mindfulnes.controller;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.service.AdminService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,17 +18,17 @@ import java.util.List;
 @CrossOrigin(origins = "${CORS_ALLOWED_ORIGIN:http://localhost:3000}")
 public class AdminController {
 
-    private final UserService userService;
+    private final AdminService adminService;
 
     @PostMapping
     public ResponseEntity<UserDTOResponse> saveUser(@RequestBody SaveAuth0UserRequestDTO request) {
-        UserDTOResponse savedUser = userService.saveOrUpdateUser(request);
+        UserDTOResponse savedUser = adminService.saveOrUpdateAdmin(request);
         return ResponseEntity.ok(savedUser);
     }
 
     @GetMapping
     public ResponseEntity<List<UserDTOResponse>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+        return ResponseEntity.ok(adminService.getAllAdmins());
     }
 
 
@@ -38,7 +39,7 @@ public class AdminController {
         String email = jwt.getClaimAsString("email");
         if (email == null) email = jwt.getSubject();
 
-        return userService.getUserByEmail(email)
+        return adminService.getAdminByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(404).build());
     }
@@ -59,13 +60,13 @@ public class AdminController {
         boolean isEmail = claim != null && claim.matches("^[A-Za-z0-9+_.-]+@(.+)$");
 
         if (isEmail) {
-            return userService.completeOnboarding(claim)
+            return adminService.completeOnboarding(claim)
                     .map(ResponseEntity::ok)
                     .orElseGet(() -> {
                         return ResponseEntity.status(404).build();
                     });
         } else {
-            return userService.completeOnboardingByAuth0Id(claim)
+            return adminService.completeOnboardingByAuth0Id(claim)
                     .map(ResponseEntity::ok)
                     .orElseGet(() -> {
                         return ResponseEntity.status(404).build();

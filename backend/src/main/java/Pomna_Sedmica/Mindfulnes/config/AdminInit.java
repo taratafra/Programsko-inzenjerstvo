@@ -1,5 +1,6 @@
 package Pomna_Sedmica.Mindfulnes.config;
 
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
@@ -59,6 +60,16 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(user);
+                Trainer trainer = new Trainer(
+                        "trainer2@trainer",
+                        passwordEncoder.encode("admin"), //moze se prebacit u env
+                        "admin",
+                        "admin",
+                        null,
+                        Role.TRAINER,//isto neka ostane user, a promijeni se kod onboardinga
+                        false
+                );
+                userRepository.save(trainer);
             }
         };
     }

@@ -27,7 +27,7 @@ public class TrainerSettingsService {
 
         User trainer = userRepository.findByEmail(email)
                 .orElseThrow(() -> {
-                    String allTrainers = userRepository.findByRole(Role.TRAINER).stream()
+                    String allTrainers = userRepository.findAllByRole(Role.TRAINER).stream()
                             .map(u -> String.format("Trainer[id=%d, email='%s', role='%s', name='%s']",
                                     u.getId(), u.getEmail(), u.getRole(), u.getName()))
                             .collect(Collectors.joining(", "));

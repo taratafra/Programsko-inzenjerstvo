@@ -25,7 +25,7 @@ public class AdminService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserDTOResponse saveOrUpdateTrainer(SaveAuth0UserRequestDTO dto) {
+    public UserDTOResponse saveOrUpdateAdmin(SaveAuth0UserRequestDTO dto) {
         Optional<User> existingUser = Optional.empty();
 
         if (dto.auth0Id() != null && !dto.auth0Id().isEmpty()) {
@@ -47,19 +47,19 @@ public class AdminService {
     }
 
 
-    public List<UserDTOResponse> getAllTrainers() {
-        return userRepository.findByRole(Role.TRAINER)
+    public List<UserDTOResponse> getAllAdmins() {
+        return userRepository.findAllByRole(Role.ADMIN)
                 .stream()
                 .map(AdminMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<UserDTOResponse> getTrainerByEmail(String email) {
+    public Optional<UserDTOResponse> getAdminByEmail(String email) {
         return userRepository.findByEmail(email)
                 .map(AdminMapper::toDTO);
     }
 
-    public Optional<UserDTOResponse> getTrainerByAuth0Id(String auth0Id) {
+    public Optional<UserDTOResponse> getAdminByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
                 .map(AdminMapper::toDTO);
     }
