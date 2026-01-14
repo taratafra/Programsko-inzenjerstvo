@@ -83,7 +83,7 @@ public class AuthController {
                                 "Auth0User",
                                 "",
                                 LocalDate.now(),
-                                Role.USER,
+                                Role.USER, //ovo treba promijenit, ne moze vise default bit user, zapravo neka bude user pa neka onboarding promijeni
                                 true
                         );
                         return userRepository.save(u);
@@ -124,7 +124,7 @@ public class AuthController {
                 req.getName(),
                 req.getSurname(),
                 req.getDateOfBirth(),
-                Role.USER,
+                Role.USER,//isto neka ostane user, a promijeni se kod onboardinga
                 false
         );
 

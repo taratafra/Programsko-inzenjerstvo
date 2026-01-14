@@ -4,7 +4,7 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
-import Pomna_Sedmica.Mindfulnes.mapper.UserMapper;
+import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
-public class UserService {
+public class TrainerService {
 
     private final UserRepository userRepository;
 
     @Transactional
-    public UserDTOResponse saveOrUpdateUser(SaveAuth0UserRequestDTO dto) {
+    public UserDTOResponse saveOrUpdateTrainer(SaveAuth0UserRequestDTO dto) {
         Optional<User> existingUser = Optional.empty();
 
         if (dto.auth0Id() != null && !dto.auth0Id().isEmpty()) {
@@ -37,31 +37,31 @@ public class UserService {
         }
 
         User user = existingUser.map(existing -> {
-            return UserMapper.updateExisting(existing, dto);
+            return TrainerMapper.updateExisting(existing, dto);
         }).orElseGet(() -> {
-            return UserMapper.toNewEntity(dto);
+            return TrainerMapper.toNewEntity(dto);
         });
 
         User savedUser = userRepository.save(user);
-        return UserMapper.toDTO(savedUser);
+        return TrainerMapper.toDTO(savedUser);
     }
 
 
-    public List<UserDTOResponse> getAllUsers() {
-        return userRepository.findByRole(Role.USER)
+    public List<UserDTOResponse> getAllTrainers() {
+        return userRepository.findByRole(Role.TRAINER)
                 .stream()
-                .map(UserMapper::toDTO)
+                .map(TrainerMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<UserDTOResponse> getUserByEmail(String email) {
+    public Optional<UserDTOResponse> getTrainerByEmail(String email) {
         return userRepository.findByEmail(email)
-                .map(UserMapper::toDTO);
+                .map(TrainerMapper::toDTO);
     }
 
-    public Optional<UserDTOResponse> getUserByAuth0Id(String auth0Id) {
+    public Optional<UserDTOResponse> getTrainerByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
-                .map(UserMapper::toDTO);
+                .map(TrainerMapper::toDTO);
     }
 
 
@@ -73,9 +73,10 @@ public class UserService {
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     user.setRequiresPasswordReset(false);
+                    user.setRole(Role.TRAINER);
                     User savedUser = userRepository.save(user);
                     //log.info("Onboarding completed for user: {}", email);
-                    return UserMapper.toDTO(savedUser);
+                    return TrainerMapper.toDTO(savedUser);
                 });
     }
 
@@ -85,13 +86,14 @@ public class UserService {
         return userRepository.findByAuth0Id(auth0Id)
                 .map(user -> {
                     user.setOnboardingComplete(true);
+                    user.setRole(Role.TRAINER);
                     User savedUser = userRepository.save(user);
-                    return UserMapper.toDTO(savedUser);
+                    return TrainerMapper.toDTO(savedUser);
                 });
     }
 
     @Transactional
-    public User getOrCreateUserFromJwt(Jwt jwt) {
+    public User getOrCreateTrainerFromJwt(Jwt jwt) {
         String sub = jwt.getClaimAsString("sub");
         String email = jwt.getClaimAsString("email");
 
@@ -117,49 +119,14 @@ public class UserService {
                 return userRepository.save(user);
             }
         }
-        String givenName = jwt.getClaimAsString("given_name");
-        String familyName = jwt.getClaimAsString("family_name");
-        String fullName = jwt.getClaimAsString("name");
-
-        String firstName;
-        String lastName;
-
-        // If Auth0 provides given_name and family_name, use those
-        if (givenName != null && !givenName.isBlank() && familyName != null && !familyName.isBlank()) {
-            firstName = givenName;
-            lastName = familyName;
-        }
-        // If only given_name is provided, use it as first name
-        else if (givenName != null && !givenName.isBlank()) {
-            firstName = givenName;
-            lastName = familyName != null ? familyName : "";
-        }
-        // Otherwise, try to split the full name
-        else if (fullName != null && !fullName.isBlank()) {
-            if (fullName.contains(" ")) {
-                String[] nameParts = fullName.trim().split("\\s+", 2);
-                firstName = nameParts[0];
-                lastName = nameParts.length > 1 ? nameParts[1] : "";
-            } else {
-                firstName = fullName;
-                lastName = "";
-            }
-        }
-        // Fallback
-        else {
-            firstName = "User";
-            lastName = "";
-        }
-
-
 
         User newUser = new User();
         newUser.setAuth0Id(sub);
 
         newUser.setEmail(email != null ? email : sub + "@placeholder.local");
-        newUser.setName(firstName);
-        newUser.setSurname(lastName);
-        newUser.setRole(Role.USER);
+        newUser.setName(jwt.getClaimAsString("given_name"));
+        newUser.setSurname(jwt.getClaimAsString("family_name"));
+        newUser.setRole(Role.TRAINER);
         newUser.setSocialLogin(true);
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setLastLogin(LocalDateTime.now());
