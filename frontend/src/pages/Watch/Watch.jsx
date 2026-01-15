@@ -41,7 +41,7 @@ export default function Watch() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { user: auth0User, isAuthenticated } = useAuth0();
+    const { user: auth0User, isAuthenticated, isLoading } = useAuth0();
     const [user, setUser] = useState(null);
 
     // --- COMMENTS STATE ---
@@ -60,13 +60,64 @@ export default function Watch() {
     });
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
     const [loading, setLoading] = useState(true);
 
+    const { getAccessTokenSilently } = useAuth0();
+
     useEffect(() => {
-        if (isAuthenticated && auth0User) {
-            setUser(auth0User);
-        }
-    }, [isAuthenticated, auth0User]);
+        const initUser = async () => {
+            const localToken = localStorage.getItem("token");
+            try {
+                if (isAuthenticated) {
+                    if (!auth0User) return;
+                    setUser(auth0User);
+                    try {
+                        const token = await getAccessTokenSilently({
+                            authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                        });
+                        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            setUser(data);
+                            if (!data.isOnboardingComplete) {
+                                navigate("/questions", { replace: true });
+                                return;
+                            }
+                        }
+                    } catch (tokenErr) {
+                        console.error("Error getting token in Watch:", tokenErr);
+                    }
+                    // We don't set loading false here because fetchContent handles it
+                } else if (localToken) {
+                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                        headers: { Authorization: `Bearer ${localToken}` },
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        setUser(data);
+                        if (!data.isOnboardingComplete) {
+                            navigate("/questions", { replace: true });
+                            return;
+                        }
+                    } else {
+                        throw new Error("Failed to fetch user");
+                    }
+                }
+            } catch (err) {
+                console.error("Error initializing user in Watch:", err);
+                if (!isAuthenticated) {
+                    if (localToken) {
+                        localStorage.removeItem("token");
+                    }
+                    navigate("/login");
+                }
+            }
+        };
+        initUser();
+    }, [isAuthenticated, auth0User, BACKEND_URL, AUDIENCE, getAccessTokenSilently, navigate]);
 
     useEffect(() => {
         const fetchContent = async () => {
@@ -135,7 +186,15 @@ export default function Watch() {
         setComments(comments.filter(c => c.id !== commentId));
     };
 
-    if (loading) return <div className={styles.layoutContainer}><div className={styles.centerContainer}>Loading content...</div></div>;
+    if (loading || isLoading) return <div className={styles.layoutContainer}><div className={styles.centerContainer}>Loading content...</div></div>;
+
+    const hasLocalToken = !!localStorage.getItem("token");
+    if (!user && !isAuthenticated && !hasLocalToken) {
+        navigate("/login");
+        return null;
+    }
+
+    if (!user) return <div className={styles.layoutContainer}><div className={styles.centerContainer}>Loading user data...</div></div>;
 
     return (
         <div className={styles.layoutContainer}>

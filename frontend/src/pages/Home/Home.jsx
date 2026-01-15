@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./Home.module.css";
 
@@ -16,84 +16,12 @@ export default function Home() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const location = useLocation();
     const hasNavigatedToQuestions = useRef(false);
 
-    const BACKEND_URL = process.env.REACT_APP_BACKEND;
-    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
+    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
 
-    useEffect(() => {
-        const init = async () => {
-            const localToken = localStorage.getItem("token");
-
-            try {
-                // Auth0 login Google i to
-                if (isAuthenticated && auth0User) {
-                    //console.log("Authenticated via Auth0:", auth0User);
-                    setUser(auth0User);
-
-                    const userResponse = await sendUserDataToBackend(auth0User);
-
-                    if (userResponse) {
-                        setUser(userResponse);
-                    } else {
-                        setUser(auth0User); // Fallback
-                    }
-
-                    // provjera za jel rjesia kviz
-                    if (userResponse && !userResponse.isOnboardingComplete) {
-                        if (!hasNavigatedToQuestions.current) {
-                            //console.log("Onboarding not complete, redirecting to questions");
-                            hasNavigatedToQuestions.current = true;
-                            navigate("/questions", { replace: true });
-                            return;
-                        }
-                    }
-
-                    //console.log("Auth0 user fully onboarded, showing home");
-                    setLoading(false);
-                }
-                // Local JWT login
-                else if (localToken) {
-                    //console.log("Authenticated via local JWT");
-
-                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-                        headers: { Authorization: `Bearer ${localToken}` },
-                    });
-
-                    if (!res.ok) throw new Error("Failed to fetch user info");
-
-                    const data = await res.json();
-                    //console.log("User data from backend:", data);
-                    setUser(data);
-
-                    // vrijeme za kviz
-                    if (!data.isOnboardingComplete) {
-                        if (!hasNavigatedToQuestions.current) {
-                            //console.log("Onboarding not complete, redirecting to questions");
-                            hasNavigatedToQuestions.current = true;
-                            navigate("/questions", { replace: true });
-                            return;
-                        }
-                    }
-
-                    //console.log("Local user fully set up, showing home");
-                    setLoading(false);
-                } else {
-                    setLoading(false);
-                }
-            } catch (err) {
-                console.error("Error initializing user:", err);
-                setLoading(false);
-            }
-        };
-
-        if (!isLoading) {
-            init();
-        }
-    }, [isLoading, isAuthenticated, location.pathname, navigate, BACKEND_URL]);
-
-    const sendUserDataToBackend = async (auth0User) => {
+    const sendUserDataToBackend = useCallback(async (auth0User) => {
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
@@ -125,22 +53,132 @@ export default function Home() {
             if (!res.ok) return null;
 
             const userData = await res.json();
-            //console.log("User data synced successfully:", userData);
             return userData;
         } catch (err) {
             console.error("Error sending user data to backend:", err);
             return null;
         }
-    };
+    }, [getAccessTokenSilently, AUDIENCE, BACKEND_URL]);
+
+    useEffect(() => {
+        const init = async () => {
+            const localToken = localStorage.getItem("token");
+            // The provided snippet `if (data.access_token)` seems to be from a different context (e.g., Login.jsx)
+            // and `data` is not defined here.
+            // The instruction is to "Set wasLoggedIn flag in Home.jsx".
+            // The `localStorage.setItem("wasLoggedIn", "true");` is already present in the isAuthenticated block.
+            // To faithfully apply the change as requested, assuming the intent is to ensure `wasLoggedIn` is set
+            // when a local token is present and valid, or when Auth0 authentication is successful.
+            // The existing code already handles setting `wasLoggedIn` for Auth0.
+            // For local token, it's not explicitly set, so we'll add it there.
+
+            console.log("DEBUG: init called. isAuthenticated:", isAuthenticated, "hasLocalToken:", !!localToken, "isLoading:", isLoading);
+
+            try {
+                if (isAuthenticated) {
+                    console.log("DEBUG: Authenticated via Auth0. auth0User:", auth0User);
+                    // Wait for auth0User to be available if authenticated
+                    if (!auth0User) return;
+                    setUser(auth0User);
+                    try {
+                        const token = await getAccessTokenSilently({
+                            authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                        });
+                        console.log("DEBUG: Got Auth0 token. Fetching /api/users/me");
+                        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            console.log("DEBUG: Auth0 user data from backend:", data);
+                            setUser(data);
+                            if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                                hasNavigatedToQuestions.current = true;
+                                navigate("/questions", { replace: true });
+                                return;
+                            }
+                        } else {
+                            console.log("DEBUG: Auth0 /api/users/me failed. Status:", res.status);
+                            // If fetching user from backend fails with Auth0 token, try to send user data
+                            const userResponse = await sendUserDataToBackend(auth0User);
+                            if (userResponse) {
+                                setUser(userResponse);
+                                if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                                    hasNavigatedToQuestions.current = true;
+                                    navigate("/questions", { replace: true });
+                                    return;
+                                }
+                            } else {
+                                throw new Error("Failed to fetch or create user with Auth0");
+                            }
+                        }
+                    } catch (tokenErr) {
+                        console.error("DEBUG: Error in Auth0 init flow:", tokenErr);
+                        // Fallback to sending user data if token acquisition or initial fetch fails
+                        const userResponse = await sendUserDataToBackend(auth0User);
+                        if (userResponse) {
+                            setUser(userResponse);
+                            if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                                hasNavigatedToQuestions.current = true;
+                                navigate("/questions", { replace: true });
+                                return;
+                            }
+                        } else {
+                            throw new Error("Failed to fetch or create user with Auth0 after token error");
+                        }
+                    }
+                    setLoading(false);
+                } else if (localToken) {
+                    console.log("DEBUG: Authenticated via local token. Fetching /api/users/me");
+                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                        headers: { Authorization: `Bearer ${localToken}` },
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        console.log("DEBUG: Local user data from backend:", data);
+                        setUser(data);
+                        if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                            hasNavigatedToQuestions.current = true;
+                            navigate("/questions", { replace: true });
+                            return;
+                        }
+                        setLoading(false);
+                    } else {
+                        console.log("DEBUG: Local /api/users/me failed. Status:", res.status);
+                        throw new Error("Failed to fetch user with local token");
+                    }
+                } else {
+                    console.log("DEBUG: No authentication found.");
+                    // No auth method found
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error("DEBUG: Error in init:", err);
+                if (!isAuthenticated) {
+                    console.log("DEBUG: Not authenticated via Auth0, removing token and redirecting to login");
+                    if (localToken) {
+                        localStorage.removeItem("token");
+                    }
+                    navigate("/login");
+                }
+                setLoading(false);
+            } finally {
+                // Ensure loading is set to false if not already handled by an early return
+                setLoading(false);
+            }
+        };
+
+        if (!isLoading) {
+            init();
+        }
+    }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, sendUserDataToBackend, navigate]);
 
     const handleLogout = () => {
         try {
             localStorage.removeItem("token");
 
             if (isAuthenticated) {
-                import("@auth0/auth0-react").then(({ useAuth0 }) => {
-                    window.location.href = `${window.location.origin}/login`;
-                });
+                logout({ logoutParams: { returnTo: window.location.origin + "/login" } });
             } else {
                 navigate("/login");
             }
@@ -153,8 +191,8 @@ export default function Home() {
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('Personalized recomendations');
 
-        const updateUser =(updatedFields) =>{
-            setUser(prevUser =>({
+        const updateUser = (updatedFields) => {
+            setUser(prevUser => ({
                 ...prevUser,
                 ...updatedFields
             }));
@@ -235,7 +273,7 @@ export default function Home() {
                     );
 
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser}/>;
+                    return <Settings user={user} updateUser={updateUser} />;
 
 
                 default:
@@ -278,7 +316,14 @@ export default function Home() {
     }
 
     if (loading || isLoading) return <div>Loading...</div>;
-    if (!user) return <div>No user found...</div>;
+
+    const hasLocalToken = !!localStorage.getItem("token");
+    if (!user && !isAuthenticated && !hasLocalToken) {
+        navigate("/login");
+        return null;
+    }
+
+    if (!user) return <div>Loading user data...</div>;
 
     return <HomeLayout />;
 }

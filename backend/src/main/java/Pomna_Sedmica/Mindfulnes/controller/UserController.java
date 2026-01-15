@@ -102,6 +102,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "${CORS_ALLOWED_ORIGIN:http://localhost:3000}")
 @RequiredArgsConstructor
 public class UserController {
 

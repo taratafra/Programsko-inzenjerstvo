@@ -79,9 +79,18 @@ public class SecurityConfigDev {
         // Try Auth0 first, fallback to local
         return token -> {
             try {
-                return auth0Decoder.decode(token);
+                Jwt decoded = auth0Decoder.decode(token);
+                System.out.println("DEBUG: Decoded via Auth0. Sub: " + decoded.getSubject());
+                return decoded;
             } catch (Exception e) {
-                return localDecoder.decode(token);
+                try {
+                    Jwt decoded = localDecoder.decode(token);
+                    System.out.println("DEBUG: Decoded via Local. Sub: " + decoded.getSubject());
+                    return decoded;
+                } catch (Exception e2) {
+                    System.err.println("DEBUG: Failed to decode token. Auth0 error: " + e.getMessage() + ", Local error: " + e2.getMessage());
+                    throw e2;
+                }
             }
         };
     }

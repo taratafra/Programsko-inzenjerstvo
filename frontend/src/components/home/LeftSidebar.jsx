@@ -11,9 +11,6 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
     return `${homeStyles.navItem} ${isActive ? homeStyles.navItemActive : ""}`;
   };
 
-  const getAvatarClass = () => {
-    return `${homeStyles.profileAvatar} ${activeTab === 'Account' ? homeStyles.profileAvatarActive : ""}`;
-  };
 
   const handleHomeClick = () => {
     if (location.pathname === '/home') {
@@ -23,11 +20,13 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
     }
   };
 
+  if (!user) return null;
+
   return (
     <div className={homeStyles.sidebar}>
       <div className={homeStyles.profileBox}>
-        <p className={homeStyles.profileName}>{user.name}</p>
-        <p className={homeStyles.profileTitle}>{user.email}</p>
+        <p className={homeStyles.profileName}>{user.name || "User"}</p>
+        <p className={homeStyles.profileTitle}>{user.email || ""}</p>
       </div>
 
       <ul className={homeStyles.navList}>

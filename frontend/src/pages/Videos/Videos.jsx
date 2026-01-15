@@ -24,6 +24,7 @@ export default function Videos() {
 
     const navigate = useNavigate();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
 
     // --- HELPER: FIXED DETECTION LOGIC ---
     const getMediaType = (item) => {
@@ -57,23 +58,55 @@ export default function Videos() {
         const init = async () => {
             const localToken = localStorage.getItem("token");
             try {
-                if (isAuthenticated && auth0User) {
-                    const token = await getAccessTokenSilently({
-                        authorizationParams: { audience: `${BACKEND_URL}`, scope: "openid profile email" },
-                    });
-                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (res.ok) setUser(await res.json());
-                    else setUser(auth0User);
+                if (isAuthenticated) {
+                    if (!auth0User) return;
+                    setUser(auth0User);
+                    try {
+                        const token = await getAccessTokenSilently({
+                            authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                        });
+                        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            setUser(data);
+                            if (!data.isOnboardingComplete) {
+                                navigate("/questions", { replace: true });
+                                return;
+                            }
+                        }
+                    } catch (tokenErr) {
+                        console.error("Error getting token or fetching user with Auth0:", tokenErr);
+                    }
+                    setLoading(false);
                 } else if (localToken) {
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
-                    if (res.ok) setUser(await res.json());
+                    if (res.ok) {
+                        const data = await res.json();
+                        setUser(data);
+                        if (!data.isOnboardingComplete) {
+                            navigate("/questions", { replace: true });
+                            return;
+                        }
+                        setLoading(false);
+                    } else {
+                        throw new Error("Failed to fetch user with local token");
+                    }
+                } else {
+                    setLoading(false);
                 }
             } catch (err) {
                 console.error("Error initializing user:", err);
+                if (!isAuthenticated) {
+                    if (localToken) {
+                        localStorage.removeItem("token");
+                    }
+                    navigate("/login");
+                }
+                setLoading(false);
             } finally {
                 setLoading(false);
             }
@@ -83,7 +116,7 @@ export default function Videos() {
             init();
             fetchVideos();
         }
-    }, [isLoading, isAuthenticated, BACKEND_URL, getAccessTokenSilently, auth0User, fetchVideos]);
+    }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, fetchVideos, navigate]);
 
     const handleFileChange = (e) => {
         if (e.target.files[0]) setFile(e.target.files[0]);
@@ -159,7 +192,15 @@ export default function Videos() {
         return "video/*";
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading || isLoading) return <div>Loading...</div>;
+
+    const hasLocalToken = !!localStorage.getItem("token");
+    if (!user && !isAuthenticated && !hasLocalToken) {
+        navigate("/login");
+        return null;
+    }
+
+    if (!user) return <div>Loading user data...</div>;
 
     return (
         <div className={styles.layoutContainer}>

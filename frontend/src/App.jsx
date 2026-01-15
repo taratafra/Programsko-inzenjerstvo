@@ -15,13 +15,12 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/questions" element={<Questionnaire />} />
-            
+
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/videos" element={<Videos />} />
+        <Route path="/watch/:id" element={<Watch />} />
       </Route>
-
-      <Route path="/watch/:id" element={<Watch />} />
     </Routes>
   );
 }
