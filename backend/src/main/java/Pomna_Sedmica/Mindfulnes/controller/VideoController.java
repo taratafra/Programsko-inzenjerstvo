@@ -1,12 +1,10 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
-import Pomna_Sedmica.Mindfulnes.domain.dto.CreateVideoRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.VideoResponseDTO;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
-import Pomna_Sedmica.Mindfulnes.service.CurrentUserService;
+import Pomna_Sedmica.Mindfulnes.service.TrainerService;
 import Pomna_Sedmica.Mindfulnes.service.VideoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,11 +19,11 @@ import java.util.List;
 public class VideoController {
 
     private final VideoService videoService;
-    private final CurrentUserService currentUserService;
+    private final TrainerService trainerService;
 
-    public VideoController(VideoService videoService, CurrentUserService currentUserService) {
+    public VideoController(VideoService videoService, TrainerService trainerService) {
         this.videoService = videoService;
-        this.currentUserService = currentUserService;
+        this.trainerService = trainerService;
     }
 
     @GetMapping
@@ -41,7 +39,7 @@ public class VideoController {
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) throws java.io.IOException {
         
-        User user = currentUserService.getOrCreate(jwt);
+        User user = trainerService.getOrCreateTrainerFromJwt(jwt);
         if (user.getRole() != Role.TRAINER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can upload videos");
         }
