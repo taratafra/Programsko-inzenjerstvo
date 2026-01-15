@@ -52,6 +52,8 @@ public class OnboardingController {
                 .sleepQuality(req.sleepQuality())
                 .meditationExperience(req.meditationExperience())
                 .goals(req.goals())
+                .sessionLength(req.sessionLength())
+                .preferredTime(req.preferredTime())
                 .note(req.note())
                 .build();
 
@@ -72,6 +74,8 @@ public class OnboardingController {
         survey.setSleepQuality(req.sleepQuality());
         survey.setMeditationExperience(req.meditationExperience());
         survey.setGoals(req.goals());
+        survey.setSessionLength(req.sessionLength());
+        survey.setPreferredTime(req.preferredTime());
         survey.setNote(req.note());
         survey.setUpdatedAt(Instant.now());
 
@@ -99,12 +103,20 @@ public class OnboardingController {
         if (surveys.existsByUserId(me.getId())) {
             return ResponseEntity.status(409).build();
         }
+
+        if (Boolean.TRUE.equals(req.isTrainer())) {
+            me.setRole(Pomna_Sedmica.Mindfulnes.domain.enums.Role.TRAINER);
+            userService.saveUser(me);
+        }
+
         var entity = OnboardingSurvey.builder()
                 .userId(me.getId())
                 .stressLevel(req.stressLevel())
                 .sleepQuality(req.sleepQuality())
                 .meditationExperience(req.meditationExperience())
                 .goals(req.goals())
+                .sessionLength(req.sessionLength())
+                .preferredTime(req.preferredTime())
                 .note(req.note())
                 .build();
         var saved = surveys.save(entity);
@@ -125,8 +137,15 @@ public class OnboardingController {
         survey.setSleepQuality(req.sleepQuality());
         survey.setMeditationExperience(req.meditationExperience());
         survey.setGoals(req.goals());
+        survey.setSessionLength(req.sessionLength());
+        survey.setPreferredTime(req.preferredTime());
         survey.setNote(req.note());
         survey.setUpdatedAt(Instant.now());
+
+        if (Boolean.TRUE.equals(req.isTrainer())) {
+            me.setRole(Pomna_Sedmica.Mindfulnes.domain.enums.Role.TRAINER);
+            userService.saveUser(me);
+        }
 
         var saved = surveys.save(survey);
         return ResponseEntity.ok(OnboardingSurveyResponse.from(saved));

@@ -70,9 +70,8 @@
     font-size: 16px;
 }
 
-.passwordResetSubmit,
-.quit {
-    margin-top: 5px;
+.passwordResetSubmit {
+    background-color: #27ae60;
     color: white;
     padding: 12px 30px;
     border: none;
@@ -83,41 +82,12 @@
     width: 100%;
 }
 
-.passwordResetSubmit{
-    background-color: #27ae60;
-}
-.quit{
-    background-color: rgb(59, 59, 59);
-}
-
-
 .cannotContinue {
     margin-top: 15px;
     font-size: 12px;
     color: #777;
     font-style: italic;
 }
-
-
-.currentPass {
-    margin-bottom: 20px;
-    text-align: left;
-}
-
-.currentPass label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-}
-
-.currentPass input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 2px solid #ddd;
-    font-size: 16px;
-}
-
 
 /* Password Tab Container */
 .passwordTab {
@@ -126,47 +96,18 @@
     padding: 20px;
 }
 
-/* Blurred Form State */
-.formBlurred {
-    filter: blur(5px);
-    pointer-events: none;
+.infoText {
+    color: #666;
+    font-style: italic;
+    padding: 1rem;
+    background-color: #f0f0f0;
+    border-radius: 8px;
 }
 
 /* Questionnaire Styles */
-.upitnikSvi {
-    max-width: 800px;
-    margin: 10vh auto;
-    padding: 20px;
-    position: relative;
 
-    background-color: #37237c3a;
-    width: 90vw;
 
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    border-radius: 40px;
-    height: 85vh;
-    overflow-y: auto;
-}
-
-.upitnikSvi::-webkit-scrollbar {
-    width: 10px;
-}
-
-.upitnikSvi::-webkit-scrollbar-thumb {
-    background-color: rgba(35, 13, 59, 0.5);
-    border-radius: 5px;
-}
-
-.onboarding {
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.upitnikSvi p {
+p{
     color: rgb(248, 244, 244);
     font-weight: 600;
     display: flex;
@@ -174,23 +115,8 @@
     align-items: center;
 }
 
-.errortext {
-    padding: 0.5rem;
-    background-color: rgb(255, 238, 238);
-    border: 1px solid #fcc;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.errortext p {
-    color: #c00;
-    font-weight: 700;
-}
-
-.role,
+.basicInfo,
+.security,
 .wellbeing,
 .meditationExp,
 .goals,
@@ -200,7 +126,8 @@
     background-color: #ffffff1f;
 }
 
-.role legend,
+.basicInfo legend,
+.security legend,
 .wellbeing legend,
 .meditationExp legend,
 .goals legend,
@@ -209,6 +136,7 @@
     font-weight: 700;
 }
 
+.basicInfo div,
 .wellbeing div,
 .practice div {
     display: flex;
@@ -219,7 +147,6 @@
 }
 
 .meditationExp div,
-.role div,
 .goals div {
     margin: 0.5rem;
 }
@@ -228,6 +155,7 @@
     padding-top: 1rem;
 }
 
+.basicInfo label,
 .wellbeing label,
 .practice label {
     flex: 0 0 150px;
@@ -235,6 +163,7 @@
     margin-left: 1rem;
 }
 
+.basicInfo input,
 .practice select,
 .practice textarea {
     background-color: #f2eef381;
@@ -245,8 +174,10 @@
     flex: 0.6;
 }
 
+.basicInfo input:focus,
 .practice select:focus,
-.practice textarea:focus {
+.practice textarea:focus,
+.otherGoal input:focus {
     box-shadow: 0 0 9px rgba(245, 245, 245, 0.6);
     outline: none;
     background-color: #f0f8ffd7;
@@ -254,7 +185,6 @@
 
 .practice select {
     color: black;
-
 }
 
 .inputWrapper {
@@ -293,7 +223,6 @@
 
 .goals input[type="checkbox"],
 .meditationExp input[type="radio"],
-.role input[type="radio"],
 .consent input[type="checkbox"] {
     width: 1.2rem;
     height: 0.7rem;
@@ -311,21 +240,9 @@
     margin-left: 0.8rem;
 }
 
-.consent label {
-    margin: 0.5rem;
-}
-
-.buttonRow {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-}
-
-.resetGoals,
-.submitGoals {
+.settbutton{
     transition: transform 0.1s ease, box-shadow 0.1s ease;
-    margin-top: 5%;
+    margin: 3% auto 3%;
     background-color: rgba(79, 48, 255, 0.7);
     color: rgb(231, 223, 223);
     border: none;
@@ -334,17 +251,23 @@
     font-size: 1.1rem;
     cursor: pointer;
     display: flex;
-    flex-direction: row;
     align-items: center;
 }
 
-.resetGoals:hover,
-.submitGoals:hover {
+.settbutton:hover{
     background-color: rgb(238, 45, 55);
     transform: scale(1.05);
 }
 
-.resetGoals:active,
-.submitGoals:active {
+.settbutton:active{
     box-shadow: 0 0 9px rgba(13, 13, 15, 0.7);
+}
+
+.success {
+  color: #28a745;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin: 1rem 0;
 }

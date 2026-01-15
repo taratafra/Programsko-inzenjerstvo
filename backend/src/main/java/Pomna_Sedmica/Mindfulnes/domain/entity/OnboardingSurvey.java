@@ -70,6 +70,12 @@ public class OnboardingSurvey {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "session_length")
+    private String sessionLength;
+
+    @Column(name = "preferred_time")
+    private String preferredTime;
+
     @PrePersist
     void onCreate() {
         var now = Instant.now();

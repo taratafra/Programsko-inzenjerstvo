@@ -14,10 +14,12 @@ public class FirebaseConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
+        // Check if already initialized
         if (!FirebaseApp.getApps().isEmpty()) {
             return FirebaseApp.getInstance();
         }
 
+        // Try to find service account file
         FileInputStream serviceAccount =
                 new FileInputStream("serviceAccountKey.json");
 
@@ -34,3 +36,4 @@ public class FirebaseConfig {
         return com.google.firebase.cloud.StorageClient.getInstance(firebaseApp).bucket();
     }
 }
+

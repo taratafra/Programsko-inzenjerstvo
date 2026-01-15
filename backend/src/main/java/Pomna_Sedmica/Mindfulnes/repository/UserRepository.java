@@ -20,10 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findAllByRole(Role role);
 
-    Optional<User> findByEmailAndRole(String email, Role role);
-
-    Optional<User> findByAuth0IdAndRole(String auth0Id, Role role);
-
     @Modifying
     @Query(value = "INSERT INTO trainer (id, approved) VALUES (:id, :approved)", nativeQuery = true)
     void promoteToTrainer(@Param("id") Long id, @Param("approved") boolean approved);

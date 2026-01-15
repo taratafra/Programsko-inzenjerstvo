@@ -51,6 +51,7 @@ public class SecurityConfigDev {
                         //.requestMatchers("/api/admins/**").authenticated()
                         .requestMatchers("/api/user/settings/**").authenticated() //trebat ce dodat jos putanje za trenera content i admina
                         .requestMatchers("/public").permitAll()
+                        .requestMatchers("/onboarding/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())
@@ -112,6 +113,7 @@ public class SecurityConfigDev {
             }
         };
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
