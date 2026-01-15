@@ -1,5 +1,6 @@
 package Pomna_Sedmica.Mindfulnes.domain.entity;
 
+import Pomna_Sedmica.Mindfulnes.domain.enums.ContentType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,9 @@ public class Video {
 
     @Column(length = 2048)
     private String url;
+
+    @Enumerated(EnumType.STRING)
+    private ContentType type;
 
     @ManyToOne
     @JoinColumn(name = "trainer_id")

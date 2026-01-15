@@ -278,8 +278,16 @@ public class UserService {
         String sub = jwt.getClaimAsString("sub");
         String email = jwt.getClaimAsString("email");
 
+        System.out.println("DEBUG: getOrCreateUserFromJwt - sub: " + sub + ", email: " + email);
+        System.out.println("DEBUG: Claims: " + jwt.getClaims());
+
         if (sub == null || sub.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 'sub' claim is required");
+        }
+
+        // If email claim is missing but sub looks like an email (local JWT), use sub as email
+        if ((email == null || email.isBlank()) && sub.contains("@")) {
+            email = sub;
         }
 
         Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub);

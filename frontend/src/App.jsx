@@ -6,6 +6,7 @@ import Home from "./pages/Home/Home.jsx";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Questionnaire from "./pages/Questionnaire/Questionnaire.jsx";
 import Videos from "./pages/Videos/Videos";
+import Watch from "./pages/Watch/Watch";
 
 function App() {
   return (
@@ -14,10 +15,11 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/questions" element={<Questionnaire />} />
-            
+
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
         <Route path="/videos" element={<Videos />} />
+        <Route path="/watch/:id" element={<Watch />} />
       </Route>
     </Routes>
   );

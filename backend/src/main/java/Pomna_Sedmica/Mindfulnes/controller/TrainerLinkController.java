@@ -1,6 +1,7 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
+import Pomna_Sedmica.Mindfulnes.domain.entity.UserTrainer;
 import Pomna_Sedmica.Mindfulnes.service.TrainerLinkService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +11,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/trainers")
+@RequestMapping("/api/trainers")
 @RequiredArgsConstructor
 public class TrainerLinkController {
 
@@ -49,7 +51,61 @@ public class TrainerLinkController {
     public ResponseEntity<Map<String, Object>> getMyPrimaryTrainer(@AuthenticationPrincipal Jwt jwt) {
         User me = userService.getOrCreateUserFromJwt(jwt);
         Long trainerId = trainerLinks.getPrimaryTrainerIdOrNull(me.getId());
-        return ResponseEntity.ok(Map.of("trainerId", trainerId));
+
+        // Handle null trainerId properly
+        Map<String, Object> response = new HashMap<>();
+        response.put("trainerId", trainerId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get all trainers the user is subscribed to
+     * GET /trainers/me/subscriptions
+     */
+    @GetMapping("/me/subscriptions")
+    public ResponseEntity<List<Long>> getMySubscriptions(@AuthenticationPrincipal Jwt jwt) {
+        User me = userService.getOrCreateUserFromJwt(jwt);
+
+        var trainerIds = trainerLinks.listMyTrainers(me.getId())
+                .stream()
+                .map(UserTrainer::getTrainerId)
+                .distinct()
+                .toList();
+
+        return ResponseEntity.ok(trainerIds);
+    }
+
+    /**
+     * Subscribe to a trainer (without making them primary)
+     * POST /trainers/me/subscribe
+     * body: {"trainerId": 5}
+     */
+    @PostMapping("/me/subscribe")
+    public ResponseEntity<Void> subscribeToTrainer(@AuthenticationPrincipal Jwt jwt,
+                                                   @RequestBody Map<String, Object> body) {
+        User me = userService.getOrCreateUserFromJwt(jwt);
+
+        Object raw = body.get("trainerId");
+        if (raw == null) return ResponseEntity.badRequest().build();
+
+        Long trainerId = Long.valueOf(String.valueOf(raw));
+        trainerLinks.linkTrainer(me.getId(), trainerId, false); // false = not primary
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Unsubscribe from a trainer
+     * DELETE /trainers/me/{trainerId}
+     */
+    @DeleteMapping("/me/{trainerId}")
+    public ResponseEntity<Void> unsubscribeFromTrainer(@AuthenticationPrincipal Jwt jwt,
+                                                       @PathVariable Long trainerId) {
+        User me = userService.getOrCreateUserFromJwt(jwt);
+        trainerLinks.unlinkTrainer(me.getId(), trainerId);
+
+        return ResponseEntity.noContent().build();
     }
 
     /**

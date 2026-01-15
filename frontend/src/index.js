@@ -21,6 +21,8 @@ root.render(
         audience: audience,
         scope: "openid profile email",
       }}
+      cacheLocation="localstorage"
+      useRefreshTokens={true}
     >
       <BrowserRouter>
         <App />

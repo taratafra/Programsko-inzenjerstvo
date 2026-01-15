@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import styles from './DailyMessages.module.css';
+import styles from './DailyMessages.module.css'; 
 
 export default function DailyMessages() {
   const [messageData, setMessageData] = useState(null);
@@ -42,39 +42,22 @@ export default function DailyMessages() {
       const response = await fetch(
         `${BACKEND_URL}/messages/me?timeOfDay=${timeOfDay}&count=3`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.status === 204) {
-        setError("Please complete the onboarding questionnaire first to receive personalized messages.");
+        setError("Please complete onboarding first.");
         setLoading(false);
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch messages: ${response.status}`);
-      }
-
       const data = await response.json();
-      console.log("Received messages:", data);
       setMessageData(data);
       setLoading(false);
     } catch (err) {
-      console.error("Error fetching messages:", err);
-      setError("Failed to load messages. Please try again.");
+      setError("Failed to load messages.");
       setLoading(false);
-    }
-  };
-
-  const getTimeOfDayEmoji = (tod) => {
-    switch(tod) {
-      case "MORNING": return "🌅";
-      case "MIDDAY": return "☀️";
-      case "EVENING": return "🌙";
-      default: return "🕐";
     }
   };
 
@@ -89,58 +72,36 @@ export default function DailyMessages() {
     return labels[goal] || goal;
   };
 
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <p>Učitavam tvoje personalizirane poruke...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.errorContainer}>
-        <p className={styles.errorText}>{error}</p>
-      </div>
-    );
-  }
+  if (loading) return <div className={styles.loadingContainer}>Učitavam...</div>;
+  if (error) return <div className={styles.errorContainer}><p className={styles.errorText}>{error}</p></div>;
 
   return (
     <div className={styles.container}>
-      {/* Header with time selector */}
-      <div className={styles.header}>
-        <h2 className={styles.headerTitle}>
-          {getTimeOfDayEmoji(messageData?.timeOfDay)} Your daily message
-        </h2>
-      </div>
+      <h2 className={styles.headerTitle}>
+         Your daily message
+      </h2>
 
-      {/* Messages */}
       {messageData?.messages && messageData.messages.length > 0 ? (
         <div className={styles.scrollContainer}>
           {messageData.messages.map((item, index) => (
             <div key={index} className={styles.messageCard}>
-              {/* Goal badge */}
               <div className={styles.goalBadgeContainer}>
                 <span className={styles.goalBadge}>
                   {getGoalLabel(item.goal)}
                 </span>
               </div>
-              
-              {/* Message text */}
-              <p className={styles.messageText}>
-                {item.text}
-              </p>
+              <p className={styles.messageText}>{item.text}</p>
             </div>
           ))}
         </div>
       ) : (
         <div className={styles.noMessagesContainer}>
-          <p>Nema dostupnih poruka. Molimo ispuni upitnik za početak.</p>
+          <p>Nema dostupnih poruka.</p>
         </div>
       )}
-      {/* Info note */}
+
       <p className={styles.infoNote}>
-        💡Poruke se personaliziruju na temelju tvojih odgovora u upitniku.
+        💡Poruke se personaliziraju na temelju tvojih odgovora u upitniku. 
         Mijenjaju se svaki dan i prilagođavaju se dijelu dana.
       </p>
     </div>

@@ -15,5 +15,6 @@ public class VideoResponseDTO {
     private String url;
     private String trainerName;
     private LocalDateTime createdAt;
+    private String type;
 }
 

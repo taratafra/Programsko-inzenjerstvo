@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
-@RequestMapping("/schedules")
+@RequestMapping("/api/schedules")
 @RequiredArgsConstructor
 public class PracticeScheduleController {
 

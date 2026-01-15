@@ -3,45 +3,31 @@ import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./LeftSidebar.module.css";
 
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate(); 
 
   const getNavItemClass = (tabName) => {
     const isActive = (tabName === 'Home' && activeTab === 'General Information') || activeTab === tabName;
     return `${homeStyles.navItem} ${isActive ? homeStyles.navItemActive : ""}`;
   };
 
-  const getAvatarClass = () => {
-    return `${homeStyles.profileAvatar} ${activeTab === 'Account' ? homeStyles.profileAvatarActive : ""}`;
-  };
-
-  const handleHomeClick = () => {
-    if (location.pathname === '/home') {
-      setActiveTab('General Information');
-    } else {
-      navigate('/home');
-    }
-  };
-
   return (
     <div className={homeStyles.sidebar}>
       <div className={homeStyles.profileBox}>
-        <p className={homeStyles.profileName}>{user.name}</p>
+        <p className={homeStyles.profileName}>{user.name} {user.surname}</p>
         <p className={homeStyles.profileTitle}>{user.email}</p>
       </div>
-
       <ul className={homeStyles.navList}>
-        <li className={getNavItemClass("Home")} onClick={handleHomeClick}>
+        <li className={getNavItemClass("Home")} onClick={() => setActiveTab('General Information')}>
           🏠 Home
         </li>
+        <li className={getNavItemClass("Trainers")} onClick={() => setActiveTab('Trainers')}>
+          👥 Trainers
+        </li> 
         <li className={getNavItemClass("Videos")} onClick={() => navigate('/videos')}>
           🎥 Videos
         </li>
-        <li className={getNavItemClass("Calendar")} onClick={() => setActiveTab('Calendar')}>
-          📅 Calendar
-        </li>
-        <li className={getNavItemClass("Journal")} onClick={() => setActiveTab('Journal')}>
-          📒 Journal
+        <li className={getNavItemClass("Make Appointment")} onClick={() => setActiveTab('Make Appointment')}>
+          📅 Make Appointment
         </li>
         <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics
