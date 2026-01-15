@@ -12,6 +12,7 @@ import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 import Settings from "../../components/home/tabPanel/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
+import CalendarMain from "../../components/home/CalendarMain";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -204,6 +205,17 @@ export default function Home() {
                         <div className={styles.tabPanel}>
                             <h1>Statistics Placeholder</h1>
                             <p>Kolege će ovdje implementirati Statistics.</p>
+                        </div>
+                    );
+                
+                case 'Calendar':
+                    return (
+                        <div className={styles.tabPanel}>
+                            <CalendarMain 
+                                navigate={navigate} 
+                                setActiveTab={setActiveTab}
+                                // Pass any other props your specific CalendarMain needs
+                            />
                         </div>
                     );
 
