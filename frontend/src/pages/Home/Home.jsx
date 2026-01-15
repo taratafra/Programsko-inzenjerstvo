@@ -13,6 +13,9 @@ import Settings from "../../components/home/tabPanel/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 
+import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
+
+
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
     const [user, setUser] = useState(null);
@@ -223,7 +226,12 @@ export default function Home() {
                     );
                 
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser} />;
+
+                    return <Settings user={user} updateUser={updateUser}/>;
+                
+                case 'DailyFocus':
+                    return <DailyFocus user={user}/>
+
 
                 default:
                     return <GeneralInfoGrid />;
