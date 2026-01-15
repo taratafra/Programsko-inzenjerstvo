@@ -26,12 +26,10 @@ public class PracticeScheduleService {
     private final PracticeScheduleRepository repo;
     private final UserTrainerRepository userTrainerRepo;
 
-
     public PracticeSchedule createForUser(Long userId, PracticeScheduleRequest req) {
         validate(req);
         enforceHasTrainer(userId);
 
-        // Verify that the selected trainer is subscribed to by this user
         boolean isSubscribed = userTrainerRepo.findByUserIdAndTrainerId(userId, req.trainerId()).isPresent();
         if (!isSubscribed) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not subscribed to this trainer");
@@ -39,7 +37,7 @@ public class PracticeScheduleService {
 
         PracticeSchedule s = PracticeSchedule.builder()
                 .userId(userId)
-                .trainerId(req.trainerId())  // Use the trainerId from request
+                .trainerId(req.trainerId())
                 .title(req.title().trim())
                 .startTime(req.startTime())
                 .repeatType(req.repeatType())
@@ -48,6 +46,7 @@ public class PracticeScheduleService {
                 .timezone((req.timezone() == null || req.timezone().isBlank()) ? DEFAULT_TZ : req.timezone().trim())
                 .reminderMinutesBefore(req.reminderMinutesBefore() == null ? 10 : req.reminderMinutesBefore())
                 .enabled(req.enabled() == null ? true : req.enabled())
+                .excludedDates(req.excludedDates() == null ? new HashSet<>() : new HashSet<>(req.excludedDates()))
                 .build();
 
         return repo.save(s);
@@ -57,7 +56,6 @@ public class PracticeScheduleService {
         validate(req);
         enforceHasTrainer(userId);
 
-        // Verify that the selected trainer is subscribed to by this user
         boolean isSubscribed = userTrainerRepo.findByUserIdAndTrainerId(userId, req.trainerId()).isPresent();
         if (!isSubscribed) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not subscribed to this trainer");
@@ -66,7 +64,7 @@ public class PracticeScheduleService {
         PracticeSchedule s = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
-        s.setTrainerId(req.trainerId());  // Update with selected trainer
+        s.setTrainerId(req.trainerId());
         s.setTitle(req.title().trim());
         s.setStartTime(req.startTime());
         s.setRepeatType(req.repeatType());
@@ -75,6 +73,7 @@ public class PracticeScheduleService {
         s.setTimezone((req.timezone() == null || req.timezone().isBlank()) ? DEFAULT_TZ : req.timezone().trim());
         s.setReminderMinutesBefore(req.reminderMinutesBefore() == null ? 10 : req.reminderMinutesBefore());
         s.setEnabled(req.enabled() == null ? s.isEnabled() : req.enabled());
+        s.setExcludedDates(req.excludedDates() == null ? new HashSet<>() : new HashSet<>(req.excludedDates()));
 
         return repo.save(s);
     }
@@ -83,7 +82,7 @@ public class PracticeScheduleService {
     public void deleteForUser(Long userId, Long scheduleId) {
         PracticeSchedule schedule = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
-        repo.delete(schedule);  // Use standard delete() instead of custom method
+        repo.delete(schedule);
     }
 
     public PracticeSchedule getForUser(Long userId, Long scheduleId) {
@@ -116,7 +115,6 @@ public class PracticeScheduleService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Repeat type is required");
         }
 
-        // DTO već ima @AssertTrue, ali ovdje dodajemo service-side guard da ne uđe invalid stanje u bazu.
         switch (req.repeatType()) {
             case DAILY -> {
                 if (req.daysOfWeek() != null && !req.daysOfWeek().isEmpty()) {
@@ -147,7 +145,7 @@ public class PracticeScheduleService {
 
     private Set<DayOfWeek> normalizeDays(RepeatType type, Set<DayOfWeek> days) {
         if (type == RepeatType.DAILY || type == RepeatType.ONCE) {
-            return new HashSet<>(); // ignoriramo
+            return new HashSet<>();
         }
         return days == null ? new HashSet<>() : new HashSet<>(days);
     }

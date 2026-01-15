@@ -21,7 +21,9 @@ public record PracticeScheduleResponse(
         Integer reminderMinutesBefore,
         boolean enabled,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Set<LocalDate> excludedDates,
+        Long trainerId
 ) {
     public static PracticeScheduleResponse from(PracticeSchedule s) {
         return new PracticeScheduleResponse(
@@ -36,7 +38,9 @@ public record PracticeScheduleResponse(
                 s.getReminderMinutesBefore(),
                 s.isEnabled(),
                 s.getCreatedAt(),
-                s.getUpdatedAt()
+                s.getUpdatedAt(),
+                s.getExcludedDates(),
+                s.getTrainerId()
         );
     }
 }

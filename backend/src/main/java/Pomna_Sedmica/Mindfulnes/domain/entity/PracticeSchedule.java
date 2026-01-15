@@ -85,4 +85,10 @@ public class PracticeSchedule {
         if (reminderMinutesBefore == null) reminderMinutesBefore = 10;
         if (timezone == null || timezone.isBlank()) timezone = "Europe/Zagreb";
     }
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "schedule_excluded_dates", joinColumns = @JoinColumn(name = "schedule_id"))
+    @Column(name = "excluded_date")
+    @Builder.Default
+    private Set<LocalDate> excludedDates = new HashSet<>();
 }

@@ -278,71 +278,54 @@
   margin-top: 4px;
 }
 
+/* Add these styles to your RightSidebar.module.css */
+
 .scheduleActions {
-  margin-top: 8px;
   display: flex;
   gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
 }
 
-.editButton {
-  flex: 1;
-  padding: 6px 12px;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  color: #93c5fd;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.editButton:hover {
-  background: rgba(59, 130, 246, 0.3);
-  border-color: rgba(59, 130, 246, 0.6);
-  color: #bfdbfe;
-  transform: translateY(-1px);
-}
 
 .deleteButton {
-  flex: 1;
   padding: 6px 12px;
-  background: rgba(220, 38, 38, 0.2);
-  border: 1px solid rgba(220, 38, 38, 0.4);
-  color: #fca5a5;
+  background-color: #dc3545;
+  color: white;
+  border: none;
   border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
 }
 
 .deleteButton:hover {
-  background: rgba(220, 38, 38, 0.3);
-  border-color: rgba(220, 38, 38, 0.6);
-  color: #fecaca;
+  background-color: #c82333;
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
-.manageButton,
-.createButton {
-  width: 100%;
-  padding: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.deleteThisDateButton {
+  padding: 6px 12px;
+  background-color: #ff8c00;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
 }
 
-.manageButton:hover,
-.createButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.deleteThisDateButton:hover {
+  background-color: #e67e00;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
 }
+
 
 .calendarNote {
   margin-top: 15px;

@@ -20,7 +20,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
 
   const dayNames = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-  // Helper function to get token from either Auth0 or localStorage
   const getToken = async () => {
     try {
       if (isAuthenticated) {
@@ -55,6 +54,7 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Loaded schedules:', data); // Debug: check if trainerId is present
         setSchedules(data);
       }
       
@@ -65,8 +65,8 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     }
   };
 
-  const handleDeleteSchedule = async (scheduleId) => {
-    if (!window.confirm('Are you sure you want to delete this schedule?')) {
+  const handleDeleteEntireSchedule = async (scheduleId) => {
+    if (!window.confirm('Are you sure you want to delete this entire schedule? This will remove all occurrences.')) {
       return;
     }
 
@@ -81,10 +81,8 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
       });
 
       if (response.ok || response.status === 204) {
-        // Reload schedules after successful deletion
         await loadSchedules();
         
-        // Check if there are still schedules for this date after reload
         setTimeout(() => {
           const remainingSchedules = getSchedulesForDate(selectedDate);
           if (remainingSchedules.length === 0) {
@@ -104,77 +102,159 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     }
   };
 
-  const handleEditSchedule = (schedule) => {
-    // Store the schedule to edit in localStorage temporarily
-    localStorage.setItem('scheduleToEdit', JSON.stringify(schedule));
-    // Navigate to Make Appointment tab
-    setActiveTab('Make Appointment');
+  const handleDeleteSpecificDate = async (schedule) => {
+    const dateStr = selectedDate.toLocaleDateString();
+    
+    if (!window.confirm(`Are you sure you want to remove this schedule from ${dateStr} only?`)) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      
+      // Format date as YYYY-MM-DD
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      // Add this date to the excluded dates list
+      const existingExcludedDates = schedule.excludedDates || [];
+      const updatedExcludedDates = [...existingExcludedDates, formattedDate];
+      
+      // Make sure trainerId exists - this is required!
+      if (!schedule.trainerId) {
+        console.error('Schedule missing trainerId:', schedule);
+        alert('Error: Schedule is missing trainer information. Please refresh and try again.');
+        return;
+      }
+      
+      let updatedSchedule = {
+        title: schedule.title,
+        startTime: schedule.startTime,
+        repeatType: schedule.repeatType,
+        trainerId: schedule.trainerId, // Must not be undefined!
+        timezone: schedule.timezone || 'Europe/Zagreb',
+        reminderMinutesBefore: schedule.reminderMinutesBefore != null ? schedule.reminderMinutesBefore : 30,
+        enabled: schedule.enabled != null ? schedule.enabled : true,
+        excludedDates: updatedExcludedDates
+      };
+
+      // Add required fields based on repeat type
+      if (schedule.repeatType === 'WEEKLY') {
+        updatedSchedule.daysOfWeek = schedule.daysOfWeek; // Keep all the days
+        updatedSchedule.date = null; // WEEKLY must have date as null
+      } else if (schedule.repeatType === 'DAILY') {
+        updatedSchedule.daysOfWeek = []; // DAILY must have empty daysOfWeek
+        updatedSchedule.date = null; // DAILY must have date as null
+      } else if (schedule.repeatType === 'ONCE') {
+        updatedSchedule.daysOfWeek = []; // ONCE must have empty daysOfWeek
+        updatedSchedule.date = schedule.date; // ONCE must have the date
+      }
+
+      console.log('Sending update:', updatedSchedule); // Debug log
+
+      const response = await fetch(`${BACKEND_URL}/api/schedules/me/${schedule.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedSchedule)
+      });
+
+      if (response.ok) {
+        await loadSchedules();
+        
+        setTimeout(() => {
+          const remainingSchedules = getSchedulesForDate(selectedDate);
+          if (remainingSchedules.length === 0) {
+            setShowDetails(false);
+          }
+        }, 100);
+        
+        alert('Schedule updated successfully!');
+      } else {
+        const errorText = await response.text();
+        console.error('Update failed - Status:', response.status);
+        console.error('Update failed - Response:', errorText);
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          alert(`Failed to update schedule: ${errorJson.message || JSON.stringify(errorJson, null, 2)}`);
+        } catch (e) {
+          alert(`Failed to update schedule: ${errorText}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      alert(`Error updating schedule: ${error.message}`);
+    }
   };
 
   useEffect(() => {
     loadSchedules();
   }, []);
 
-  // Reload schedules when returning to this tab
   useEffect(() => {
     if (activeTab === 'Personalized recomendations' || activeTab === 'Make Appointment') {
       loadSchedules();
     }
   }, [activeTab]);
 
-  // Expose loadSchedules to parent component
   useEffect(() => {
     if (onSchedulesReload) {
       onSchedulesReload(loadSchedules);
     }
-  }, [onSchedulesReload]);
+  }, []);
 
-  // Check if a date has any schedules
   const getSchedulesForDate = (date) => {
     if (!date) return [];
     
     const dayOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][date.getDay()];
     
-    // Normalize the date to midnight for comparison
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     
-    // Get today's date at midnight for comparison
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    // Format date as YYYY-MM-DD for comparison with excludedDates
+    const year = compareDate.getFullYear();
+    const month = String(compareDate.getMonth() + 1).padStart(2, '0');
+    const day = String(compareDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
     return schedules.filter(schedule => {
-      // ONCE type - check if date matches
+      // Check if this date is in the excluded dates list
+      if (schedule.excludedDates && schedule.excludedDates.includes(formattedDate)) {
+        return false;
+      }
+      
       if (schedule.repeatType === 'ONCE' && schedule.date) {
         const scheduleDate = new Date(schedule.date);
         scheduleDate.setHours(0, 0, 0, 0);
         return scheduleDate.getTime() === compareDate.getTime();
       }
       
-      // DAILY type - check if date is today or in the future
       if (schedule.repeatType === 'DAILY') {
-        // Don't show on past dates
         if (compareDate.getTime() < today.getTime()) {
           return false;
         }
         
-        // Only show if schedule has started
         if (schedule.date) {
           const startDate = new Date(schedule.date);
           startDate.setHours(0, 0, 0, 0);
           
-          // Date must be on or after start date
           if (compareDate.getTime() < startDate.getTime()) {
             return false;
           }
         }
         
-        // Optionally check end date if your schedule has one
         if (schedule.endDate) {
           const endDate = new Date(schedule.endDate);
           endDate.setHours(0, 0, 0, 0);
           
-          // Date must be on or before end date
           if (compareDate.getTime() > endDate.getTime()) {
             return false;
           }
@@ -183,14 +263,11 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         return true;
       }
       
-      // WEEKLY type - check if day of week matches AND date is today or future
       if (schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek) {
-        // Don't show on past dates
         if (compareDate.getTime() < today.getTime()) {
           return false;
         }
         
-        // Check if date is after start date (if exists)
         if (schedule.date) {
           const startDate = new Date(schedule.date);
           startDate.setHours(0, 0, 0, 0);
@@ -200,7 +277,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
           }
         }
         
-        // Check if day of week matches
         return schedule.daysOfWeek.includes(dayOfWeek);
       }
       
@@ -275,12 +351,10 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
       <h3 className={styles.calendarTitle}>Calendar</h3>
       
       <div className={styles.calendar}>
-        {/* Month/Year Title - Centered */}
         <div className={styles.monthYearTitle}>
           {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
         </div>
 
-        {/* Calendar Navigation */}
         <div className={styles.calendarHeader}>
           <button onClick={previousMonth} className={styles.navButton}>
             ‹
@@ -290,14 +364,12 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
           </button>
         </div>
 
-        {/* Day Names */}
         <div className={styles.dayNames}>
           {dayNames.map(day => (
             <div key={day} className={styles.dayName}>{day}</div>
           ))}
         </div>
 
-        {/* Calendar Days */}
         <div className={styles.daysGrid}>
           {days.map((date, index) => (
             <div
@@ -334,7 +406,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
           ))}
         </div>
 
-        {/* Selected Date Details */}
         {showDetails && selectedDateSchedules.length > 0 && (
           <div className={styles.scheduleDetails}>
             <div className={styles.detailsHeader}>
@@ -366,30 +437,65 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
                       {schedule.daysOfWeek.map(day => day.substring(0, 3)).join(', ')}
                     </div>
                   )}
+                  
                   <div className={styles.scheduleActions}>
-                    <button 
-                      onClick={() => handleEditSchedule(schedule)}
-                      className={styles.editButton}
-                      title="Edit schedule"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteSchedule(schedule.id)}
-                      className={styles.deleteButton}
-                      title="Delete schedule"
-                    >
-                      🗑️ Delete
-                    </button>
+                    {/* For ONCE - only show delete entire */}
+                    {schedule.repeatType === 'ONCE' && (
+                      <button 
+                        onClick={() => handleDeleteEntireSchedule(schedule.id)}
+                        className={styles.deleteButton}
+                        title="Delete this schedule"
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
+                    
+                    {/* For WEEKLY - show both options */}
+                    {schedule.repeatType === 'WEEKLY' && (
+                      <>
+                        <button 
+                          onClick={() => handleDeleteSpecificDate(schedule)}
+                          className={styles.deleteThisDateButton}
+                          title="Remove this day from weekly schedule"
+                        >
+                          🗑️ Remove This Day
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteEntireSchedule(schedule.id)}
+                          className={styles.deleteButton}
+                          title="Delete entire weekly schedule"
+                        >
+                          🗑️ Delete All
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* For DAILY - show both options */}
+                    {schedule.repeatType === 'DAILY' && (
+                      <>
+                        <button 
+                          onClick={() => handleDeleteSpecificDate(schedule)}
+                          className={styles.deleteThisDateButton}
+                          title="Remove this specific date"
+                        >
+                          🗑️ Remove This Date
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteEntireSchedule(schedule.id)}
+                          className={styles.deleteButton}
+                          title="Delete entire daily schedule"
+                        >
+                          🗑️ Delete All
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-            {/* REMOVED: Create New Schedule button */}
           </div>
         )}
 
-        {/* Empty state for selected date */}
         {showDetails && selectedDateSchedules.length === 0 && (
           <div className={styles.calendarNote}>
             <p>No schedules for this day</p>

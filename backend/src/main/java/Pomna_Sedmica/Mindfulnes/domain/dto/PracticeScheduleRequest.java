@@ -41,9 +41,10 @@ public record PracticeScheduleRequest(
         // Optional; default true
         Boolean enabled,
 
-        // ADD THIS - trainerId selected by user
         @NotNull(message = "trainerId is required")
-        Long trainerId
+        Long trainerId,
+
+        Set<LocalDate> excludedDates
 ) {
     @AssertTrue(message = "Invalid combination: WEEKLY requires non-empty daysOfWeek; ONCE requires date; DAILY should not set daysOfWeek/date")
     public boolean isValidCombination() {
