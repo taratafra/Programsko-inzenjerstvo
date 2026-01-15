@@ -229,6 +229,26 @@
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
+.cancelButton {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
 /* Time Section */
 .timeSection {
     background: rgba(53, 32, 90, 0.6);

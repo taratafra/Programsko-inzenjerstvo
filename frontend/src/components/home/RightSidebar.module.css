@@ -143,14 +143,34 @@
   background: rgba(220, 38, 38, 0.3);
 }
 
-.appointmentDot {
+.appointmentDots {
   position: absolute;
   bottom: 3px;
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+.appointmentDot {
   width: 6px;
   height: 6px;
-  background: #dc2626;
   border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.dotOnce {
+  background: #dc2626;
   box-shadow: 0 0 4px rgba(220, 38, 38, 0.8);
+}
+
+.dotDaily {
+  background: #3b82f6;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.8);
+}
+
+.dotWeekly {
+  background: #10b981;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.8);
 }
 
 /* Schedule Details Panel */
@@ -258,6 +278,52 @@
   margin-top: 4px;
 }
 
+.scheduleActions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.editButton {
+  flex: 1;
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton:hover {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.6);
+  color: #bfdbfe;
+  transform: translateY(-1px);
+}
+
+.deleteButton {
+  flex: 1;
+  padding: 6px 12px;
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #fca5a5;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  background: rgba(220, 38, 38, 0.3);
+  border-color: rgba(220, 38, 38, 0.6);
+  color: #fecaca;
+  transform: translateY(-1px);
+}
+
 .manageButton,
 .createButton {
   width: 100%;
@@ -342,6 +408,10 @@
 
   .dayCell {
     font-size: 0.7rem;
+  }
+
+  .appointmentDots {
+    gap: 2px;
   }
 
   .appointmentDot {

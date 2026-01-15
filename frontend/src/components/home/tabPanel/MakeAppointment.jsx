@@ -8,13 +8,14 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [scheduleType, setScheduleType] = useState('ONCE'); // ONCE, DAILY, WEEKLY
-    const [selectedDays, setSelectedDays] = useState([]); // For WEEKLY
+    const [scheduleType, setScheduleType] = useState('ONCE');
+    const [selectedDays, setSelectedDays] = useState([]);
     const [appointmentData, setAppointmentData] = useState({
         title: '',
         trainerId: null
     });
     const [loading, setLoading] = useState(true);
+    const [editingScheduleId, setEditingScheduleId] = useState(null);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
@@ -27,10 +28,8 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weekDaysForSelection = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
-    // Helper function to get token from either Auth0 or localStorage
     const getToken = async () => {
         try {
-            // If authenticated with Auth0 (Google login)
             if (isAuthenticated) {
                 return await getAccessTokenSilently({
                     authorizationParams: {
@@ -38,9 +37,7 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                         scope: "openid profile email",
                     },
                 });
-            }
-            // Otherwise use local JWT token (normal registration)
-            else {
+            } else {
                 const localToken = localStorage.getItem("token");
                 if (!localToken) {
                     throw new Error("No authentication token found");
@@ -55,7 +52,47 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
     useEffect(() => {
         loadSubscribedTrainers();
+        
+        // Check if we're editing a schedule
+        const scheduleToEdit = localStorage.getItem('scheduleToEdit');
+        if (scheduleToEdit) {
+            const schedule = JSON.parse(scheduleToEdit);
+            loadScheduleForEdit(schedule);
+            localStorage.removeItem('scheduleToEdit');
+        }
     }, []);
+
+    const loadScheduleForEdit = (schedule) => {
+        console.log('Loading schedule for edit:', schedule);
+        
+        setEditingScheduleId(schedule.id);
+        setAppointmentData({
+            title: schedule.title,
+            trainerId: schedule.trainerId
+        });
+        setScheduleType(schedule.repeatType);
+        
+        // Set time
+        if (schedule.startTime) {
+            const hour = parseInt(schedule.startTime.split(':')[0]);
+            setSelectedTime({
+                time: `${hour}:00 - ${hour + 1}:00`,
+                hour24: `${hour.toString().padStart(2, '0')}:00`
+            });
+        }
+        
+        // Set date for ONCE type
+        if (schedule.repeatType === 'ONCE' && schedule.date) {
+            const date = new Date(schedule.date);
+            setSelectedDate(date);
+            setCurrentMonth(date);
+        }
+        
+        // Set days for WEEKLY type
+        if (schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek) {
+            setSelectedDays(schedule.daysOfWeek);
+        }
+    };
 
     const loadSubscribedTrainers = async () => {
         try {
@@ -185,24 +222,27 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                 enabled: true
             };
 
-            // Add type-specific fields - CRITICAL: don't include fields that should be null
+            // Add type-specific fields
             if (scheduleType === 'ONCE') {
-                // Format date as YYYY-MM-DD
                 const year = selectedDate.getFullYear();
                 const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
                 const day = String(selectedDate.getDate()).padStart(2, '0');
                 scheduleRequest.date = `${year}-${month}-${day}`;
-                // Don't include daysOfWeek at all
             } else if (scheduleType === 'WEEKLY') {
                 scheduleRequest.daysOfWeek = selectedDays;
-                // Don't include date
             }
-            // For DAILY, don't include daysOfWeek or date
 
             console.log('Sending schedule request:', scheduleRequest);
 
-            const response = await fetch(`${BACKEND_URL}/api/schedules/me`, {
-                method: 'POST',
+            // Determine if creating or updating
+            const url = editingScheduleId 
+                ? `${BACKEND_URL}/api/schedules/me/${editingScheduleId}`
+                : `${BACKEND_URL}/api/schedules/me`;
+            
+            const method = editingScheduleId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -211,9 +251,9 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             });
 
             if (response.ok) {
-                alert('Schedule created successfully!');
+                alert(editingScheduleId ? 'Schedule updated successfully!' : 'Schedule created successfully!');
                 
-                // 🎉 RELOAD THE CALENDAR - ADD THIS!
+                // Reload the calendar
                 if (reloadCalendar) {
                     reloadCalendar();
                 }
@@ -224,17 +264,26 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                 setSelectedDays([]);
                 setAppointmentData({ title: '', trainerId: null });
                 setScheduleType('ONCE');
+                setEditingScheduleId(null);
             } else {
                 const error = await response.json();
                 console.error('Server error:', error);
-                alert(`Failed to create schedule: ${error.message || JSON.stringify(error)}`);
+                alert(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule: ${error.message || JSON.stringify(error)}`);
             }
         } catch (error) {
-            console.error('Error creating schedule:', error);
-            alert('Failed to create schedule: ' + error.message);
+            console.error('Error with schedule:', error);
+            alert(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule: ` + error.message);
         }
     };
 
+    const handleCancelEdit = () => {
+        setEditingScheduleId(null);
+        setSelectedDate(null);
+        setSelectedTime(null);
+        setSelectedDays([]);
+        setAppointmentData({ title: '', trainerId: null });
+        setScheduleType('ONCE');
+    };
 
     const previousMonth = () => {
         setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
@@ -271,7 +320,9 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Create Practice Schedule</h2>
+            <h2 className={styles.title}>
+                {editingScheduleId ? 'Edit Practice Schedule' : 'Create Practice Schedule'}
+            </h2>
 
             {/* Schedule Type Selection */}
             <div className={styles.formSection} style={{marginBottom: '25px'}}>
@@ -438,8 +489,17 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                         onClick={handleSubmitAppointment}
                         className={styles.submitButton}
                     >
-                        Create Schedule
+                        {editingScheduleId ? '✅ Update Schedule' : '✅ Create Schedule'}
                     </button>
+
+                    {editingScheduleId && (
+                        <button
+                            onClick={handleCancelEdit}
+                            className={styles.cancelButton}
+                        >
+                            ❌ Cancel Edit
+                        </button>
+                    )}
                 </div>
             )}
         </div>

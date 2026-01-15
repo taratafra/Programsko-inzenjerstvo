@@ -65,6 +65,52 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     }
   };
 
+  const handleDeleteSchedule = async (scheduleId) => {
+    if (!window.confirm('Are you sure you want to delete this schedule?')) {
+      return;
+    }
+
+    try {
+      const token = await getToken();
+      
+      const response = await fetch(`${BACKEND_URL}/api/schedules/me/${scheduleId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok || response.status === 204) {
+        // Reload schedules after successful deletion
+        await loadSchedules();
+        
+        // Check if there are still schedules for this date after reload
+        setTimeout(() => {
+          const remainingSchedules = getSchedulesForDate(selectedDate);
+          if (remainingSchedules.length === 0) {
+            setShowDetails(false);
+          }
+        }, 100);
+        
+        alert('Schedule deleted successfully!');
+      } else {
+        const errorText = await response.text();
+        console.error('Delete failed:', errorText);
+        alert(`Failed to delete schedule: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      alert(`Error deleting schedule: ${error.message}`);
+    }
+  };
+
+  const handleEditSchedule = (schedule) => {
+    // Store the schedule to edit in localStorage temporarily
+    localStorage.setItem('scheduleToEdit', JSON.stringify(schedule));
+    // Navigate to Make Appointment tab
+    setActiveTab('Make Appointment');
+  };
+
   useEffect(() => {
     loadSchedules();
   }, []);
@@ -93,6 +139,10 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     
+    // Get today's date at midnight for comparison
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
     return schedules.filter(schedule => {
       // ONCE type - check if date matches
       if (schedule.repeatType === 'ONCE' && schedule.date) {
@@ -101,8 +151,13 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         return scheduleDate.getTime() === compareDate.getTime();
       }
       
-      // DAILY type - check if date is after start date (and before end date if exists)
+      // DAILY type - check if date is today or in the future
       if (schedule.repeatType === 'DAILY') {
+        // Don't show on past dates
+        if (compareDate.getTime() < today.getTime()) {
+          return false;
+        }
+        
         // Only show if schedule has started
         if (schedule.date) {
           const startDate = new Date(schedule.date);
@@ -128,8 +183,13 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         return true;
       }
       
-      // WEEKLY type - check if day of week matches
+      // WEEKLY type - check if day of week matches AND date is today or future
       if (schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek) {
+        // Don't show on past dates
+        if (compareDate.getTime() < today.getTime()) {
+          return false;
+        }
+        
         // Check if date is after start date (if exists)
         if (schedule.date) {
           const startDate = new Date(schedule.date);
@@ -255,7 +315,18 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
                 <>
                   <span className={styles.dayNumber}>{date.getDate()}</span>
                   {hasSchedule(date) && (
-                    <span className={styles.appointmentDot}></span>
+                    <div className={styles.appointmentDots}>
+                      {getSchedulesForDate(date).map((schedule, idx) => (
+                        <span 
+                          key={idx}
+                          className={`${styles.appointmentDot} ${
+                            schedule.repeatType === 'ONCE' ? styles.dotOnce :
+                            schedule.repeatType === 'DAILY' ? styles.dotDaily :
+                            styles.dotWeekly
+                          }`}
+                        ></span>
+                      ))}
+                    </div>
                   )}
                 </>
               )}
@@ -295,16 +366,26 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
                       {schedule.daysOfWeek.map(day => day.substring(0, 3)).join(', ')}
                     </div>
                   )}
+                  <div className={styles.scheduleActions}>
+                    <button 
+                      onClick={() => handleEditSchedule(schedule)}
+                      className={styles.editButton}
+                      title="Edit schedule"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteSchedule(schedule.id)}
+                      className={styles.deleteButton}
+                      title="Delete schedule"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-
-            <button 
-              onClick={() => setActiveTab('Make Appointment')}
-              className={styles.manageButton}
-            >
-              Manage Schedules
-            </button>
+            {/* REMOVED: Create New Schedule button */}
           </div>
         )}
 
@@ -312,12 +393,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         {showDetails && selectedDateSchedules.length === 0 && (
           <div className={styles.calendarNote}>
             <p>No schedules for this day</p>
-            <button 
-              onClick={() => setActiveTab('Make Appointment')}
-              className={styles.createButton}
-            >
-              Create Schedule
-            </button>
           </div>
         )}
       </div>

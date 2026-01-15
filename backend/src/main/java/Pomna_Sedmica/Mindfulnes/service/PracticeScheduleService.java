@@ -8,6 +8,7 @@ import Pomna_Sedmica.Mindfulnes.repository.UserTrainerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.DayOfWeek;
@@ -78,10 +79,11 @@ public class PracticeScheduleService {
         return repo.save(s);
     }
 
+    @Transactional
     public void deleteForUser(Long userId, Long scheduleId) {
-        repo.findByIdAndUserId(scheduleId, userId)
+        PracticeSchedule schedule = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
-        repo.deleteByIdAndUserId(scheduleId, userId);
+        repo.delete(schedule);  // Use standard delete() instead of custom method
     }
 
     public PracticeSchedule getForUser(Long userId, Long scheduleId) {
