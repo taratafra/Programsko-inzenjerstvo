@@ -63,6 +63,8 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(user);
+                user.setOnboardingComplete(true);
+                user.setRequiresPasswordReset(false);
                 user = userRepository.findByEmail("trainer@trainer").orElse(null);
                 userRepository.delete(user);
                 userRepository.save(new Trainer(user));
@@ -78,6 +80,8 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(trainer);
+                user.setOnboardingComplete(true);
+                user.setRequiresPasswordReset(false);
             }
         };
     }
