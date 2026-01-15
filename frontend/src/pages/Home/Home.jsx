@@ -10,18 +10,94 @@ import DashboardTabs from "../../components/home/DashboardTabs";
 import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 
 import Settings from "../../components/home/tabPanel/Settings";
+import Trainers from "../../components/home/tabPanel/Trainers";
+import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
     const hasNavigatedToQuestions = useRef(false);
 
-    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
-    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
+    const BACKEND_URL = process.env.REACT_APP_BACKEND;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
-    const sendUserDataToBackend = useCallback(async (auth0User) => {
+    useEffect(() => {
+        const init = async () => {
+            const localToken = localStorage.getItem("token");
+
+            try {
+                // Auth0 login Google i to
+                if (isAuthenticated && auth0User) {
+                    setUser(auth0User);
+
+                    const userResponse = await sendUserDataToBackend(auth0User);
+
+                    if (userResponse) {
+                        setUser(userResponse);
+                    } else {
+                        setUser(auth0User);
+                    }
+
+                    // provjera za jel rjesia kviz
+                    if (userResponse && !userResponse.isOnboardingComplete) {
+                        if (!hasNavigatedToQuestions.current) {
+                            hasNavigatedToQuestions.current = true;
+                            navigate("/questions", { replace: true });
+                            return;
+                        }
+                    }
+
+                    setLoading(false);
+                }
+                // Local JWT login
+                else if (localToken) {
+                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                        headers: { Authorization: `Bearer ${localToken}` },
+                    });
+
+                    if (!res.ok) throw new Error("Failed to fetch user info");
+
+                    const data = await res.json();
+                    setUser(data);
+
+                    // vrijeme za kviz
+                    if (!data.isOnboardingComplete) {
+                        if (!hasNavigatedToQuestions.current) {
+                            hasNavigatedToQuestions.current = true;
+                            navigate("/questions", { replace: true });
+                            return;
+                        }
+                    }
+
+                    setLoading(false);
+                } else {
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error("DEBUG: Error in init:", err);
+                if (!isAuthenticated) {
+                    console.log("DEBUG: Not authenticated via Auth0, removing token and redirecting to login");
+                    if (localToken) {
+                        localStorage.removeItem("token");
+                    }
+                    navigate("/login");
+                }
+                setLoading(false);
+            } finally {
+                // Ensure loading is set to false if not already handled by an early return
+                setLoading(false);
+            }
+        };
+
+        if (!isLoading) {
+            init();
+        }
+    }, [isLoading, isAuthenticated, location.pathname, navigate, BACKEND_URL]);
+
+    const sendUserDataToBackend = async (auth0User) => {
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
@@ -58,120 +134,7 @@ export default function Home() {
             console.error("Error sending user data to backend:", err);
             return null;
         }
-    }, [getAccessTokenSilently, AUDIENCE, BACKEND_URL]);
-
-    useEffect(() => {
-        const init = async () => {
-            const localToken = localStorage.getItem("token");
-            // The provided snippet `if (data.access_token)` seems to be from a different context (e.g., Login.jsx)
-            // and `data` is not defined here.
-            // The instruction is to "Set wasLoggedIn flag in Home.jsx".
-            // The `localStorage.setItem("wasLoggedIn", "true");` is already present in the isAuthenticated block.
-            // To faithfully apply the change as requested, assuming the intent is to ensure `wasLoggedIn` is set
-            // when a local token is present and valid, or when Auth0 authentication is successful.
-            // The existing code already handles setting `wasLoggedIn` for Auth0.
-            // For local token, it's not explicitly set, so we'll add it there.
-
-            console.log("DEBUG: init called. isAuthenticated:", isAuthenticated, "hasLocalToken:", !!localToken, "isLoading:", isLoading);
-
-            try {
-                if (isAuthenticated) {
-                    console.log("DEBUG: Authenticated via Auth0. auth0User:", auth0User);
-                    // Wait for auth0User to be available if authenticated
-                    if (!auth0User) return;
-                    setUser(auth0User);
-                    try {
-                        const token = await getAccessTokenSilently({
-                            authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
-                        });
-                        console.log("DEBUG: Got Auth0 token. Fetching /api/users/me");
-                        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
-                        if (res.ok) {
-                            const data = await res.json();
-                            console.log("DEBUG: Auth0 user data from backend:", data);
-                            setUser(data);
-                            if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
-                                hasNavigatedToQuestions.current = true;
-                                navigate("/questions", { replace: true });
-                                return;
-                            }
-                        } else {
-                            console.log("DEBUG: Auth0 /api/users/me failed. Status:", res.status);
-                            // If fetching user from backend fails with Auth0 token, try to send user data
-                            const userResponse = await sendUserDataToBackend(auth0User);
-                            if (userResponse) {
-                                setUser(userResponse);
-                                if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
-                                    hasNavigatedToQuestions.current = true;
-                                    navigate("/questions", { replace: true });
-                                    return;
-                                }
-                            } else {
-                                throw new Error("Failed to fetch or create user with Auth0");
-                            }
-                        }
-                    } catch (tokenErr) {
-                        console.error("DEBUG: Error in Auth0 init flow:", tokenErr);
-                        // Fallback to sending user data if token acquisition or initial fetch fails
-                        const userResponse = await sendUserDataToBackend(auth0User);
-                        if (userResponse) {
-                            setUser(userResponse);
-                            if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
-                                hasNavigatedToQuestions.current = true;
-                                navigate("/questions", { replace: true });
-                                return;
-                            }
-                        } else {
-                            throw new Error("Failed to fetch or create user with Auth0 after token error");
-                        }
-                    }
-                    setLoading(false);
-                } else if (localToken) {
-                    console.log("DEBUG: Authenticated via local token. Fetching /api/users/me");
-                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-                        headers: { Authorization: `Bearer ${localToken}` },
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        console.log("DEBUG: Local user data from backend:", data);
-                        setUser(data);
-                        if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
-                            hasNavigatedToQuestions.current = true;
-                            navigate("/questions", { replace: true });
-                            return;
-                        }
-                        setLoading(false);
-                    } else {
-                        console.log("DEBUG: Local /api/users/me failed. Status:", res.status);
-                        throw new Error("Failed to fetch user with local token");
-                    }
-                } else {
-                    console.log("DEBUG: No authentication found.");
-                    // No auth method found
-                    setLoading(false);
-                }
-            } catch (err) {
-                console.error("DEBUG: Error in init:", err);
-                if (!isAuthenticated) {
-                    console.log("DEBUG: Not authenticated via Auth0, removing token and redirecting to login");
-                    if (localToken) {
-                        localStorage.removeItem("token");
-                    }
-                    navigate("/login");
-                }
-                setLoading(false);
-            } finally {
-                // Ensure loading is set to false if not already handled by an early return
-                setLoading(false);
-            }
-        };
-
-        if (!isLoading) {
-            init();
-        }
-    }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, sendUserDataToBackend, navigate]);
+    };
 
     const handleLogout = () => {
         try {
@@ -190,9 +153,11 @@ export default function Home() {
 
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('Personalized recomendations');
+        // ADD THIS LINE - state to hold the calendar reload function
+        const [reloadCalendar, setReloadCalendar] = useState(null);
 
-        const updateUser = (updatedFields) => {
-            setUser(prevUser => ({
+        const updateUser =(updatedFields) =>{
+            setUser(prevUser =>({
                 ...prevUser,
                 ...updatedFields
             }));
@@ -235,20 +200,13 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Calendar':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Calendar Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Calendar.</p>
-                        </div>
-                    );
-                case 'Journal':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Journal Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Journal.</p>
-                        </div>
-                    );
+                case 'Trainers':
+                    return <Trainers />;
+
+                case 'Make Appointment':
+                    // MODIFY THIS LINE - pass reloadCalendar to MakeAppointment
+                    return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
+
                 case 'Statistics':
                     return (
                         <div className={styles.tabPanel}>
@@ -271,10 +229,10 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
-
+                
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser} />;
-
+                    return <Settings user={user} updateUser={updateUser}/>;
+                
 
                 default:
                     return <GeneralInfoGrid />;
@@ -308,7 +266,13 @@ export default function Home() {
                             {renderTabContent()}
                         </div>
 
-                        <RightSidebar navigate={navigate} />
+                        {/* MODIFY THIS - pass onSchedulesReload to RightSidebar */}
+                        <RightSidebar
+                            navigate={navigate}
+                            setActiveTab={setActiveTab}
+                            activeTab={activeTab}
+                            onSchedulesReload={(reloadFn) => setReloadCalendar(() => reloadFn)}
+                        />
                     </div>
                 </div>
             </div>

@@ -226,7 +226,7 @@ public class UserService {
     }
 
     public List<UserDTOResponse> getAllUsers() {
-        return userRepository.findAll()
+        return userRepository.findAllByRole(Role.USER)
                 .stream()
                 .map(UserMapper::toDTO)
                 .collect(Collectors.toList());

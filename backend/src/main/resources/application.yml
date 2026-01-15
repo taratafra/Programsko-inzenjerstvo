@@ -8,6 +8,9 @@ spring:
     show-sql: true
   profiles:
     active: ${spring.profiles.active:prod} # fallback if not defined
+  reminders:
+    pollDelayMs: 30000
+
 
 ---
 
@@ -59,6 +62,23 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
     database-platform: org.hibernate.dialect.H2Dialect
 
+  mail:
+    host: ${DEV_MAIL_HOST}
+    port: ${DEV_MAIL_PORT}
+    username: ${DEV_MAIL_USERNAME}
+    password: ${DEV_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  mail:
+    from: ${DEV_MAIL_FROM}
+
+
 ---
 
 # ────────────── PRODUCTION PROFILE (PostgreSQL) ──────────────
@@ -78,4 +98,20 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: ${PROD_MAIL_HOST}
+    port: ${PROD_MAIL_PORT}
+    username: ${PROD_MAIL_USERNAME}
+    password: ${PROD_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  mail:
+    from: ${PROD_MAIL_FROM}
 
