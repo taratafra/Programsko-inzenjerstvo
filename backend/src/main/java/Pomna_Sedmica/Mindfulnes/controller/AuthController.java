@@ -79,6 +79,7 @@ public class AuthController {
                     .orElseGet(() -> {
                         User u = new User(
                                 req.getEmail(),
+                                null,
                                 auth0Id,
                                 "Auth0User",
                                 "",
@@ -121,6 +122,7 @@ public class AuthController {
         User user = new User(
                 req.getEmail(),
                 encoded,
+                null,
                 req.getName(),
                 req.getSurname(),
                 req.getDateOfBirth(),

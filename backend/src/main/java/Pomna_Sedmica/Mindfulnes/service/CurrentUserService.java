@@ -58,6 +58,7 @@ public class CurrentUserService {
 
         User u = new User(
                 email != null ? email : (sub + "@placeholder.local"),
+                null,
                 sub,
                 "Auth0User",
                 "",

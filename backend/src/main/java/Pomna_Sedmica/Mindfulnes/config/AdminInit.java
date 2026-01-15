@@ -25,6 +25,7 @@ public class AdminInit {
                 User user = new User(
                         "admin@admin",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,
@@ -43,6 +44,7 @@ public class AdminInit {
                 User user = new User(
                         "user@user",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,
@@ -53,6 +55,7 @@ public class AdminInit {
                 user = new User(
                         "trainer@trainer",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,
@@ -60,9 +63,14 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(user);
+                user = userRepository.findByEmail("trainer@trainer").orElse(null);
+                userRepository.delete(user);
+                userRepository.save(new Trainer(user));
+                //Trainer trainer = new Trainer()
                 Trainer trainer = new Trainer(
                         "trainer2@trainer",
-                        passwordEncoder.encode("admin"), //moze se prebacit u env
+                        passwordEncoder.encode("admin"),//moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,

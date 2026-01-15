@@ -2,6 +2,7 @@ package Pomna_Sedmica.Mindfulnes.service;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;

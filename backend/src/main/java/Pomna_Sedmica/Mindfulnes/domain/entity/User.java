@@ -67,15 +67,10 @@ public class User{
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
 
-    public User(String email, String passwordOrAuth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
+    public User(String email, String password, String auth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
 
-        if(isSocialLogin) {
-            this.auth0Id = passwordOrAuth0Id; // za korisnika koji se ulogirao preko auth0
-            this.password = null;
-        } else {
-            this.password = passwordOrAuth0Id; // za korisnika koji se lokalno ulogira
-            this.auth0Id = null;
-        }
+        this.password = password;
+        this.auth0Id = auth0Id;
         this.email = email;
         this.name = name;
         this.surname = surname;
