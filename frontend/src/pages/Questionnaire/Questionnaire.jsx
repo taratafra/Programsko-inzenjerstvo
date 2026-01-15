@@ -146,7 +146,7 @@ export default function Questionnaire() {
                 }
             });
 
-            if(goals.length===0){//dodano
+            if (goals.length === 0) {//dodano
                 setError("Please select at least one goal");
                 setIsSubmitting(false);
                 return;
@@ -165,19 +165,19 @@ export default function Questionnaire() {
                 return;
             }
 
-            const roleMapping ={
-                "user":"USER",
-                "coach":"COACH"
+            const roleMapping = {
+                "user": "USER",
+                "coach": "COACH"
             }
 
-            const role=formData.get("role");
-            if(!role){
+            const role = formData.get("role");
+            if (!role) {
                 setError("Please select your role");
                 setIsSubmitting(false);
                 return;
             }
 
-            const consent =formData.get("consent");
+            const consent = formData.get("consent");
             if (!consent) {
                 setError("You must give consent to continue.");
                 setIsSubmitting(false);
@@ -193,7 +193,7 @@ export default function Questionnaire() {
                 sessionLength: formData.get("session-length") || null,
                 preferredTime: formData.get("preferred-time") || null,
                 note: formData.get("notes") || null,
-                isTrainer: formData.get("isTrainer") === "true"
+                isTrainer: role === "coach"
             };
 
             console.log("Submitting survey data:", surveyData);
@@ -288,7 +288,7 @@ export default function Questionnaire() {
                         </div>
                         <div>
                             <label>
-                                <input type="radio" name="role" value="coach" /> Coach
+                                <input type="radio" name="role" value="coach" /> Coach (Enable video uploads)
                             </label>
                         </div>
                     </div>
@@ -363,7 +363,7 @@ export default function Questionnaire() {
 
                     <div>
                         <label>
-                            <input type="checkbox" name="goals" value="reduce-anxiety"/> Reduce anxiety
+                            <input type="checkbox" name="goals" value="reduce-anxiety" /> Reduce anxiety
                         </label>
                     </div>
                     <div>
@@ -424,12 +424,7 @@ export default function Questionnaire() {
                     </div>
                 </fieldset>
 
-                <fieldset className={styles.trainer}>
-                    <legend>Trainer Account (Testing)</legend>
-                    <label>
-                        <input type="checkbox" name="isTrainer" value="true" /> I am a trainer (Enable video uploads)
-                    </label>
-                </fieldset>
+
 
                 <fieldset className={styles.consent}>
                     <legend>Consent<span aria-hidden="true">*</span></legend>
