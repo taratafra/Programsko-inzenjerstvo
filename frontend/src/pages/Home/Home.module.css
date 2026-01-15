@@ -1,7 +1,7 @@
 :root {
-  --bg-main: #1a1a1a;
+  --bg-main: #353232;
   --bg-sidebar: #2a2a2a;
-  --bg-card: #333333;
+  --bg-card: #0000005c;
   --text-main: #e0e0e0;
   --text-accent: #ffffff;
   --text-dark: #1a1a1a;
@@ -272,11 +272,6 @@
 .tabButtonActive {
   background-color: var(--text-accent);
   color: var(--text-dark);
-}
-
-.tabPanel {
-  text-align: center;
-  padding: 50px;
 }
 
 .infoGrid {
