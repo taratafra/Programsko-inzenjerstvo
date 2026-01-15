@@ -2,6 +2,7 @@ package Pomna_Sedmica.Mindfulnes.mapper;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import lombok.experimental.UtilityClass;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 public class TrainerMapper {
 
     public User toNewEntity(SaveAuth0UserRequestDTO request) {
-        User user = new User();
+        Trainer user = new Trainer();
         user.setAuth0Id(request.auth0Id());
         user.setEmail(request.email());
         user.setName(request.name());
@@ -36,6 +37,7 @@ public class TrainerMapper {
         existingUser.setSocialLogin(request.isSocialLogin());
         existingUser.setLastLogin(LocalDateTime.now());
         existingUser.setFirstLogin(false);
+        existingUser.setRole(Role.TRAINER);
         return existingUser;
     }
 

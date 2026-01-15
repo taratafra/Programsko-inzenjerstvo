@@ -75,7 +75,7 @@ public class TrainerService {
                     user.setRequiresPasswordReset(false);
                     user.setRole(Role.TRAINER);
                     User savedUser = userRepository.save(user);
-                    //log.info("Onboarding completed for user: {}", email);
+//log.info("Onboarding completed for user: {}", email);
                     return TrainerMapper.toDTO(savedUser);
                 });
     }

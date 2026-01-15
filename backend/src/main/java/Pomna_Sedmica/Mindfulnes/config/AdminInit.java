@@ -1,5 +1,6 @@
 package Pomna_Sedmica.Mindfulnes.config;
 
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
@@ -24,6 +25,7 @@ public class AdminInit {
                 User user = new User(
                         "admin@admin",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,
@@ -42,6 +44,7 @@ public class AdminInit {
                 User user = new User(
                         "user@user",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,
@@ -52,6 +55,7 @@ public class AdminInit {
                 user = new User(
                         "trainer@trainer",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
+                        null,
                         "admin",
                         "admin",
                         null,
@@ -59,6 +63,21 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(user);
+                user = userRepository.findByEmail("trainer@trainer").orElse(null);
+                userRepository.delete(user);
+                userRepository.save(new Trainer(user));
+                //Trainer trainer = new Trainer()
+                Trainer trainer = new Trainer(
+                        "trainer2@trainer",
+                        passwordEncoder.encode("admin"),//moze se prebacit u env
+                        null,
+                        "admin",
+                        "admin",
+                        null,
+                        Role.TRAINER,//isto neka ostane user, a promijeni se kod onboardinga
+                        false
+                );
+                userRepository.save(trainer);
             }
         };
     }
