@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
 
 import Header from "../../components/home/Header";
@@ -18,39 +18,45 @@ export default function Home() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const location = useLocation();
     const hasNavigatedToQuestions = useRef(false);
+    const hasInitialized = useRef(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
     useEffect(() => {
+        // Don't run if still loading Auth0 or already initialized
+        if (isLoading || hasInitialized.current) return;
+        
         const init = async () => {
+            hasInitialized.current = true;
             const localToken = localStorage.getItem("token");
 
-            try {
-                // Auth0 login Google i to
-                if (isAuthenticated && auth0User) {
-                    setUser(auth0User);
+            // CHECK AUTHENTICATION FIRST - before any other logic
+            if (!isAuthenticated && !localToken) {
+                console.log("No authentication found, redirecting to login");
+                setLoading(false);
+                navigate("/login", { replace: true });
+                return;
+            }
 
+            try {
+                // Auth0 login (Google, etc.)
+                if (isAuthenticated && auth0User) {
                     const userResponse = await sendUserDataToBackend(auth0User);
 
                     if (userResponse) {
                         setUser(userResponse);
-                    } else {
-                        setUser(auth0User);
-                    }
-
-                    // provjera za jel rjesia kviz
-                    if (userResponse && !userResponse.isOnboardingComplete) {
-                        if (!hasNavigatedToQuestions.current) {
+                        
+                        // Check if questionnaire needs to be completed
+                        if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
+                    } else {
+                        setUser(auth0User);
                     }
-
-                    setLoading(false);
                 }
                 // Local JWT login
                 else if (localToken) {
@@ -58,44 +64,31 @@ export default function Home() {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
 
-                    if (!res.ok) throw new Error("Failed to fetch user info");
+                    if (!res.ok) {
+                        throw new Error("Failed to fetch user info");
+                    }
 
                     const data = await res.json();
                     setUser(data);
 
-                    // vrijeme za kviz
-                    if (!data.isOnboardingComplete) {
-                        if (!hasNavigatedToQuestions.current) {
-                            hasNavigatedToQuestions.current = true;
-                            navigate("/questions", { replace: true });
-                            return;
-                        }
+                    // Check if questionnaire needs to be completed
+                    if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                        hasNavigatedToQuestions.current = true;
+                        navigate("/questions", { replace: true });
+                        return;
                     }
-
-                    setLoading(false);
-                } else {
-                    setLoading(false);
                 }
             } catch (err) {
-                console.error("DEBUG: Error in init:", err);
-                if (!isAuthenticated) {
-                    console.log("DEBUG: Not authenticated via Auth0, removing token and redirecting to login");
-                    if (localToken) {
-                        localStorage.removeItem("token");
-                    }
-                    navigate("/login");
-                }
-                setLoading(false);
+                console.error("Error in init:", err);
+                localStorage.removeItem("token");
+                navigate("/login", { replace: true });
             } finally {
-                // Ensure loading is set to false if not already handled by an early return
                 setLoading(false);
             }
         };
 
-        if (!isLoading) {
-            init();
-        }
-    }, [isLoading, isAuthenticated, location.pathname, navigate, BACKEND_URL]);
+        init();
+    }, [isLoading, isAuthenticated, auth0User, navigate, BACKEND_URL, AUDIENCE]);
 
     const sendUserDataToBackend = async (auth0User) => {
         try {
@@ -152,12 +145,11 @@ export default function Home() {
     };
 
     function HomeLayout() {
-        const [activeTab, setActiveTab] = useState('Personalized recomendations');
-        // ADD THIS LINE - state to hold the calendar reload function
+        const [activeTab, setActiveTab] = useState('General Information');
         const [reloadCalendar, setReloadCalendar] = useState(null);
 
-        const updateUser =(updatedFields) =>{
-            setUser(prevUser =>({
+        const updateUser = (updatedFields) => {
+            setUser(prevUser => ({
                 ...prevUser,
                 ...updatedFields
             }));
@@ -165,6 +157,7 @@ export default function Home() {
 
         const renderTabContent = () => {
             switch (activeTab) {
+                case 'General Information':
                 case 'Personalized recomendations':
                     return <GeneralInfoGrid />;
 
@@ -204,7 +197,6 @@ export default function Home() {
                     return <Trainers />;
 
                 case 'Make Appointment':
-                    // MODIFY THIS LINE - pass reloadCalendar to MakeAppointment
                     return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
 
                 case 'Statistics':
@@ -231,8 +223,7 @@ export default function Home() {
                     );
                 
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser}/>;
-                
+                    return <Settings user={user} updateUser={updateUser} />;
 
                 default:
                     return <GeneralInfoGrid />;
@@ -266,7 +257,6 @@ export default function Home() {
                             {renderTabContent()}
                         </div>
 
-                        {/* MODIFY THIS - pass onSchedulesReload to RightSidebar */}
                         <RightSidebar
                             navigate={navigate}
                             setActiveTab={setActiveTab}
@@ -279,15 +269,16 @@ export default function Home() {
         );
     }
 
-    if (loading || isLoading) return <div>Loading...</div>;
-
-    const hasLocalToken = !!localStorage.getItem("token");
-    if (!user && !isAuthenticated && !hasLocalToken) {
-        navigate("/login");
-        return null;
+    // Show loading while checking authentication
+    if (loading || isLoading) {
+        return <div>Loading...</div>;
     }
 
-    if (!user) return <div>Loading user data...</div>;
+    // If no user after loading, this means authentication failed
+    // The useEffect will handle the redirect
+    if (!user) {
+        return null;
+    }
 
     return <HomeLayout />;
 }
