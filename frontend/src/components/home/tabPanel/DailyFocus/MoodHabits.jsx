@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
-import HomeStyles from "../../../../pages/Home/Home.module.css"; // koristi isti CSS kao tabPanel
 import styles from './MoodHabits.module.css';
 
 export default function MoodHabits({ user }) {
@@ -23,15 +21,15 @@ export default function MoodHabits({ user }) {
   const [canSubmitToday, setCanSubmitToday] = useState(true);
 
   const emotionOptions = [
-    { value: 'happy', label: '😊 Happy', color: '#FFD700' },
-    { value: 'sad', label: '😢 Sad', color: '#4682B4' },
-    { value: 'anxious', label: '😰 Anxious', color: '#FF6347' },
-    { value: 'calm', label: '😌 Calm', color: '#98FB98' },
-    { value: 'energetic', label: '⚡ Energetic', color: '#FFA500' },
-    { value: 'tired', label: '😴 Tired', color: '#9370DB' },
-    { value: 'frustrated', label: '😤 Frustrated', color: '#DC143C' },
-    { value: 'grateful', label: '🙏 Grateful', color: '#FF69B4' },
-  ];
+    { value: 'HAPPY', label: '😊 Happy' },
+    { value: 'SAD', label: '😢 Sad' },
+    { value: 'ANXIOUS', label: '😰 Anxious' },
+    { value: 'CALM', label: '😌 Calm' },
+    { value: 'ENERGETIC', label: '⚡ Energetic' },
+    { value: 'TIRED', label: '😴 Tired' },
+    { value: 'FRUSTRATED', label: '😤 Frustrated' },
+    { value: 'GRATEFUL', label: '🙏 Grateful' },
+];
 
   useEffect(() => {
     checkSubmissionStatus();
@@ -39,17 +37,30 @@ export default function MoodHabits({ user }) {
 
   const checkSubmissionStatus = async () => {
     try {
-      const response = await fetch('/api/mood-checkins/me', {
+      const today = new Date().toISOString().split('T')[0];
+
+      const response = await fetch('/api/mood-checkins/me/${today}', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
       
+      // Ako je 404, nema check-in za danas
+      if (response.status === 404) {
+        setCanSubmitToday(true);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Failed to check submission status');
+      }
+
       const data = await response.json();
-      setCanSubmitToday(!data.submittedToday);
-      setLastSubmission(data.lastSubmissionDate);
+      setCanSubmitToday(false);
+      setLastSubmission(data.date);
     } catch (err) {
       console.error('Error checking submission status:', err);
+      setCanSubmitToday(true);  //dozvoljavam submit ako ne mozemo provjeriti
     }
   };
 
@@ -104,18 +115,31 @@ export default function MoodHabits({ user }) {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          ...formData,
-          date: new Date().toISOString(),
+          date: new Date().toISOString().split('T')[0],
+          moodScore: formData.moodScore,
+          emotions: formData.emotions.length > 0 ? formData.emotions : null,
+          sleepQuality: formData.sleepQuality,
+          stressLevel: formData.stressLevel,
+          focusLevel: formData.focusLevel,
+          caffeineIntake: formData.caffeineIntake.trim() || null,
+          alcoholIntake: formData.alcoholIntake.trim() || null,
+          physicalActivity: formData.physicalActivity.trim() || null,
+          notes: formData.notes.trim() || null,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit mood check-in');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to submit mood check-in');
       }
 
       const result = await response.json();
       setSuccess(true);
       setCanSubmitToday(false);
+
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
 
     } catch (err) {
       setError(err.message || 'Failed to submit. Please try again.');
@@ -322,7 +346,7 @@ export default function MoodHabits({ user }) {
           {/* Success Message */}
           {success && (
             <div className={styles.successMessage}>
-            Successfully submitted!
+              Successfully submitted!
             </div>
           )}
 
