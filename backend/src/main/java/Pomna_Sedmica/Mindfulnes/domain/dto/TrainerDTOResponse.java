@@ -7,6 +7,7 @@ import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 
 public record TrainerDTOResponse(
@@ -24,7 +25,7 @@ public record TrainerDTOResponse(
         String profilePictureUrl,
         Boolean firstLogin,
         Boolean approved,
-        List<User> subscribers,
-        List<Video> videoContent
+        Set<User> subscribers,
+        Set<Video> videoContent
 ) {
 }

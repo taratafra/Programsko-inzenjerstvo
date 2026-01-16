@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @RestController
@@ -49,14 +50,22 @@ public class TrainerController {
     }
 
     @PostMapping("/subscribe")
-    public void subscribe(SubscribeDTORequest request) {
+    public void subscribe(@RequestBody SubscribeDTORequest request) {
+        System.out.println("hello, trying to map subscribers");
+        System.out.println(request);
         User user = userRepository.findByEmail(request.emailUser()).orElse(null);
         if (user == null) return;
 
         Trainer trainer = new Trainer(userRepository.findByEmail(request.emailTrainer()).orElse(null));
         if (trainer == null) return;
-
-        trainer.getSubscribers().add(user);
+        /*System.out.println("checkpoint");
+        Set<User> subscribers = trainer.getSubscribers();
+        subscribers.add(user);
+        System.out.println("printing subscribers");
+        System.out.println(subscribers);
+        trainer.setSubscribers(subscribers);*/
+        user.getTrainers().add(trainer);
+        userRepository.save(user);
     }
 
     @PostMapping("/unsubscribe")

@@ -8,7 +8,9 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -17,11 +19,11 @@ import java.util.List;
 public class Trainer extends User{
     private boolean approved = false;
 
-    @ManyToMany
-    private List<User> subscribers = new ArrayList<>();
+    @ManyToMany(mappedBy = "trainers")
+    private Set<User> subscribers = new HashSet<>();
 
     @OneToMany
-    private List<Video> videoContent = new ArrayList<>();
+    private Set<Video> videoContent;
     public Trainer(String email, String password, String auth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
         super(email, password, auth0Id, name, surname, dob, role, isSocialLogin);
     }

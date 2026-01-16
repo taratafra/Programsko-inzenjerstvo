@@ -48,7 +48,7 @@ public class SecurityConfigDev {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/schedules/**").authenticated()
-                        .requestMatchers("/api/trainers/**").authenticated()
+                        .requestMatchers("/api/trainers/**").permitAll()
                         .requestMatchers("/api/admins/**").authenticated()
                         .requestMatchers("/api/user/settings/**").authenticated() //trebat ce dodat jos putanje za trenera content i admina
                         .requestMatchers("/public").permitAll()
