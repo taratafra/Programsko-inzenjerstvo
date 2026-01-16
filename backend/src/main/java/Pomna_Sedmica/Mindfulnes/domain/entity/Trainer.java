@@ -29,7 +29,41 @@ public class Trainer extends User{
     public Trainer(String email, String password, String auth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
         super(email, password, auth0Id, name, surname, dob, role, isSocialLogin);
     }
-    public Trainer(User user) {
-        super(user.getEmail(), user.getPassword(), user.getAuth0Id(), user.getName(), user.getSurname(), user.getDateOfBirth(), user.getRole(), user.isSocialLogin());
+
+public Trainer(User user) {
+    super(
+            user.getEmail(),
+            user.getPassword(),
+            user.getAuth0Id(),
+            user.getName(),
+            user.getSurname(),
+            user.getDateOfBirth(),
+            user.getRole(),
+            user.isSocialLogin()
+    );
+
+    // Preserve identity so DTO mapping works and subscriptions match correctly
+    this.setId(user.getId());
+
+    // Preserve audit/common persisted fields
+    this.setCreatedAt(user.getCreatedAt());
+    this.setLastLogin(user.getLastLogin());
+    this.setLastModifiedAt(user.getLastModifiedAt());
+    this.setOnboardingComplete(user.isOnboardingComplete());
+
+    // ✅ Hardcode these so the frontend doesn't force the password reset screen
+    this.setFirstLogin(false);
+    this.setRequiresPasswordReset(false);
+
+    // Keep optional profile fields
+    this.setBio(user.getBio());
+    this.setProfilePictureUrl(user.getProfilePictureUrl());
+
+    // If it was already a Trainer instance, preserve trainer-specific state
+    if (user instanceof Trainer t) {
+        this.approved = t.isApproved();
+        this.subscribers = t.getSubscribers();
+        this.videoContent = t.getVideoContent();
     }
+}
 }
