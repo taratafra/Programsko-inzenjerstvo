@@ -15,6 +15,8 @@ export default function DashboardTabs({ activeTab, setActiveTab }) {
   const homeTabs = ["Personalized recomendations", "Focus", "Sleep", "Stress", "Gratitude", "Breathing", "General Information"];
 
   if (!homeTabs.includes(activeTab)) {
+
+
     return null;
   }
 

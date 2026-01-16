@@ -1,4 +1,4 @@
-import styles from "../../../pages/Questionnaire/Questionnaire.module.css";
+import styles from "../../../../pages/Questionnaire/Questionnaire.module.css";
 
 const PasswordResetModal = ({ onPasswordReset, passwordResetData, onPasswordChange, onClose }) => {
     const handleSubmit = (e) => {

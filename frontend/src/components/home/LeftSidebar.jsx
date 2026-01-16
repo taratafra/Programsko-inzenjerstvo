@@ -1,5 +1,5 @@
 import homeStyles from "../../pages/Home/Home.module.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./LeftSidebar.module.css";
 
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
@@ -31,6 +31,9 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         </li>
         <li className={getNavItemClass("Calendar")} onClick={() => setActiveTab('Calendar')}>
           🗓️ Calendar
+        </li>
+        <li className={getNavItemClass("DailyFocus")} onClick={() => setActiveTab('DailyFocus')}>
+           <span className={homeStyles.navItemLogout}>📒 Daily Focus</span>
         </li>
         <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics

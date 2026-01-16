@@ -9,10 +9,12 @@ import RightSidebar from "../../components/home/RightSidebar";
 import DashboardTabs from "../../components/home/DashboardTabs";
 import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 
-import Settings from "../../components/home/tabPanel/Settings";
+import Settings from "../../components/home/tabPanel/Settings/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 import CalendarMain from "../../components/home/tabPanel/CalendarMain";
+
+import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -200,6 +202,7 @@ export default function Home() {
                 case 'Make Appointment':
                     return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
 
+
                 case 'Statistics':
                     return (
                         <div className={styles.tabPanel}>
@@ -235,7 +238,14 @@ export default function Home() {
                     );
                 
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser} />;
+                    return <Settings user={user} updateUser={updateUser}/>;
+                
+                case 'DailyFocus':
+                    return <DailyFocus 
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
 
                 default:
                     return <GeneralInfoGrid />;
