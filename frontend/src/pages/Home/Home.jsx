@@ -1,4 +1,4 @@
-import { useAuth0 } from "@auth0/auth0-react";
+/*import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
@@ -262,7 +262,6 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
-                {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
                 <div id="o3"></div>
@@ -312,3 +311,4 @@ export default function Home() {
 
     return <HomeLayout />;
 }
+*/
