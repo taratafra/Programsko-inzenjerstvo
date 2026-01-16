@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from 'react';
 import styles from './MoodHabits.module.css';
 
@@ -20,6 +23,7 @@ export default function MoodHabits({ user }) {
   const [lastSubmission, setLastSubmission] = useState(null);
   const [canSubmitToday, setCanSubmitToday] = useState(true);
 
+
   const emotionOptions = [
     { value: 'HAPPY', label: '😊 Happy' },
     { value: 'SAD', label: '😢 Sad' },
@@ -29,7 +33,8 @@ export default function MoodHabits({ user }) {
     { value: 'TIRED', label: '😴 Tired' },
     { value: 'FRUSTRATED', label: '😤 Frustrated' },
     { value: 'GRATEFUL', label: '🙏 Grateful' },
-];
+  ];
+
 
   useEffect(() => {
     checkSubmissionStatus();
@@ -162,8 +167,7 @@ export default function MoodHabits({ user }) {
   return (
   <div >
         <h1 className={styles.title}>Daily Mood Check-in</h1>
-        <div className={styles.formContent}>
-          
+        <div className={styles.formContent}>          
           {/* Mood Score */}
           <div className={styles.section}>
             <label className={styles.label}>
@@ -366,3 +370,4 @@ export default function MoodHabits({ user }) {
       </div>
   );
 }
+

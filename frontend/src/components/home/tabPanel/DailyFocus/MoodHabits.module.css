@@ -314,40 +314,168 @@
   margin-bottom: 0.5rem;
 }
 
-
-.streakCard {
-  background-color: rgba(79, 48, 255, 0.2);
-  border-radius: 10px;
-  padding: 1rem;
-  display: inline-block;
-  margin: 1rem 0;
+/* Streak Container */
+.streakContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(79, 48, 255, 0.15) 0%, rgba(79, 48, 255, 0.05) 100%);
+  border: 2px solid rgba(79, 48, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.streakContent {
+.streakBadge {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(79, 48, 255, 0.4) 0%, rgba(79, 48, 255, 0.25) 100%);
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(79, 48, 255, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.streakBadge:hover {
+  transform: scale(1.05);
 }
 
 .streakIcon {
-  font-size: 1.5rem;
+  font-size: 2.5rem;
+  animation: flicker 2s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.streakInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .streakNumber {
-  font-size: 1.875rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: rgb(248, 244, 244);
+  line-height: 1;
 }
 
 .streakLabel {
-  color: rgb(248, 244, 244);
+  font-size: 0.875rem;
+  color: rgba(248, 244, 244, 0.9);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.longestStreak {
+  font-size: 0.875rem;
+  color: rgba(248, 244, 244, 0.7);
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Divider */
+.divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(248, 244, 244, 0.3) 50%, transparent 100%);
+  margin: 3rem 0;
+  width: 100%;
+}
+
+/* Badges Container */
+.badgesContainer {
+  margin-top: 2rem;
+}
+
+.badgesTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(248, 244, 244);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.badgesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.badgeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(79, 48, 255, 0.15) 0%, rgba(79, 48, 255, 0.05) 100%);
+  border: 2px solid rgba(79, 48, 255, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.badgeItem:hover {
+  transform: translateY(-5px);
+  border-color: rgba(79, 48, 255, 0.6);
+  box-shadow: 0 8px 16px rgba(79, 48, 255, 0.2);
+}
+
+.badgeIcon {
+  font-size: 3.5rem;
+  transition: transform 0.3s ease;
+}
+
+.badgeItem:hover .badgeIcon {
+  transform: scale(1.1) rotate(10deg);
+}
+
+.badgeName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(248, 244, 244);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* No Badges State */
+.noBadges {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(248, 244, 244, 0.6);
+  font-style: italic;
+}
+
+/* Completed State */
+.completedTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(248, 244, 244);
+  text-align: center;
+  margin-bottom: 0.5rem;
 }
 
 .completedSubtext {
   font-size: 0.875rem;
   color: rgba(248, 244, 244, 0.8);
-  margin-top: 1rem;
+  text-align: center;
   font-style: italic;
+}
+
+/* Loading State */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: rgba(248, 244, 244, 0.8);
 }
