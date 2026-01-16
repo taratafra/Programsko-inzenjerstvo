@@ -8,6 +8,9 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -66,6 +69,9 @@ public class User{
 
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
+
+    @ManyToMany
+    private List<Trainer> trainers = new ArrayList<>();
 
     public User(String email, String password, String auth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
 

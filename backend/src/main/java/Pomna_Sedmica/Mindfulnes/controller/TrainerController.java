@@ -1,7 +1,12 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
+import Pomna_Sedmica.Mindfulnes.domain.dto.SubscribeDTORequest;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
+import Pomna_Sedmica.Mindfulnes.domain.entity.User;
+import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import Pomna_Sedmica.Mindfulnes.service.TrainerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,20 +23,21 @@ import java.util.List;
 public class TrainerController {
 
     private final TrainerService trainerService;
+    private final UserRepository userRepository;
 
     @PostMapping
-    public ResponseEntity<UserDTOResponse> saveTrainer(@RequestBody SaveAuth0UserRequestDTO request) {
-        UserDTOResponse savedUser = trainerService.saveOrUpdateTrainer(request);
+    public ResponseEntity<TrainerDTOResponse> saveTrainer(@RequestBody SaveAuth0UserRequestDTO request) {
+        TrainerDTOResponse savedUser = trainerService.saveOrUpdateTrainer(request);
         return ResponseEntity.ok(savedUser);
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDTOResponse>> getAllTrainers() {
+    public ResponseEntity<List<TrainerDTOResponse>> getAllTrainers() {
         return ResponseEntity.ok(trainerService.getAllTrainers());
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDTOResponse> getCurrentTrainer(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<TrainerDTOResponse> getCurrentTrainer(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) return ResponseEntity.status(401).build();
 
         String email = jwt.getClaimAsString("email");
@@ -42,8 +48,30 @@ public class TrainerController {
                 .orElse(ResponseEntity.status(404).build());
     }
 
+    @PostMapping("/subscribe")
+    public void subscribe(SubscribeDTORequest request) {
+        User user = userRepository.findByEmail(request.emailUser()).orElse(null);
+        if (user == null) return;
+
+        Trainer trainer = new Trainer(userRepository.findByEmail(request.emailTrainer()).orElse(null));
+        if (trainer == null) return;
+
+        trainer.getSubscribers().add(user);
+    }
+
+    @PostMapping("/unsubscribe")
+    public void unsubscribe(SubscribeDTORequest request) {
+        User user = userRepository.findByEmail(request.emailUser()).orElse(null);
+        if (user == null) return;
+
+        Trainer trainer = new Trainer(userRepository.findByEmail(request.emailTrainer()).orElse(null));
+        if (trainer == null) return;
+
+        trainer.getSubscribers().remove(user);
+    }
+
     @PostMapping("/complete-onboarding")
-    public ResponseEntity<UserDTOResponse> completeTrainerOnboarding(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<TrainerDTOResponse> completeTrainerOnboarding(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) return ResponseEntity.status(401).build();
 
         String claim = jwt.getSubject();
