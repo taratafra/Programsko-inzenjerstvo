@@ -226,11 +226,14 @@ export default function Home() {
                     );
                 
                 case 'Settings':
-
                     return <Settings user={user} updateUser={updateUser}/>;
                 
                 case 'DailyFocus':
-                    return <DailyFocus user={user}/>
+                    return <DailyFocus 
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
 
                 default:
                     return <GeneralInfoGrid />;

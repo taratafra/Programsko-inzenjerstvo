@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/mood-checkins")
+@RequestMapping("/api/mood-checkins")
 @RequiredArgsConstructor
 public class MoodCheckInController {
 

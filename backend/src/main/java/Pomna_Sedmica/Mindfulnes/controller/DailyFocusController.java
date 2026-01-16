@@ -18,7 +18,7 @@ import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/daily-focus")
+@RequestMapping("/api/daily-focus")
 @RequiredArgsConstructor
 public class DailyFocusController {
 

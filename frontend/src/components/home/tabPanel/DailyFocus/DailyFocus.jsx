@@ -11,10 +11,9 @@ import Streak from "./Streak";
 import Meditation from "./Meditation";
 
 
-export default function DailyFocus({user, activeTab, setActiveTab}) {  
+export default function DailyFocus({ user, activeTab, setActiveTab, getAccessTokenSilently, isAuthenticated }) {  
   const [activeSubTab, setActiveSubTab] = useState("Meditation");
-  const Navigate=useNavigate();
-  const { isAuthenticated } = useAuth0();
+  const Navigate = useNavigate();
 
   const tabs = [
     "Meditation",
@@ -32,7 +31,11 @@ export default function DailyFocus({user, activeTab, setActiveTab}) {
           return <Exercise user={user}/>
         
         case "Mood & Habits":
-          return <MoodHabits user={user}/>  
+          return <MoodHabits 
+            user={user}
+            getAccessTokenSilently={getAccessTokenSilently}
+            isAuthenticated={isAuthenticated}
+          />  
         
         case "Streak":
           return <Streak user={user}/>

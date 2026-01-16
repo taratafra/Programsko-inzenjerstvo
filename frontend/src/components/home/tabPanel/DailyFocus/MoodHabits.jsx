@@ -1,10 +1,9 @@
-
-
-
 import React, { useState, useEffect } from 'react';
 import styles from './MoodHabits.module.css';
 
-export default function MoodHabits({ user }) {
+export default function MoodHabits({ user, getAccessTokenSilently, isAuthenticated }) {
+  const BACKEND_URL = process.env.REACT_APP_BACKEND;
+
   const [formData, setFormData] = useState({
     moodScore: null,
     emotions: [],
@@ -23,7 +22,6 @@ export default function MoodHabits({ user }) {
   const [lastSubmission, setLastSubmission] = useState(null);
   const [canSubmitToday, setCanSubmitToday] = useState(true);
 
-
   const emotionOptions = [
     { value: 'HAPPY', label: '😊 Happy' },
     { value: 'SAD', label: '😢 Sad' },
@@ -35,6 +33,28 @@ export default function MoodHabits({ user }) {
     { value: 'GRATEFUL', label: '🙏 Grateful' },
   ];
 
+  // Helper function to get the token based on auth method
+  const getToken = async () => {
+    try {
+      // If Auth0 login (Google, etc.)
+      if (isAuthenticated && getAccessTokenSilently) {
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+            scope: "openid profile email",
+          },
+        });
+        return token;
+      }
+      // If local JWT login
+      else {
+        return localStorage.getItem('token');
+      }
+    } catch (error) {
+      console.error('Error getting token:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     checkSubmissionStatus();
@@ -43,10 +63,16 @@ export default function MoodHabits({ user }) {
   const checkSubmissionStatus = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
+      const token = await getToken();
 
-      const response = await fetch('/api/mood-checkins/me/${today}', {
+      if (!token) {
+        console.error('No token available');
+        return;
+      }
+
+      const response = await fetch(`${BACKEND_URL}/api/mood-checkins/me/${today}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -113,11 +139,33 @@ export default function MoodHabits({ user }) {
     setError('');
 
     try {
-      const response = await fetch('/api/mood-checkins/me', {
+      const token = await getToken();
+      
+      console.log('🔑 Token exists:', !!token);
+      console.log('🔑 Token preview:', token?.substring(0, 50) + '...');
+
+      if (!token) {
+        throw new Error('Authentication token not available');
+      }
+
+      console.log('Submitting data:', {
+        date: new Date().toISOString().split('T')[0],
+        moodScore: formData.moodScore,
+        emotions: formData.emotions,
+        sleepQuality: formData.sleepQuality,
+        stressLevel: formData.stressLevel,
+        focusLevel: formData.focusLevel,
+        caffeineIntake: formData.caffeineIntake.trim() || null,
+        alcoholIntake: formData.alcoholIntake.trim() || null,
+        physicalActivity: formData.physicalActivity.trim() || null,
+        notes: formData.notes.trim() || null,
+      });
+
+      const response = await fetch(`${BACKEND_URL}/api/mood-checkins/me`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           date: new Date().toISOString().split('T')[0],
@@ -133,12 +181,16 @@ export default function MoodHabits({ user }) {
         }),
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Error response:', errorData);
         throw new Error(errorData.message || 'Failed to submit mood check-in');
       }
 
       const result = await response.json();
+      console.log('Success:', result);
       setSuccess(true);
       setCanSubmitToday(false);
 
@@ -147,6 +199,7 @@ export default function MoodHabits({ user }) {
       }, 3000);
 
     } catch (err) {
+      console.error('Submit error:', err);
       setError(err.message || 'Failed to submit. Please try again.');
     } finally {
       setSubmitting(false);
@@ -370,4 +423,3 @@ export default function MoodHabits({ user }) {
       </div>
   );
 }
-
