@@ -28,7 +28,7 @@ public class VideoService {
                 .collect(Collectors.toList());
     }
 
-    public VideoResponseDTO createVideo(String title, String description, String type, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
+    public VideoResponseDTO createVideo(String title, String description, String type, String goal, String level, Integer duration, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
         String fileName = "videos/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
         
         com.google.cloud.storage.Blob blob = storageBucket.create(
@@ -50,6 +50,18 @@ public class VideoService {
             video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         }
         
+        try {
+            video.setGoal(Pomna_Sedmica.Mindfulnes.domain.enums.Goal.valueOf(goal));
+        } catch (Exception e) {
+            // optional
+        }
+        try {
+            video.setLevel(Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience.valueOf(level));
+        } catch (Exception e) {
+            // optional
+        }
+        video.setDuration(duration);
+        
         Video savedVideo = videoRepository.save(video);
         return mapToDTO(savedVideo);
     }
@@ -69,11 +81,48 @@ public class VideoService {
         dto.setUrl(video.getUrl());
         dto.setCreatedAt(video.getCreatedAt());
         dto.setType(video.getType() != null ? video.getType().name() : "VIDEO");
+        dto.setGoal(video.getGoal() != null ? video.getGoal().name() : null);
+        dto.setLevel(video.getLevel() != null ? video.getLevel().name() : null);
+        dto.setDuration(video.getDuration());
         if (video.getTrainer() != null) {
             dto.setTrainerName(video.getTrainer().getName() + " " + video.getTrainer().getSurname());
         } else {
             dto.setTrainerName("Unknown Trainer");
         }
         return dto;
+    }
+
+    public List<VideoResponseDTO> getFilteredVideos(String type, String goal, String level, String durationRange) {
+        List<Video> videos = videoRepository.findAllByOrderByCreatedAtDesc();
+        
+        return videos.stream()
+                .filter(v -> type == null || type.isEmpty() || (v.getType() != null && v.getType().name().equals(type)))
+                .filter(v -> goal == null || goal.isEmpty() || (v.getGoal() != null && v.getGoal().name().equals(goal)))
+                .filter(v -> level == null || level.isEmpty() || (v.getLevel() != null && v.getLevel().name().equals(level)))
+                .filter(v -> {
+                    if (durationRange == null || durationRange.isEmpty()) return true;
+                    if (v.getDuration() == null) return false;
+                    
+                    // Podcast specific filters (in hours)
+                    if ("AUDIO".equals(type)) {
+                        switch (durationRange) {
+                            case "short": return v.getDuration() < 60;
+                            case "long": return v.getDuration() >= 60 && v.getDuration() <= 180;
+                            case "superlong": return v.getDuration() > 180;
+                            default: return true;
+                        }
+                    }
+                    
+                    // Video specific filters (in minutes)
+                    switch (durationRange) {
+                        case "5-10": return v.getDuration() >= 5 && v.getDuration() <= 10;
+                        case "10-15": return v.getDuration() >= 10 && v.getDuration() <= 15;
+                        case "15-20": return v.getDuration() >= 15 && v.getDuration() <= 20;
+                        case "20-plus": return v.getDuration() > 20;
+                        default: return true;
+                    }
+                })
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 }

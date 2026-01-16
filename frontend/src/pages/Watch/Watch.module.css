@@ -23,7 +23,8 @@
   background-size: cover;
   background-attachment: fixed;
   position: relative;
-  overflow: hidden; /* Header stays, content scrolls */
+  overflow: hidden;
+  /* Header stays, content scrolls */
 }
 
 .contentWrapper {
@@ -46,220 +47,264 @@
 /* --- CLOUDS ANIMATION (Copied from your code) --- */
 .cloud1 {
   position: absolute;
-  top: 10%; left: 90%; width: 100%; height: 100%;
+  top: 10%;
+  left: 90%;
+  width: 100%;
+  height: 100%;
   background: url('/public/oblak.png') no-repeat;
   background-size: 300px auto;
   animation: moveClouds 160s linear infinite;
-  z-index: 0; opacity: 0.3;
+  z-index: 0;
+  opacity: 0.3;
 }
 
 .cloud2 {
   position: absolute;
-  top: 40%; left: 20%; width: 100%; height: 100%;
+  top: 40%;
+  left: 20%;
+  width: 100%;
+  height: 100%;
   background: url('/public/oblak.png') no-repeat;
   background-size: 400px auto;
   animation: moveClouds 110s linear infinite;
-  z-index: 0; opacity: 0.2;
+  z-index: 0;
+  opacity: 0.2;
 }
 
 .cloud3 {
   position: absolute;
-  top: 70%; left: 70%; width: 100%; height: 100%;
+  top: 70%;
+  left: 70%;
+  width: 100%;
+  height: 100%;
   background: url('/public/oblak.png') no-repeat;
   background-size: 350px auto;
   animation: moveClouds 130s linear infinite;
-  z-index: 0; opacity: 0.3;
+  z-index: 0;
+  opacity: 0.3;
 }
 
 @keyframes moveClouds {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* --- WATCH CARD SPECIFICS --- */
 
 .centerContainer {
-    max-width: 1000px;
-    margin: 0 auto;
-    width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .backButton {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    color: var(--text-main); /* Updated to your text color */
-    margin-bottom: 15px;
-    padding: 0;
-    display: block;
-    opacity: 0.8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-main);
+  /* Updated to your text color */
+  margin-bottom: 15px;
+  padding: 0;
+  display: block;
+  opacity: 0.8;
 }
+
 .backButton:hover {
-    text-decoration: underline;
-    opacity: 1;
+  text-decoration: underline;
+  opacity: 1;
 }
 
 /* THE MAIN CARD */
 .watchCard {
-    /* Using your sidebar/card styling preference */
-    background-color: var(--bg-card); /* Dark Grey */
-    background: linear-gradient(to bottom, #35205A, #FF81B0); /* Or your card gradient */
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    color: white;
+  /* Using your sidebar/card styling preference */
+  background-color: var(--bg-card);
+  /* Dark Grey */
+  background: linear-gradient(to bottom, #35205A, #FF81B0);
+  /* Or your card gradient */
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  color: white;
 }
 
 /* VIDEO PLAYER */
 .videoPlayerWrapper {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #000;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 25px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
+
 .videoPlayer {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* HEADER INFO */
 .videoHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 20px;
 }
 
 .videoTitle {
-    font-size: 1.8rem;
-    margin: 0 0 5px 0;
-    color: var(--text-accent); /* White */
+  font-size: 1.8rem;
+  margin: 0 0 5px 0;
+  color: var(--text-accent);
+  /* White */
 }
+
 .videoDate {
-    color: var(--text-main); /* Light Grey */
-    font-size: 0.9rem;
-    margin: 0;
-    opacity: 0.8;
+  color: var(--text-main);
+  /* Light Grey */
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.8;
 }
 
 /* SUBSCRIBE BUTTON */
 .subscribeBtn {
-    background-color: #ff812d; /* Orange from your theme */
-    color: white;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 25px;
-    font-weight: bold;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.2s;
+  background-color: #ff812d;
+  /* Orange from your theme */
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
+
 .subscribeBtn:hover {
-    transform: scale(1.05);
-    background-color: #ff9a5a;
+  transform: scale(1.05);
+  background-color: #ff9a5a;
 }
 
 /* STARS */
-.actionRow { margin-bottom: 25px; }
+.actionRow {
+  margin-bottom: 25px;
+}
+
 .reviewSection {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 1.1rem;
 }
+
 .starRating {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 1.6rem;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 1.6rem;
+  cursor: pointer;
 }
-.starFilled { color: #ffc107; }
-.starEmpty { color: #555; }
+
+.starFilled {
+  color: #ffc107;
+}
+
+.starEmpty {
+  color: #555;
+}
+
 .ratingText {
-    font-size: 1rem;
-    color: var(--text-main);
-    margin-left: 10px;
+  font-size: 1rem;
+  color: var(--text-main);
+  margin-left: 10px;
 }
 
 /* DESCRIPTION */
 .descriptionBox {
-    background: rgba(0,0,0,0.2); /* Semi-transparent dark */
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 40px;
-    line-height: 1.6;
-    color: var(--text-main);
+  background: rgba(0, 0, 0, 0.2);
+  /* Semi-transparent dark */
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 40px;
+  line-height: 1.6;
+  color: var(--text-main);
 }
 
 /* COMMENTS */
 .commentsSection h3 {
-    margin-bottom: 20px;
-    color: var(--text-accent);
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    padding-bottom: 10px;
-    display: inline-block;
+  margin-bottom: 20px;
+  color: var(--text-accent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+  display: inline-block;
 }
 
 .commentInputWrapper {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 30px;
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
 }
+
 .userAvatar {
-    width: 45px;
-    height: 45px;
-    background: #555;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    color: white;
+  width: 45px;
+  height: 45px;
+  background: #555;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: white;
 }
 
 /* Matching your input styles */
 .commentInput {
-    flex: 1;
-    border: 1px solid var(--border-color);
-    background-color: rgba(255,255,255,0.1);
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    outline: none;
+  flex: 1;
+  border: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  outline: none;
 }
+
 .commentInput:focus {
-    background-color: rgba(255,255,255,0.2);
-    border-color: var(--text-accent);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--text-accent);
 }
 
 .postBtn {
-    padding: 10px 24px;
-    background: var(--text-accent); /* White */
-    color: #352081; /* Purple Text */
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: bold;
+  padding: 10px 24px;
+  background: var(--text-accent);
+  /* White */
+  color: #352081;
+  /* Purple Text */
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .commentList {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
+
 .comment {
-    font-size: 1rem;
-    color: var(--text-main);
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 1rem;
+  color: var(--text-main);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ==================================================
@@ -289,12 +334,48 @@
 .blogTextWrapper {
   margin-bottom: 30px;
   font-size: 1.1rem;
-  line-height: 1.6;
-  color: #333;
+  line-height: 1.8;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 30px;
+  border-radius: 12px;
 }
 
-.blogParagraph {
-  margin-bottom: 10px;
+.blogTextWrapper h1,
+.blogTextWrapper h2,
+.blogTextWrapper h3 {
+  color: var(--text-accent);
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.blogTextWrapper p {
+  margin-bottom: 1.2rem;
+}
+
+.blogTextWrapper ul,
+.blogTextWrapper ol {
+  margin-bottom: 1.2rem;
+  padding-left: 2rem;
+}
+
+.blogTextWrapper li {
+  margin-bottom: 0.5rem;
+}
+
+.blogTextWrapper code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.blogTextWrapper blockquote {
+  border-left: 4px solid var(--text-accent);
+  padding-left: 20px;
+  font-style: italic;
+  margin: 20px 0;
+  opacity: 0.8;
 }
 
 /* Comment Section Styling */

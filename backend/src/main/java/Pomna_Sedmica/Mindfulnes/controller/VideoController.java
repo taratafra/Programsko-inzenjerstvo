@@ -27,8 +27,12 @@ public class VideoController {
     }
 
     @GetMapping
-    public List<VideoResponseDTO> getAllVideos() {
-        return videoService.getAllVideos();
+    public List<VideoResponseDTO> getAllVideos(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String goal,
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String durationRange) {
+        return videoService.getFilteredVideos(type, goal, level, durationRange);
     }
 
     @GetMapping("/{id}")
@@ -42,6 +46,9 @@ public class VideoController {
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("type") String type,
+            @RequestParam(value = "goal", required = false) String goal,
+            @RequestParam(value = "level", required = false) String level,
+            @RequestParam(value = "duration", required = false) Integer duration,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) throws java.io.IOException {
         
@@ -49,6 +56,6 @@ public class VideoController {
         if (user.getRole() != Role.TRAINER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can upload videos");
         }
-        return videoService.createVideo(title, description, type, file, user);
+        return videoService.createVideo(title, description, type, goal, level, duration, file, user);
     }
 }

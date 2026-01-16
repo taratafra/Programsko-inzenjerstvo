@@ -1,6 +1,8 @@
 package Pomna_Sedmica.Mindfulnes.domain.entity;
 
 import Pomna_Sedmica.Mindfulnes.domain.enums.ContentType;
+import Pomna_Sedmica.Mindfulnes.domain.enums.Goal;
+import Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,6 +35,14 @@ public class Video {
     @ManyToOne
     @JoinColumn(name = "trainer_id")
     private User trainer;
+
+    @Enumerated(EnumType.STRING)
+    private Goal goal;
+
+    @Enumerated(EnumType.STRING)
+    private MeditationExperience level;
+
+    private Integer duration; // in minutes
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

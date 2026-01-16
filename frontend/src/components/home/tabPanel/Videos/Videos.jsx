@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Videos.module.css";
 // import { storage } from "../../utils/firebase";
 
-export default function Videos() {
+export default function Videos({ contentType = "VIDEO" }) {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated } = useAuth0();
     const [user, setUser] = useState(null);
     const [videos, setVideos] = useState([]);
@@ -12,11 +12,17 @@ export default function Videos() {
 
     // --- UPLOAD STATES ---
     const [showUploadModal, setShowUploadModal] = useState(false);
-    const [contentType, setContentType] = useState("VIDEO");
     const [newVideo, setNewVideo] = useState({ title: "", description: "" });
     const [file, setFile] = useState(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
+
+    // --- FILTER STATES ---
+    const [filters, setFilters] = useState({
+        goal: "",
+        level: "",
+        durationRange: ""
+    });
 
     const navigate = useNavigate();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
@@ -24,23 +30,23 @@ export default function Videos() {
 
     // --- HELPER: FIXED DETECTION LOGIC ---
     const getMediaType = (item) => {
-        if (item.type && (item.type === 'AUDIO' || item.type === 'BLOG')) return item.type;
-
+        if (item.type) return item.type;
         if (!item.url) return "VIDEO";
         const urlLower = item.url.toLowerCase();
-
-        // Debugging log
-        // console.log(`Checking ${item.title}:`, urlLower);
-
         if (urlLower.includes('.mp3') || urlLower.includes('.wav') || urlLower.includes('.ogg') || urlLower.includes('audio')) return "AUDIO";
         if (urlLower.includes('.txt') || urlLower.includes('.md') || urlLower.includes('.pdf') || urlLower.includes('document')) return "BLOG";
-
         return "VIDEO";
     };
 
     const fetchVideos = useCallback(async () => {
         try {
-            const res = await fetch(`${BACKEND_URL}/api/videos`);
+            const queryParams = new URLSearchParams();
+            queryParams.append("type", contentType);
+            if (filters.goal) queryParams.append("goal", filters.goal);
+            if (filters.level) queryParams.append("level", filters.level);
+            if (filters.durationRange) queryParams.append("durationRange", filters.durationRange);
+
+            const res = await fetch(`${BACKEND_URL}/api/videos?${queryParams.toString()}`);
             if (res.ok) {
                 const data = await res.json();
                 setVideos(data);
@@ -48,7 +54,7 @@ export default function Videos() {
         } catch (err) {
             console.error("Error fetching content:", err);
         }
-    }, [BACKEND_URL]);
+    }, [BACKEND_URL, filters, contentType]);
 
     useEffect(() => {
         const init = async () => {
@@ -115,7 +121,43 @@ export default function Videos() {
     }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, fetchVideos, navigate]);
 
     const handleFileChange = (e) => {
-        if (e.target.files[0]) setFile(e.target.files[0]);
+        const selectedFile = e.target.files[0];
+        if (!selectedFile) return;
+
+        setFile(selectedFile);
+
+        // Extract duration if it's video or audio
+        if (selectedFile.type.startsWith('video/') || selectedFile.type.startsWith('audio/')) {
+            const media = document.createElement(selectedFile.type.startsWith('video/') ? 'video' : 'audio');
+            media.preload = 'metadata';
+            media.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(media.src);
+                // Round to nearest minute, minimum 1
+                const durationInMinutes = Math.max(1, Math.round(media.duration / 60));
+                setNewVideo(prev => ({ ...prev, duration: durationInMinutes }));
+            };
+            media.src = URL.createObjectURL(selectedFile);
+        } else if (selectedFile.name.toLowerCase().endsWith('.md')) {
+            // Word count for markdown articles
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                // Basic word count: split by whitespace and filter out empty strings
+                const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+                const wordCount = words.length;
+
+                // Average reading speed: 200 words per minute
+                const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+                setNewVideo(prev => ({ ...prev, duration: readingTime }));
+            };
+            reader.onerror = () => {
+                console.error("Error reading markdown file");
+                setNewVideo(prev => ({ ...prev, duration: "" }));
+            };
+            reader.readAsText(selectedFile);
+        } else {
+            setNewVideo(prev => ({ ...prev, duration: "" }));
+        }
     };
 
     const handleUpload = async (e) => {
@@ -137,6 +179,9 @@ export default function Videos() {
             formData.append("title", newVideo.title);
             formData.append("description", newVideo.description);
             formData.append("type", contentType);
+            if (newVideo.goal) formData.append("goal", newVideo.goal);
+            if (newVideo.level) formData.append("level", newVideo.level);
+            if (newVideo.duration) formData.append("duration", newVideo.duration);
             formData.append("file", file);
 
             const progressInterval = setInterval(() => {
@@ -154,9 +199,8 @@ export default function Videos() {
 
             if (res.ok) {
                 setShowUploadModal(false);
-                setNewVideo({ title: "", description: "" });
+                setNewVideo({ title: "", description: "", goal: "", level: "", duration: "" });
                 setFile(null);
-                setContentType("VIDEO");
                 setUploadProgress(0);
                 fetchVideos();
                 alert("Upload successful!");
@@ -184,7 +228,7 @@ export default function Videos() {
 
     const getAcceptedFileTypes = () => {
         if (contentType === "AUDIO") return "audio/*";
-        if (contentType === "BLOG") return ".txt,.md,.pdf";
+        if (contentType === "BLOG") return ".md";
         return "video/*";
     };
 
@@ -200,98 +244,153 @@ export default function Videos() {
 
     return (
         <>
-        <div className={styles.mainContent}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h1>Content Library</h1>
-                            {user?.role === 'TRAINER' && (
-                                <button className={styles.uploadButton} onClick={() => setShowUploadModal(true)}>
-                                    Upload New Content
-                                </button>
+            <div className={styles.mainContent}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h1>{contentType === 'VIDEO' ? 'Videos' : contentType === 'AUDIO' ? 'Podcasts' : 'Articles'}</h1>
+                    {user?.role === 'TRAINER' && (
+                        <button className={styles.uploadButton} onClick={() => setShowUploadModal(true)}>
+                            Upload New {contentType === 'VIDEO' ? 'Video' : contentType === 'AUDIO' ? 'Podcast' : 'Article'}
+                        </button>
+                    )}
+                </div>
+
+                {/* --- FILTERS --- */}
+                <div className={styles.filterContainer}>
+                    <div className={styles.filterGroup}>
+                        <label>Goal</label>
+                        <select
+                            value={filters.goal}
+                            onChange={(e) => setFilters({ ...filters, goal: e.target.value })}
+                            className={styles.filterSelect}
+                        >
+                            <option value="">All Goals</option>
+                            <option value="REDUCE_ANXIETY">Reduce Anxiety</option>
+                            <option value="IMPROVE_SLEEP">Improve Sleep</option>
+                            <option value="INCREASE_FOCUS">Increase Focus</option>
+                            <option value="STRESS_MANAGEMENT">Stress Management</option>
+                            <option value="BUILD_HABIT">Build Habit</option>
+                        </select>
+                    </div>
+
+                    <div className={styles.filterGroup}>
+                        <label>Level</label>
+                        <select
+                            value={filters.level}
+                            onChange={(e) => setFilters({ ...filters, level: e.target.value })}
+                            className={styles.filterSelect}
+                        >
+                            <option value="">All Levels</option>
+                            <option value="BEGINNER">Beginner</option>
+                            <option value="INTERMEDIATE">Intermediate</option>
+                            <option value="ADVANCED">Advanced</option>
+                        </select>
+                    </div>
+
+                    <div className={styles.filterGroup}>
+                        <label>Duration</label>
+                        <select
+                            value={filters.durationRange}
+                            onChange={(e) => setFilters({ ...filters, durationRange: e.target.value })}
+                            className={styles.filterSelect}
+                        >
+                            <option value="">Any Length</option>
+                            {contentType === 'AUDIO' ? (
+                                <>
+                                    <option value="short">Short (&lt; 1 hour)</option>
+                                    <option value="long">Long (1–3 hours)</option>
+                                    <option value="superlong">Superlong (&gt; 3 hours)</option>
+                                </>
+                            ) : (
+                                <>
+                                    <option value="5-10">5–10 minutes</option>
+                                    <option value="10-15">10–15 minutes</option>
+                                    <option value="15-20">15–20 minutes</option>
+                                    <option value="20-plus">20+ minutes</option>
+                                </>
                             )}
-                        </div>
+                        </select>
+                    </div>
 
-                        <div className={styles.videoGrid}>
-                            {videos.map((item) => {
-                                const itemType = getMediaType(item);
+                    {(filters.goal || filters.level || filters.durationRange) && (
+                        <button
+                            className={styles.clearFilters}
+                            onClick={() => setFilters({ goal: "", level: "", durationRange: "" })}
+                        >
+                            Clear Filters
+                        </button>
+                    )}
+                </div>
 
-                                return (
-                                    <div key={item.id} className={styles.videoCard}>
-                                        <div
-                                            className={styles.videoThumbnail}
-                                            style={{ cursor: "pointer" }}
-                                            onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
-                                            onMouseEnter={(e) => {
-                                                if (itemType === 'VIDEO') {
-                                                    const v = e.currentTarget.querySelector("video");
-                                                    if (v) v.play().catch(() => { });
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (itemType === 'VIDEO') {
-                                                    const v = e.currentTarget.querySelector("video");
-                                                    if (v) { v.pause(); v.currentTime = 0; }
-                                                }
-                                            }}
-                                        >
-                                            {/* RENDER CONTENT BASED ON TYPE */}
-                                            {itemType === 'VIDEO' && (
-                                                <video src={item.url} muted width="100%" height="100%" style={{ objectFit: 'cover', pointerEvents: 'none' }} />
-                                            )}
+                <div className={styles.videoGrid}>
+                    {videos.map((item) => {
+                        const itemType = getMediaType(item);
 
-                                            {itemType === 'AUDIO' && (
-                                                <div className={`${styles.placeholderIcon} ${styles.audioIcon}`}>
-                                                    🎧
-                                                </div>
-                                            )}
+                        return (
+                            <div key={item.id} className={styles.videoCard}>
+                                <div
+                                    className={styles.videoThumbnail}
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
+                                    onMouseEnter={(e) => {
+                                        if (itemType === 'VIDEO') {
+                                            const v = e.currentTarget.querySelector("video");
+                                            if (v) v.play().catch(() => { });
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (itemType === 'VIDEO') {
+                                            const v = e.currentTarget.querySelector("video");
+                                            if (v) { v.pause(); v.currentTime = 0; }
+                                        }
+                                    }}
+                                >
+                                    {/* RENDER CONTENT BASED ON TYPE */}
+                                    {itemType === 'VIDEO' && (
+                                        <video src={item.url} muted width="100%" height="100%" style={{ objectFit: 'cover', pointerEvents: 'none' }} />
+                                    )}
 
-                                            {itemType === 'BLOG' && (
-                                                <div className={`${styles.placeholderIcon} ${styles.blogIcon}`}>
-                                                    📄
-                                                </div>
-                                            )}
-
-                                            {/* Type Badge */}
-                                            <span className={styles.typeBadge}>
-                                                {itemType}
-                                            </span>
+                                    {itemType === 'AUDIO' && (
+                                        <div className={`${styles.placeholderIcon} ${styles.audioIcon}`}>
+                                            🎧
                                         </div>
+                                    )}
 
-                                        <div className={styles.videoInfo}>
-                                            <div
-                                                className={styles.videoTitle}
-                                                style={{ cursor: "pointer" }}
-                                                onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
-                                            >
-                                                {item.title}
-                                            </div>
-                                            <div className={styles.videoDescription}>{item.description}</div>
-                                            <div style={{ fontSize: '0.8rem', color: '#888' }}>
-                                                {itemType} • By {item.trainerName}
-                                            </div>
+                                    {itemType === 'BLOG' && (
+                                        <div className={`${styles.placeholderIcon} ${styles.blogIcon}`}>
+                                            📄
                                         </div>
+                                    )}
+
+                                    {/* Type Badge */}
+                                    <span className={styles.typeBadge}>
+                                        {itemType}
+                                    </span>
+                                </div>
+
+                                <div className={styles.videoInfo}>
+                                    <div
+                                        className={styles.videoTitle}
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
+                                    >
+                                        {item.title}
                                     </div>
-                                );
-                            })}
-                        </div>
-        </div>
+                                    <div className={styles.videoDescription}>{item.description}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#888' }}>
+                                        {itemType} • By {item.trainerName}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
 
-        {showUploadModal && (
+            {showUploadModal && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
-                        <h2>Upload Content</h2>
+                        <h2>Upload {contentType === 'VIDEO' ? 'Video' : contentType === 'AUDIO' ? 'Podcast' : 'Article'}</h2>
                         <form onSubmit={handleUpload}>
-                            <div className={styles.formGroup}>
-                                <label>Content Type</label>
-                                <select
-                                    value={contentType}
-                                    onChange={(e) => setContentType(e.target.value)}
-                                    className={styles.selectInput}
-                                >
-                                    <option value="VIDEO">Video</option>
-                                    <option value="AUDIO">Audio (MP3)</option>
-                                    <option value="BLOG">Blog (Text File)</option>
-                                </select>
-                            </div>
                             <div className={styles.formGroup}>
                                 <label>Title</label>
                                 <input type="text" value={newVideo.title} onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })} required />
@@ -300,9 +399,57 @@ export default function Videos() {
                                 <label>Description</label>
                                 <textarea value={newVideo.description} onChange={(e) => setNewVideo({ ...newVideo, description: e.target.value })} required />
                             </div>
+
+                            <div className={styles.formRow}>
+                                <div className={styles.formGroup}>
+                                    <label>Goal</label>
+                                    <select
+                                        value={newVideo.goal}
+                                        onChange={(e) => setNewVideo({ ...newVideo, goal: e.target.value })}
+                                        className={styles.selectInput}
+                                    >
+                                        <option value="">Select Goal</option>
+                                        <option value="REDUCE_ANXIETY">Reduce Anxiety</option>
+                                        <option value="IMPROVE_SLEEP">Improve Sleep</option>
+                                        <option value="INCREASE_FOCUS">Increase Focus</option>
+                                        <option value="STRESS_MANAGEMENT">Stress Management</option>
+                                        <option value="BUILD_HABIT">Build Habit</option>
+                                    </select>
+                                </div>
+                                <div className={styles.formGroup}>
+                                    <label>Level</label>
+                                    <select
+                                        value={newVideo.level}
+                                        onChange={(e) => setNewVideo({ ...newVideo, level: e.target.value })}
+                                        className={styles.selectInput}
+                                    >
+                                        <option value="">Select Level</option>
+                                        <option value="BEGINNER">Beginner</option>
+                                        <option value="INTERMEDIATE">Intermediate</option>
+                                        <option value="ADVANCED">Advanced</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {newVideo.duration && (
+                                <div className={styles.formGroup}>
+                                    <p style={{ fontSize: '0.9rem', color: '#4caf50', margin: '10px 0' }}>
+                                        ⏱️ Estimated {contentType === 'BLOG' ? 'reading time' : 'duration'}: <strong>
+                                            {contentType === 'AUDIO' && newVideo.duration >= 60
+                                                ? `${Math.floor(newVideo.duration / 60)}h ${newVideo.duration % 60}m`
+                                                : `${newVideo.duration} min`}
+                                        </strong>
+                                    </p>
+                                </div>
+                            )}
                             <div className={styles.formGroup}>
                                 <label>File</label>
                                 <input type="file" accept={getAcceptedFileTypes()} onChange={handleFileChange} required />
+                                {contentType === 'BLOG' && (
+                                    <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '5px' }}>
+                                        * Only .md files are supported for articles.
+                                    </p>
+                                )}
                             </div>
 
                             {isUploading && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import styles from "./Watch.module.css";
+import ReactMarkdown from "react-markdown";
 
 // --- STAR RATING ---
 const StarRating = ({ onRate }) => {
@@ -376,9 +377,7 @@ export default function Watch() {
 
                             {contentData.type === 'BLOG' && (
                                 <div className={styles.blogTextWrapper}>
-                                    {contentData.textBody.split('\n').map((line, i) => (
-                                        <p key={i} className={styles.blogParagraph}>{line}</p>
-                                    ))}
+                                    <ReactMarkdown>{contentData.textBody}</ReactMarkdown>
                                 </div>
                             )}
 

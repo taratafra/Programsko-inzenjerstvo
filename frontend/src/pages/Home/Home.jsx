@@ -31,7 +31,7 @@ export default function Home() {
     useEffect(() => {
         // Don't run if still loading Auth0 or already initialized
         if (isLoading || hasInitialized.current) return;
-        
+
         const init = async () => {
             hasInitialized.current = true;
             const localToken = localStorage.getItem("token");
@@ -51,7 +51,7 @@ export default function Home() {
 
                     if (userResponse) {
                         setUser(userResponse);
-                        
+
                         // Check if questionnaire needs to be completed
                         if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
                             hasNavigatedToQuestions.current = true;
@@ -211,14 +211,14 @@ export default function Home() {
                             <p>Kolege će ovdje implementirati Statistics.</p>
                         </div>
                     );
-                
+
                 case 'Calendar':
                     return (
                         <div className={styles.tabPanel}>
-                            <CalendarMain 
-                                navigate={navigate} 
+                            <CalendarMain
+                                navigate={navigate}
                                 setActiveTab={setActiveTab}
-                                // Pass any other props your specific CalendarMain needs
+                            // Pass any other props your specific CalendarMain needs
                             />
                         </div>
                     );
@@ -237,19 +237,36 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
-                
+
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser}/>;
+                    return <Settings user={user} updateUser={updateUser} />;
 
                 case 'Videos':
-                    return <Videos 
+                    return <Videos
                         user={user}
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
+                        contentType="VIDEO"
                     />;
-                
+
+                case 'Articles':
+                    return <Videos
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        contentType="BLOG"
+                    />;
+
+                case 'Podcasts':
+                    return <Videos
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        contentType="AUDIO"
+                    />;
+
                 case 'DailyFocus':
-                    return <DailyFocus 
+                    return <DailyFocus
                         user={user}
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
