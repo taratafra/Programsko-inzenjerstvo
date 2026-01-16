@@ -1,85 +1,82 @@
 import React, { useState, useEffect } from 'react';
 import styles from './MoodHabits.module.css';
 
-export default function Streak({user}) { 
-  const [streak, setStreak] = useState({
-    currentStreak: 0,
-    longestStreak: 0,
-    lastCompletedDate: null
-  });
+export default function Streak({ getAccessTokenSilently, isAuthenticated }) { 
+  const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
+  const [streak, setStreak] = useState([]);
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const getToken = async () => {
+    try {
+      // Auth0 flow
+      if (isAuthenticated && getAccessTokenSilently) {
+        return await getAccessTokenSilently({
+          authorizationParams: { audience: process.env.REACT_APP_AUTH0_AUDIENCE },
+        });
+      }
+      return localStorage.getItem('token');
+    } catch (err) {
+      console.error('Error getting token:', err);
+      return null;
+    }
+  };
+
   useEffect(() => {
     fetchStreakAndBadges();
-  }, []);
-
-
-  /*// Privremeno za testiranje (ukloni kad backend bude spreman)
-  const fetchStreakAndBadges = async () => {
-    setLoading(true);
-    // Mock data
-    setStreak({
-      currentStreak: 5,
-      longestStreak: 12,
-      lastCompletedDate: '2025-01-15'
-    }); 
-    setBadges([
-      { id: 1, badgeType: 'STREAK_7', awardedAt: '2025-01-10T10:00:00Z' }
-    ]);
-    setLoading(false);
-  };
-*/
+  }, [isAuthenticated]); 
 
   const fetchStreakAndBadges = async () => {
     setLoading(true);
     
     try {
-      // Fetch streak
-      const streakResponse = await fetch('/api/daily-focus/me/streak', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (streakResponse.ok) {
-        const streakData = await streakResponse.json();
-        setStreak({
-          currentStreak: streakData.currentStreak,
-          longestStreak: streakData.longestStreak,
-          lastCompletedDate: streakData.lastCompletedDate
-        });
+      const token = await getToken();
+
+      if (!token) {
+        console.warn('No token available, skipping streak fetch');
+        return;
       }
 
-      // Fetch badges
-      const badgesResponse = await fetch('/api/daily-focus/me/badges', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+      const streakResponse = await fetch(
+        `${BACKEND_URL}/api/daily-focus/me/streak`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
-      
+      );
+
+      if (streakResponse.ok) {
+        const data = await streakResponse.json();
+        setStreak(data);
+      } else {
+        console.error('Streak fetch failed:', streakResponse.status);
+      } 
+
+      const badgesResponse = await fetch(
+        `${BACKEND_URL}/api/badges/me`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
       if (badgesResponse.ok) {
-        const badgesData = await badgesResponse.json();
-        setBadges(badgesData);
+        const data = await badgesResponse.json();
+        setBadges(data);
+      } else {
+        console.error('Badges fetch failed:', badgesResponse.status);
       }
       
     } catch (err) {
-      console.error('Error fetching streak and badges:', err);
+      console.error('Fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
-  
 
-  
-
-  const refreshData = () => { //za poziv nakon uspjesnog submita
-    fetchStreakAndBadges();
-  };
-
-  const getBadgeIcon = (badgeType) => {
-    switch(badgeType) {
+  const getBadgeIcon = (BadgeType) => {
+    switch(BadgeType) {
       case 'STREAK_7':
         return '🥉';
       case 'STREAK_30':
@@ -91,8 +88,8 @@ export default function Streak({user}) {
     }
   };
   
-  const getBadgeName = (badgeType) => {
-    switch(badgeType) {
+  const getBadgeName = (BadgeType) => {
+    switch(BadgeType) {
       case 'STREAK_7':
         return '7 Day Streak';
       case 'STREAK_30':
@@ -116,7 +113,6 @@ export default function Streak({user}) {
     <div>      
       {/* Streak Display */}
       <h3 className={styles.title}>Current Streak</h3>
-      {streak.currentStreak > 0 && (
         <div className={styles.streakContainer}>
           <div className={styles.streakBadge}>
             <span className={styles.streakIcon}>🔥</span>
@@ -126,13 +122,12 @@ export default function Streak({user}) {
             </div>
           </div>
           
-          {streak.longestStreak > streak.currentStreak && (
+          {streak.longestStreak > streak.currentStreak && ( 
             <div className={styles.longestStreak}>
               <span>Best: {streak.longestStreak} days</span>
             </div>
           )}
         </div>
-      )}
 
       {/* Separator */}
       <div className={styles.divider}></div>      
@@ -144,8 +139,8 @@ export default function Streak({user}) {
           <div className={styles.badgesGrid}>
             {badges.map((badge) => (
               <div key={badge.id} className={styles.badgeItem}>
-                <span className={styles.badgeIcon}>{getBadgeIcon(badge.badgeType)}</span>
-                <span className={styles.badgeName}>{getBadgeName(badge.badgeType)}</span>
+                <span className={styles.BadgeIcon}>{getBadgeIcon(badge.BadgeType)}</span>
+                <span className={styles.BadgeName}>{getBadgeName(badge.BadgeType)}</span>
               </div>
             ))}
           </div>
@@ -158,20 +153,3 @@ export default function Streak({user}) {
     </div>
   );
 }
-
-{/*Provjeri jel back ima:
-  // U DailyFocusController.java (možda već postoji)
-@GetMapping("/me/streak")
-public ResponseEntity<StreakStatusResponse> getMyStreak(@AuthenticationPrincipal Jwt jwt) {
-    User me = userService.getOrCreateUserFromJwt(jwt);
-    UserStreak streak = dailyFocusService.getOrCreateStreak(me.getId());
-    return ResponseEntity.ok(StreakStatusResponse.from(streak));
-}
-
-@GetMapping("/me/badges")
-public ResponseEntity<List<BadgeAwardResponse>> getMyBadges(@AuthenticationPrincipal Jwt jwt) {
-    User me = userService.getOrCreateUserFromJwt(jwt);
-    List<BadgeAward> badges = badgeRepo.findAllByUserIdOrderByAwardedAtDesc(me.getId());
-    return ResponseEntity.ok(badges.stream().map(BadgeAwardResponse::from).toList());
-}
-  */}

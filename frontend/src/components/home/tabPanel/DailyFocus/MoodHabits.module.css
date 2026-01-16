@@ -253,7 +253,7 @@
   font-size: 1rem;
   resize: none;
   background-color: rgba(242, 238, 243, 0.5);
-  color: rgb(248, 244, 244);
+  color: rgb(0, 0, 0);
 }
 
 .textarea::placeholder {
@@ -320,17 +320,6 @@
   background-color: rgba(108, 117, 125, 0.5);
   transform: none;
 }
-
-
-.footerNote {
-  text-align: center;
-  font-size: 0.875rem;
-  color: rgba(248, 244, 244, 0.8);
-  font-style: italic;
-  margin-top: 0.5rem;
-}
-
-
 
 
 /* Completed State - FIXED */
