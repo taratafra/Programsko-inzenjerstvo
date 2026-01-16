@@ -5,7 +5,6 @@ import Register from "./pages/Register/Register.jsx";
 import Home from "./pages/Home/Home.jsx";
 import ProtectedRoute from "./utils/ProtectedRoute";
 import Questionnaire from "./pages/Questionnaire/Questionnaire.jsx";
-import Videos from "./pages/Videos/Videos";
 import Watch from "./pages/Watch/Watch";
 
 function App() {
@@ -18,7 +17,6 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/home" element={<Home />} />
-        <Route path="/videos" element={<Videos />} />
         <Route path="/watch/:id" element={<Watch />} />
       </Route>
     </Routes>

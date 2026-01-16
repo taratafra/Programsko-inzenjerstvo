@@ -1,4 +1,4 @@
-import HomeStyles from "../../../pages/Home/Home.module.css"; // koristi isti CSS kao tabPanel
+import HomeStyles from "../../../../pages/Home/Home.module.css"; // koristi isti CSS kao tabPanel
 import styles from "./Settings.module.css"
 
 import { useState, useEffect} from "react";

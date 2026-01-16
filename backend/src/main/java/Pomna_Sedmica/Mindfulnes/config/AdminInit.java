@@ -1,5 +1,6 @@
 package Pomna_Sedmica.Mindfulnes.config;
 
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.controller.TrainerController;
 import Pomna_Sedmica.Mindfulnes.domain.dto.SubscribeDTORequest;
 import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
@@ -65,6 +66,8 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(user);
+                user.setOnboardingComplete(true);
+                user.setRequiresPasswordReset(false);
                 user = userRepository.findByEmail("trainer@trainer").orElse(null);
                 userRepository.delete(user);
                 userRepository.save(new Trainer(user));
@@ -80,6 +83,8 @@ public class AdminInit {
                         false
                 );
                 userRepository.save(trainer);
+                user.setOnboardingComplete(true);
+                user.setRequiresPasswordReset(false);
             }
         };
     }

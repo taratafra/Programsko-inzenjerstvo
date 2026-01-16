@@ -1,0 +1,49 @@
+{
+  "questions": [
+    { "id": "Q1", "text": "How do you feel right now, in one sentence?" },
+    { "id": "Q2", "text": "What is one thing you are grateful for today?" },
+    { "id": "Q3", "text": "What has been your biggest stressor today?" },
+    { "id": "Q4", "text": "What would make today 1% better?" },
+    { "id": "Q5", "text": "What emotion is strongest right now, and why?" },
+    { "id": "Q6", "text": "What did you do today that you’re proud of?" },
+    { "id": "Q7", "text": "What do you need more of right now: rest, connection, or clarity?" },
+    { "id": "Q8", "text": "What’s one small win from today?" },
+
+    { "id": "Q9", "text": "What thought keeps showing up today?" },
+    { "id": "Q10", "text": "If your mood had a color, what would it be?" },
+    { "id": "Q11", "text": "What is something you can let go of today?" },
+    { "id": "Q12", "text": "What is one thing you can control right now?" },
+    { "id": "Q13", "text": "What is one thing you cannot control — and can accept for today?" },
+    { "id": "Q14", "text": "What is one kind thing you can do for yourself in the next hour?" },
+    { "id": "Q15", "text": "What part of today felt the most draining?" },
+    { "id": "Q16", "text": "What part of today felt the most energizing?" },
+
+    { "id": "Q17", "text": "How present do you feel right now (1–10) and why?" },
+    { "id": "Q18", "text": "What is one worry you can write down and postpone until later?" },
+    { "id": "Q19", "text": "What would you tell a friend who feels like you do today?" },
+    { "id": "Q20", "text": "What is one boundary you need today?" },
+    { "id": "Q21", "text": "What is one thing you did today that aligned with your values?" },
+    { "id": "Q22", "text": "What is one thing you learned about yourself recently?" },
+    { "id": "Q23", "text": "What is your body asking for right now?" },
+    { "id": "Q24", "text": "Where in your body do you feel tension? Describe it." },
+
+    { "id": "Q25", "text": "What is one moment today you’d like to remember?" },
+    { "id": "Q26", "text": "What is one thing you want to forgive yourself for?" },
+    { "id": "Q27", "text": "What is a task you can break into one tiny next step?" },
+    { "id": "Q28", "text": "What is one supportive habit you want to strengthen this week?" },
+    { "id": "Q29", "text": "What is one unhelpful habit you want to reduce — gently?" },
+    { "id": "Q30", "text": "What is one sentence that describes your day so far?" },
+
+    { "id": "Q31", "text": "What is one thing you’re looking forward to (even small)?" },
+    { "id": "Q32", "text": "What is one place where you feel safe and calm?" },
+    { "id": "Q33", "text": "What is one thought you can reframe into something kinder?" },
+    { "id": "Q34", "text": "What is one way you showed resilience recently?" },
+    { "id": "Q35", "text": "What is one relationship you want to nurture?" },
+    { "id": "Q36", "text": "What is one thing you can appreciate about yourself today?" },
+
+    { "id": "Q37", "text": "If today had a soundtrack, what would it be like?" },
+    { "id": "Q38", "text": "What is one thing you can do in 2 minutes to feel better?" },
+    { "id": "Q39", "text": "What does ‘enough’ look like for you today?" },
+    { "id": "Q40", "text": "What is one intention you want to set for tomorrow?" }
+  ]
+}

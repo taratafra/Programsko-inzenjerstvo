@@ -2,11 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Videos.module.css";
-// import { storage } from "../../utils/firebase"; 
-
-import Header from "../../components/home/Header";
-import LeftSidebar from "../../components/home/LeftSidebar";
-import RightSidebar from "../../components/home/RightSidebar";
+// import { storage } from "../../utils/firebase";
 
 export default function Videos() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated } = useAuth0();
@@ -203,18 +199,8 @@ export default function Videos() {
     if (!user) return <div>Loading user data...</div>;
 
     return (
-        <div className={styles.layoutContainer}>
-            <div id="o1"></div>
-            <div id="o2"></div>
-            <div id="o3"></div>
-
-            <div className={styles.dashboardContentWrapper}>
-                <Header navigate={navigate} user={user} />
-
-                <div className={styles.mainGrid}>
-                    <LeftSidebar user={user} activeTab="Videos" setActiveTab={() => { }} handleLogout={handleLogout} />
-
-                    <div className={styles.mainContent}>
+        <>
+        <div className={styles.mainContent}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <h1>Content Library</h1>
                             {user?.role === 'TRAINER' && (
@@ -287,12 +273,9 @@ export default function Videos() {
                                 );
                             })}
                         </div>
-                    </div>
-                    <RightSidebar navigate={navigate} />
-                </div>
-            </div>
+        </div>
 
-            {showUploadModal && (
+        {showUploadModal && (
                 <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
                         <h2>Upload Content</h2>
@@ -336,6 +319,6 @@ export default function Videos() {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

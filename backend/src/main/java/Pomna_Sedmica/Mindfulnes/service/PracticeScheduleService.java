@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,9 @@ public class PracticeScheduleService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You are not subscribed to this trainer");
         }
 
+        // Convert excluded dates from String to LocalDate
+        Set<LocalDate> convertedExcludedDates = convertExcludedDates(req.excludedDates());
+
         PracticeSchedule s = PracticeSchedule.builder()
                 .userId(userId)
                 .trainerId(req.trainerId())
@@ -46,7 +50,7 @@ public class PracticeScheduleService {
                 .timezone((req.timezone() == null || req.timezone().isBlank()) ? DEFAULT_TZ : req.timezone().trim())
                 .reminderMinutesBefore(req.reminderMinutesBefore() == null ? 10 : req.reminderMinutesBefore())
                 .enabled(req.enabled() == null ? true : req.enabled())
-                .excludedDates(req.excludedDates() == null ? new HashSet<>() : new HashSet<>(req.excludedDates()))
+                .excludedDates(convertedExcludedDates)
                 .build();
 
         return repo.save(s);
@@ -64,6 +68,9 @@ public class PracticeScheduleService {
         PracticeSchedule s = repo.findByIdAndUserId(scheduleId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Schedule not found"));
 
+        // Convert excluded dates from String to LocalDate
+        Set<LocalDate> convertedExcludedDates = convertExcludedDates(req.excludedDates());
+
         s.setTrainerId(req.trainerId());
         s.setTitle(req.title().trim());
         s.setStartTime(req.startTime());
@@ -73,7 +80,7 @@ public class PracticeScheduleService {
         s.setTimezone((req.timezone() == null || req.timezone().isBlank()) ? DEFAULT_TZ : req.timezone().trim());
         s.setReminderMinutesBefore(req.reminderMinutesBefore() == null ? 10 : req.reminderMinutesBefore());
         s.setEnabled(req.enabled() == null ? s.isEnabled() : req.enabled());
-        s.setExcludedDates(req.excludedDates() == null ? new HashSet<>() : new HashSet<>(req.excludedDates()));
+        s.setExcludedDates(convertedExcludedDates);
 
         return repo.save(s);
     }
@@ -152,5 +159,32 @@ public class PracticeScheduleService {
 
     private LocalDate normalizeDate(RepeatType type, LocalDate date) {
         return type == RepeatType.ONCE ? date : null;
+    }
+
+    /**
+     * Converts a set of date strings (YYYY-MM-DD) to LocalDate objects.
+     * Handles both String and LocalDate inputs for flexibility.
+     */
+    private Set<LocalDate> convertExcludedDates(Set<?> excludedDates) {
+        if (excludedDates == null || excludedDates.isEmpty()) {
+            return new HashSet<>();
+        }
+
+        return excludedDates.stream()
+                .map(dateObj -> {
+                    if (dateObj instanceof LocalDate) {
+                        // Already a LocalDate
+                        return (LocalDate) dateObj;
+                    } else if (dateObj instanceof String) {
+                        // Parse string to LocalDate
+                        return LocalDate.parse((String) dateObj);
+                    } else {
+                        throw new ResponseStatusException(
+                                HttpStatus.BAD_REQUEST,
+                                "Invalid excluded date format: " + dateObj
+                        );
+                    }
+                })
+                .collect(Collectors.toSet());
     }
 }
