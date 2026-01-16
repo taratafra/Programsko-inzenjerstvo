@@ -1,0 +1,223 @@
+{
+  "meta": {
+    "version": "1.0",
+    "language": "en",
+    "note": "Plans are 7 days starting from 'today'. Backend maps survey -> buckets -> selects one plan deterministically per week unless user requests refresh."
+  },
+  "buckets": {
+    "stress": {
+      "LOW": [0, 1, 2, 3],
+      "MEDIUM": [4, 5, 6],
+      "HIGH": [7, 8, 9, 10]
+    },
+    "sleep": {
+      "POOR": ["VERY_POOR", "POOR"],
+      "OK": ["AVERAGE"],
+      "GOOD": ["GOOD", "EXCELLENT"]
+    }
+  },
+  "plans": [
+    {
+      "id": "P-ANXIETY-HIGH-POOR-BEG-01",
+      "tags": {
+        "goals": ["REDUCE_ANXIETY", "STRESS_MANAGEMENT"],
+        "stressBucket": "HIGH",
+        "sleepBucket": "POOR",
+        "experience": ["BEGINNER"],
+        "intensity": "gentle",
+        "focus": ["grounding", "nervous-system", "safety"]
+      },
+      "title": "Reset & Ground: 7 Days to Calm the Nervous System",
+      "summary": "A gentle plan designed for high stress and low sleep quality. You’ll practice short grounding meditations, micro-breaks, and simple routines to reduce anxiety and stabilize your day.",
+      "dailyTheme": [
+        "Stability",
+        "Breath & Safety",
+        "Body Calm",
+        "Thought Defusion",
+        "Compassion",
+        "Boundaries",
+        "Integration"
+      ],
+      "days": [
+        {
+          "dayIndex": 1,
+          "headline": "Day 1 — Stabilize your baseline",
+          "practiceTimeMin": 8,
+          "meditation": "3-minute grounding + 5-minute slow breathing (inhale 4, exhale 6).",
+          "microExercise": "60-second shoulder drop: inhale lift shoulders, exhale release. Repeat 5 times.",
+          "reflection": "Write one sentence: ‘Right now, I’m safe enough to take the next small step.’",
+          "habit": "Pick ONE anchor habit: drink water after waking, or open a window for 1 minute."
+        },
+        {
+          "dayIndex": 2,
+          "headline": "Day 2 — Breath as a safety signal",
+          "practiceTimeMin": 10,
+          "meditation": "Box breathing 4-4-4-4 for 5 rounds + 3 minutes body scan.",
+          "microExercise": "Name 5 things you see, 4 you feel, 3 you hear, 2 you smell, 1 you taste.",
+          "reflection": "What was the first sign of stress today? (A thought? A body sensation?)",
+          "habit": "Caffeine boundary: avoid caffeine 90 minutes after waking (if possible)."
+        },
+        {
+          "dayIndex": 3,
+          "headline": "Day 3 — Calm the body first",
+          "practiceTimeMin": 12,
+          "meditation": "Progressive muscle relaxation (hands → shoulders → face → legs).",
+          "microExercise": "2-minute slow walk: feel heel-to-toe contact, don’t rush.",
+          "reflection": "Rate stress (0–10). What reduces it by even 1 point?",
+          "habit": "Evening wind-down: dim screens 30 minutes earlier (or use night mode)."
+        },
+        {
+          "dayIndex": 4,
+          "headline": "Day 4 — Unhook from anxious thoughts",
+          "practiceTimeMin": 10,
+          "meditation": "Thought labeling: ‘planning’, ‘worrying’, ‘judging’, then return to breath.",
+          "microExercise": "Write the main worry on paper. Add: ‘My mind is having the thought that…’",
+          "reflection": "What is within my control today? List 2 small actions.",
+          "habit": "1 boundary: say ‘no’ to one non-essential task or shorten it by 10%."
+        },
+        {
+          "dayIndex": 5,
+          "headline": "Day 5 — Build self-compassion",
+          "practiceTimeMin": 12,
+          "meditation": "Loving-kindness for self: ‘May I be safe. May I be calm. May I be kind to myself.’",
+          "microExercise": "Hand-on-heart + 6 slow breaths.",
+          "reflection": "What would I tell a friend in the same situation?",
+          "habit": "Add one supportive input: short stretch, warm tea, or a 5-min tidy."
+        },
+        {
+          "dayIndex": 6,
+          "headline": "Day 6 — Reduce overload",
+          "practiceTimeMin": 10,
+          "meditation": "Open awareness: notice sounds, sensations, thoughts without chasing them.",
+          "microExercise": "Notification diet: disable 1 non-essential notification for 24 hours.",
+          "reflection": "What drains me most? What’s one tiny adjustment I can try?",
+          "habit": "Micro-plan: choose your top 3 tasks only. Everything else is optional."
+        },
+        {
+          "dayIndex": 7,
+          "headline": "Day 7 — Integration & next-week plan",
+          "practiceTimeMin": 15,
+          "meditation": "Full body scan + 3 minutes gratitude for effort (not outcomes).",
+          "microExercise": "Plan a 10-minute recovery block for tomorrow (walk, stretch, or quiet time).",
+          "reflection": "Which practice helped most? Commit to repeating it 3× next week.",
+          "habit": "Sleep support: pick a fixed ‘lights-off’ target time and protect it."
+        }
+      ]
+    },
+
+    {
+      "id": "P-SLEEP-GOOD-BEG-01",
+      "tags": {
+        "goals": ["IMPROVE_SLEEP"],
+        "stressBucket": "MEDIUM",
+        "sleepBucket": "POOR",
+        "experience": ["BEGINNER"],
+        "intensity": "gentle",
+        "focus": ["sleep-hygiene", "evening-routine"]
+      },
+      "title": "Sleep Reset Week: Build a Calm Evening Routine",
+      "summary": "A practical 7-day plan to improve sleep quality with short meditations, evening rituals, and daytime behaviors that support better rest.",
+      "days": [
+        { "dayIndex": 1, "headline": "Day 1 — Set the foundation", "practiceTimeMin": 8, "meditation": "Evening breathing: 4-7-8 for 4 rounds.", "microExercise": "Make your room 5% more sleep-friendly (tidy, dim light, cool air).", "reflection": "What time do I realistically want to be in bed?", "habit": "No screens for the last 10 minutes before sleep." },
+        { "dayIndex": 2, "headline": "Day 2 — Consistent wake time", "practiceTimeMin": 8, "meditation": "Morning intention: 2 minutes + 6 minutes mindful breathing.", "microExercise": "Get daylight exposure for 5–10 minutes after waking.", "reflection": "How does light affect my energy today?", "habit": "Pick a fixed wake time (±30 min) and keep it." },
+        { "dayIndex": 3, "headline": "Day 3 — Reduce late stimulation", "practiceTimeMin": 10, "meditation": "Body scan for sleep (feet → head).", "microExercise": "Caffeine cutoff: stop 8 hours before target bedtime.", "reflection": "What triggers late-night scrolling for me?", "habit": "Create a ‘phone parking spot’ outside the bed." },
+        { "dayIndex": 4, "headline": "Day 4 — Calm the mind", "practiceTimeMin": 10, "meditation": "Noting thoughts: ‘thinking’ → back to breath.", "microExercise": "Brain dump: write tomorrow’s worries/tasks for 3 minutes.", "reflection": "What thought repeats most at night?", "habit": "Warm shower or face wash as a ‘sleep cue’." },
+        { "dayIndex": 5, "headline": "Day 5 — Relax the body", "practiceTimeMin": 12, "meditation": "Progressive relaxation (5–7 minutes) + slow breathing.", "microExercise": "Gentle neck stretch 60 seconds per side.", "reflection": "Where do I store tension?", "habit": "Add one calming scent or soft lighting in the evening." },
+        { "dayIndex": 6, "headline": "Day 6 — Build recovery buffers", "practiceTimeMin": 10, "meditation": "Open awareness: let sensations pass.", "microExercise": "Take a 10-minute walk during the day to reduce sleep pressure issues.", "reflection": "What helps me feel ‘done’ with the day?", "habit": "Stop heavy meals 2–3 hours before sleep (if possible)." },
+        { "dayIndex": 7, "headline": "Day 7 — Lock the routine", "practiceTimeMin": 15, "meditation": "Longer body scan + gratitude for effort.", "microExercise": "Plan next week’s evening routine in 3 bullet points.", "reflection": "Which change improved sleep the most?", "habit": "Commit to repeating the top 2 habits for 7 more days." }
+      ]
+    },
+
+    {
+      "id": "P-FOCUS-MED-OK-INT-01",
+      "tags": {
+        "goals": ["INCREASE_FOCUS"],
+        "stressBucket": "MEDIUM",
+        "sleepBucket": "OK",
+        "experience": ["INTERMEDIATE"],
+        "intensity": "moderate",
+        "focus": ["attention", "deep-work", "distractions"]
+      },
+      "title": "Focus Sprint: 7 Days of Attention Training",
+      "summary": "Train your attention like a muscle. Short meditations + practical deep-work rituals to improve focus without burnout.",
+      "days": [
+        { "dayIndex": 1, "headline": "Day 1 — Attention baseline", "practiceTimeMin": 12, "meditation": "Focused attention on breath (count 1–10, restart on distraction).", "microExercise": "Set a 25-min focus block today (Pomodoro).", "reflection": "What distracts me most: phone, tabs, or thoughts?", "habit": "Single-task rule for the first 15 minutes of work." },
+        { "dayIndex": 2, "headline": "Day 2 — Reduce context switching", "practiceTimeMin": 10, "meditation": "Noting distractions + return to anchor.", "microExercise": "Close 5 unnecessary tabs; keep 1 task visible.", "reflection": "What task deserves my best attention today?", "habit": "Check messages only twice (set two time windows)." },
+        { "dayIndex": 3, "headline": "Day 3 — Build deep work", "practiceTimeMin": 12, "meditation": "Body + breath anchor switching (2 minutes each).", "microExercise": "Do a 40-min deep-work block with phone out of reach.", "reflection": "How did my energy change after deep work?", "habit": "Start your day with the hardest task for 10 minutes." },
+        { "dayIndex": 4, "headline": "Day 4 — Train recovery", "practiceTimeMin": 10, "meditation": "Open awareness (let stimuli come and go).", "microExercise": "Two 2-minute breaks: stand, breathe, look far away.", "reflection": "What does ‘good break’ look like for me?", "habit": "Micro-break every 60–90 minutes." },
+        { "dayIndex": 5, "headline": "Day 5 — Working with resistance", "practiceTimeMin": 12, "meditation": "Label resistance: ‘aversion’, ‘boredom’, ‘worry’.", "microExercise": "Do the task for 5 minutes even if you don’t feel like it.", "reflection": "What story do I tell myself when I avoid tasks?", "habit": "Use a 2-minute ‘start ritual’ (water + clear desk)." },
+        { "dayIndex": 6, "headline": "Day 6 — Focus & stress balance", "practiceTimeMin": 12, "meditation": "Slow exhale breathing + brief body scan.", "microExercise": "Plan tomorrow: 3 priorities, 1 optional.", "reflection": "What’s one thing I can simplify?", "habit": "End-of-day shutdown: write ‘done’ list." },
+        { "dayIndex": 7, "headline": "Day 7 — Integration", "practiceTimeMin": 15, "meditation": "Longer focused attention + gratitude for effort.", "microExercise": "Choose your ‘default focus routine’ for next week.", "reflection": "Which technique worked best? Counting, noting, or rituals?", "habit": "Commit to 3 focus blocks next week." }
+      ]
+    },
+
+    {
+      "id": "P-STRESS-LOW-GOOD-ADV-01",
+      "tags": {
+        "goals": ["STRESS_MANAGEMENT", "INCREASE_FOCUS"],
+        "stressBucket": "LOW",
+        "sleepBucket": "GOOD",
+        "experience": ["ADVANCED"],
+        "intensity": "moderate",
+        "focus": ["resilience", "maintenance"]
+      },
+      "title": "Resilience Maintenance: Calm + Clarity",
+      "summary": "You’re already in a good place. This week maintains low stress and sharpens clarity with slightly deeper practice.",
+      "days": [
+        { "dayIndex": 1, "headline": "Day 1 — Clarity scan", "practiceTimeMin": 15, "meditation": "Open awareness: track sensations, sounds, thoughts.", "microExercise": "Write your top value for the week in one sentence.", "reflection": "Where do I overcomplicate?", "habit": "One unnecessary commitment removed." },
+        { "dayIndex": 2, "headline": "Day 2 — Precision attention", "practiceTimeMin": 18, "meditation": "Focused attention (breath) + 3 minutes metta.", "microExercise": "60-second posture reset each hour.", "reflection": "What is the smallest ‘high leverage’ action today?", "habit": "Single-task for 30 minutes." },
+        { "dayIndex": 3, "headline": "Day 3 — Emotional agility", "practiceTimeMin": 15, "meditation": "RAIN technique (Recognize, Allow, Investigate, Nurture).", "microExercise": "Name the emotion + what it needs (one word each).", "reflection": "What emotion did I avoid? How did it show up?", "habit": "5-minute walk after work." },
+        { "dayIndex": 4, "headline": "Day 4 — Compassion & boundaries", "practiceTimeMin": 15, "meditation": "Loving-kindness: self → others.", "microExercise": "One clear boundary message (short, kind, direct).", "reflection": "Where do I leak energy?", "habit": "Stop work 10 minutes earlier." },
+        { "dayIndex": 5, "headline": "Day 5 — Deep rest", "practiceTimeMin": 20, "meditation": "Yoga nidra style body scan (guided or silent).", "microExercise": "No phone for first 10 minutes after waking.", "reflection": "What does ‘rest’ mean for me today?", "habit": "Evening: warm lighting + calm music." },
+        { "dayIndex": 6, "headline": "Day 6 — Meaningful focus", "practiceTimeMin": 18, "meditation": "Noting + return; minimal effort.", "microExercise": "Do one meaningful task before checking messages.", "reflection": "What do I want to feel by end of day?", "habit": "Two message windows only." },
+        { "dayIndex": 7, "headline": "Day 7 — Weekly review", "practiceTimeMin": 20, "meditation": "Open awareness + gratitude.", "microExercise": "Review: keep / improve / remove (3 bullets).", "reflection": "What habit should become my default?", "habit": "Schedule next week’s 3 practice slots." }
+      ]
+    },
+
+    {
+      "id": "P-ANXIETY-MED-GOOD-BEG-02",
+      "tags": {
+        "goals": ["REDUCE_ANXIETY"],
+        "stressBucket": "MEDIUM",
+        "sleepBucket": "GOOD",
+        "experience": ["BEGINNER"],
+        "intensity": "gentle",
+        "focus": ["confidence", "micro-skills"]
+      },
+      "title": "Confidence Week: Small Practices, Big Calm",
+      "summary": "A beginner-friendly plan to reduce anxiety through short daily skills that build confidence and stability.",
+      "days": [
+        { "dayIndex": 1, "headline": "Day 1 — Start small", "practiceTimeMin": 7, "meditation": "3 minutes breathing + 4 minutes grounding.", "microExercise": "Write one tiny win you can achieve today.", "reflection": "What do I need most: rest, clarity, or support?", "habit": "1-minute tidy your space." },
+        { "dayIndex": 2, "headline": "Day 2 — Calm cue", "practiceTimeMin": 8, "meditation": "Breathing with a phrase: ‘in—calm, out—release’.", "microExercise": "Create a calm cue (touch thumb + index) for stress moments.", "reflection": "When did I feel most tense today?", "habit": "Drink water before coffee/tea." },
+        { "dayIndex": 3, "headline": "Day 3 — Body comfort", "practiceTimeMin": 10, "meditation": "Gentle body scan.", "microExercise": "Stretch: neck + shoulders 2 minutes.", "reflection": "Which body area asks for care?", "habit": "Short walk after lunch." },
+        { "dayIndex": 4, "headline": "Day 4 — Thought distance", "practiceTimeMin": 10, "meditation": "Label thoughts: ‘worry story’ and return.", "microExercise": "Write: ‘I notice I’m having the thought that…’", "reflection": "What would be a more helpful thought?", "habit": "One less scroll session." },
+        { "dayIndex": 5, "headline": "Day 5 — Self-kindness", "practiceTimeMin": 12, "meditation": "Loving-kindness for self.", "microExercise": "Put a hand on heart, 5 breaths.", "reflection": "What would compassion do here?", "habit": "Replace one harsh self-talk with a neutral statement." },
+        { "dayIndex": 6, "headline": "Day 6 — Reduce overload", "practiceTimeMin": 10, "meditation": "Open awareness.", "microExercise": "Say no to one small request (or delay it).", "reflection": "What can wait 24 hours?", "habit": "Two-minute planning for tomorrow." },
+        { "dayIndex": 7, "headline": "Day 7 — Your calm toolkit", "practiceTimeMin": 15, "meditation": "Choose your best practice and repeat it longer.", "microExercise": "Write a 3-step calm plan for stressful moments.", "reflection": "Which tool worked best this week?", "habit": "Commit to 3 practice days next week." }
+      ]
+    },
+
+    {
+      "id": "P-SLEEP-FOCUS-HIGH-POOR-INT-02",
+      "tags": {
+        "goals": ["IMPROVE_SLEEP", "INCREASE_FOCUS"],
+        "stressBucket": "HIGH",
+        "sleepBucket": "POOR",
+        "experience": ["INTERMEDIATE"],
+        "intensity": "gentle",
+        "focus": ["recovery", "energy-management"]
+      },
+      "title": "Recovery First: Sleep + Focus for High-Stress Weeks",
+      "summary": "When sleep is low and stress is high, focus comes from recovery. This plan stabilizes evenings and protects daytime energy.",
+      "days": [
+        { "dayIndex": 1, "headline": "Day 1 — Protect energy", "practiceTimeMin": 10, "meditation": "Slow exhale breathing + short body scan.", "microExercise": "Choose 3 priorities only.", "reflection": "What drains my energy fastest?", "habit": "Add a 10-minute wind-down timer tonight." },
+        { "dayIndex": 2, "headline": "Day 2 — Sleep cues", "practiceTimeMin": 12, "meditation": "Body scan for sleep.", "microExercise": "Phone out of bed zone.", "reflection": "What time do I start feeling sleepy?", "habit": "Dim lights 45 minutes before bed." },
+        { "dayIndex": 3, "headline": "Day 3 — Nervous system reset", "practiceTimeMin": 12, "meditation": "Box breathing + grounding.", "microExercise": "2-minute walk break twice.", "reflection": "What calms me fastest?", "habit": "Caffeine cutoff 8 hours before bed." },
+        { "dayIndex": 4, "headline": "Day 4 — Focus without strain", "practiceTimeMin": 10, "meditation": "Focused attention (count breaths).", "microExercise": "One 25-min focus block, no multitasking.", "reflection": "Which task deserves my best energy?", "habit": "Start with 5 minutes only—build momentum." },
+        { "dayIndex": 5, "headline": "Day 5 — Let thoughts pass", "practiceTimeMin": 12, "meditation": "Noting thoughts: ‘planning’, ‘worrying’.", "microExercise": "Brain dump for tomorrow.", "reflection": "What loops at night?", "habit": "Warm drink ritual (non-caffeinated)." },
+        { "dayIndex": 6, "headline": "Day 6 — Gentle strength", "practiceTimeMin": 12, "meditation": "Open awareness.", "microExercise": "10-minute easy walk.", "reflection": "How does movement affect my mind?", "habit": "Stop work 15 minutes earlier." },
+        { "dayIndex": 7, "headline": "Day 7 — Recovery plan", "practiceTimeMin": 15, "meditation": "Long body scan + gratitude.", "microExercise": "Plan next week’s sleep routine in 3 bullet points.", "reflection": "What worked best for sleep? For focus?", "habit": "Commit to your top 2 habits." }
+      ]
+    }
+  ]
+}
