@@ -29,12 +29,11 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("Make Appointment")} onClick={() => setActiveTab('Make Appointment')}>
           📅 Make Appointment
         </li>
-        <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
-          📈 Statistics
-        </li>
-        {/* NEW CALENDAR BUTTON */}
         <li className={getNavItemClass("Calendar")} onClick={() => setActiveTab('Calendar')}>
           🗓️ Calendar
+        </li>
+        <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
+          📈 Statistics
         </li>
         <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
           <span className={homeStyles.navItemLogout}>⚙️ Settings</span>

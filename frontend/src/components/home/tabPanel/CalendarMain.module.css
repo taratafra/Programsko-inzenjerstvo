@@ -122,6 +122,34 @@
   transform: none;
 }
 
+.pastDay {
+  color: rgba(255, 255, 255, 0.3) !important;
+  cursor: not-allowed !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  pointer-events: none;
+}
+
+.pastDay:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  transform: none !important;
+}
+
+/* Override color classes for past days - make them dimmer */
+.pastDay.cellOnce {
+  background: rgba(220, 38, 38, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.pastDay.cellWeekly {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+
+.pastDay.cellDaily {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+}
+
 /* --- NEW COLOR CLASSES (Replaces Dots) --- */
 
 /* Priority 1: One-time (Red) */

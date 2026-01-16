@@ -28,7 +28,7 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
       if (isAuthenticated) {
         return await getAccessTokenSilently({
           authorizationParams: {
-            audience: AUDIENCE, // Fixed: removed ${} wrapper here
+            audience: AUDIENCE,
             scope: "openid profile email",
           },
         });
@@ -49,10 +49,9 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     try {
       const token = await getToken();
       
-      // Fixed: Added backticks
       const response = await fetch(`${BACKEND_URL}/api/schedules/me`, {
         headers: {
-          'Authorization': `Bearer ${token}` // Fixed: Added backticks
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -69,7 +68,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     }
   };
 
-  // NEW: Function to download ICS file and sync with Google Calendar
   const handleGoogleCalendarSync = async () => {
     if (schedules.length === 0) {
       alert('You have no schedules to sync. Create some schedules first!');
@@ -81,10 +79,9 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     try {
       const token = await getToken();
       
-      // Fixed: Added backticks
       const response = await fetch(`${BACKEND_URL}/api/schedules/me/ics`, {
         headers: {
-          'Authorization': `Bearer ${token}` // Fixed: Added backticks
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -92,29 +89,22 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         throw new Error('Failed to generate calendar file');
       }
 
-      // Get the ICS file as a blob
       const blob = await response.blob();
-      
-      // Create a download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = 'mindfulness-practice-schedules.ics';
       
-      // Trigger download
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      // Show instructions modal
       setShowSyncInstructions(true);
       
     } catch (error) {
       console.error('Error syncing with Google Calendar:', error);
-      // Fixed: Added backticks
       alert(`Failed to sync with Google Calendar: ${error.message}`);
     } finally {
       setIsSyncing(false);
@@ -129,11 +119,10 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     try {
       const token = await getToken();
       
-      // Fixed: Added backticks
       const response = await fetch(`${BACKEND_URL}/api/schedules/me/${scheduleId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}` // Fixed: Added backticks
+          'Authorization': `Bearer ${token}`
         }
       });
 
@@ -151,12 +140,10 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
       } else {
         const errorText = await response.text();
         console.error('Delete failed:', errorText);
-        // Fixed: Added backticks
         alert(`Failed to delete schedule: ${errorText}`);
       }
     } catch (error) {
       console.error('Error deleting schedule:', error);
-      // Fixed: Added backticks
       alert(`Error deleting schedule: ${error.message}`);
     }
   };
@@ -164,7 +151,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
   const handleDeleteSpecificDate = async (schedule) => {
     const dateStr = selectedDate.toLocaleDateString();
     
-    // Fixed: Added backticks
     if (!window.confirm(`Are you sure you want to remove this schedule from ${dateStr} only?`)) {
       return;
     }
@@ -175,7 +161,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      // Fixed: Added backticks
       const formattedDate = `${year}-${month}-${day}`;
       
       const existingExcludedDates = schedule.excludedDates || [];
@@ -211,12 +196,11 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
 
       console.log('Sending update:', updatedSchedule);
 
-      // Fixed: Added backticks
       const response = await fetch(`${BACKEND_URL}/api/schedules/me/${schedule.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Fixed: Added backticks
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updatedSchedule)
       });
@@ -239,16 +223,13 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         
         try {
           const errorJson = JSON.parse(errorText);
-          // Fixed: Added backticks
           alert(`Failed to update schedule: ${errorJson.message || JSON.stringify(errorJson, null, 2)}`);
         } catch (e) {
-          // Fixed: Added backticks
           alert(`Failed to update schedule: ${errorText}`);
         }
       }
     } catch (error) {
       console.error('Error updating schedule:', error);
-      // Fixed: Added backticks
       alert(`Error updating schedule: ${error.message}`);
     }
   };
@@ -283,7 +264,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     const year = compareDate.getFullYear();
     const month = String(compareDate.getMonth() + 1).padStart(2, '0');
     const day = String(compareDate.getDate()).padStart(2, '0');
-    // Fixed: Added backticks
     const formattedDate = `${year}-${month}-${day}`;
     
     return schedules.filter(schedule => {
@@ -348,6 +328,7 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     return getSchedulesForDate(date).length > 0;
   };
 
+  // UPDATED: Now returns objects with isPast flag
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -359,21 +340,32 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
     
     const days = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
+      const dayDate = new Date(year, month, day);
+      dayDate.setHours(0, 0, 0, 0);
+      const isPast = dayDate < today;
+      
+      days.push({
+        date: dayDate,
+        isPast: isPast
+      });
     }
     
     return days;
   };
 
-  const handleDateClick = (date) => {
-    if (!date) return;
+  // UPDATED: Check if date is past before allowing click
+  const handleDateClick = (dayObj) => {
+    if (!dayObj || dayObj.isPast) return;
     
+    const date = dayObj.date;
     setSelectedDate(date);
     const dateSchedules = getSchedulesForDate(date);
     
@@ -392,15 +384,15 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
-  const isToday = (date) => {
-    if (!date) return false;
+  const isToday = (dayObj) => {
+    if (!dayObj) return false;
     const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return dayObj.date.toDateString() === today.toDateString();
   };
 
-  const isSelected = (date) => {
-    if (!date) return false;
-    return date.toDateString() === selectedDate.toDateString();
+  const isSelected = (dayObj) => {
+    if (!dayObj) return false;
+    return dayObj.date.toDateString() === selectedDate.toDateString();
   };
 
   const days = getDaysInMonth(currentDate);
@@ -410,7 +402,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
     <div className={styles.calendarSidebar}>
       <h3 className={styles.calendarTitle}>Calendar</h3>
       
-      {/* NEW: Google Calendar Sync Button */}
       <button 
         onClick={handleGoogleCalendarSync}
         disabled={isSyncing || schedules.length === 0}
@@ -420,7 +411,6 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
         {isSyncing ? '⏳ Syncing...' : '📅 Export to Google Calendar'}
       </button>
 
-      {/* NEW: Sync Instructions Modal */}
       {showSyncInstructions && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
@@ -478,23 +468,25 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
           ))}
         </div>
 
-        
-
         <div className={styles.daysGrid}>
-          {days.map((date, index) => {
-            // Logic to determine background color based on schedule type
+          {days.map((dayObj, index) => {
+            // UPDATED: Work with dayObj instead of date
             let dateClass = styles.dayCell;
             
-            if (!date) {
+            if (!dayObj) {
               dateClass += ` ${styles.emptyCell}`;
             } else {
-              if (isToday(date)) dateClass += ` ${styles.today}`;
-              if (isSelected(date)) dateClass += ` ${styles.selected}`;
+              // Add past day styling
+              if (dayObj.isPast) {
+                dateClass += ` ${styles.pastDay}`;
+              }
               
-              const daySchedules = getSchedulesForDate(date);
+              if (isToday(dayObj)) dateClass += ` ${styles.today}`;
+              if (isSelected(dayObj)) dateClass += ` ${styles.selected}`;
+              
+              const daySchedules = getSchedulesForDate(dayObj.date);
               
               if (daySchedules.length > 0) {
-                // Check priorities: ONCE (Red) > WEEKLY (Green) > DAILY (Blue)
                 const hasOnce = daySchedules.some(s => s.repeatType === 'ONCE');
                 const hasWeekly = daySchedules.some(s => s.repeatType === 'WEEKLY');
                 const hasDaily = daySchedules.some(s => s.repeatType === 'DAILY');
@@ -512,13 +504,16 @@ export default function RightSidebar({ navigate, setActiveTab, activeTab, onSche
             return (
               <div
                 key={index}
-                onClick={() => handleDateClick(date)}
+                onClick={() => handleDateClick(dayObj)}
                 className={dateClass}
+                style={{
+                  cursor: (dayObj && dayObj.isPast) ? 'not-allowed' : 'pointer',
+                  opacity: (dayObj && dayObj.isPast) ? '0.4' : '1'
+                }}
               >
-                {date && (
-                  <span className={styles.dayNumber}>{date.getDate()}</span>
+                {dayObj && (
+                  <span className={styles.dayNumber}>{dayObj.date.getDate()}</span>
                 )}
-                {/* Dots have been removed from here */}
               </div>
             );
           })}

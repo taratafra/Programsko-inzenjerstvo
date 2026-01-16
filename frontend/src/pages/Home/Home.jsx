@@ -12,7 +12,7 @@ import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 import Settings from "../../components/home/tabPanel/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
-import CalendarMain from "../../components/home/CalendarMain";
+import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
