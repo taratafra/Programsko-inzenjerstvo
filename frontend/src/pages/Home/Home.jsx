@@ -13,6 +13,7 @@ import Settings from "../../components/home/tabPanel/Settings/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 import CalendarMain from "../../components/home/tabPanel/CalendarMain";
+import Videos from "../../components/home/tabPanel/Videos/Videos";
 
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
 
@@ -239,6 +240,13 @@ export default function Home() {
                 
                 case 'Settings':
                     return <Settings user={user} updateUser={updateUser}/>;
+
+                case 'Videos':
+                    return <Videos 
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />;
                 
                 case 'DailyFocus':
                     return <DailyFocus 
