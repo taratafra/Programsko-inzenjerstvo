@@ -147,6 +147,7 @@ export default function Home() {
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState('General Information');
         const [reloadCalendar, setReloadCalendar] = useState(null);
+        const [statisticsRefreshTrigger, setStatisticsRefreshTrigger] = useState(0);
 
         const updateUser = (updatedFields) => {
             setUser(prevUser => ({
@@ -207,6 +208,7 @@ export default function Home() {
                         user={user}
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
+                        refreshTrigger ={statisticsRefreshTrigger}
                     />
                 
                 case 'Breathing':
@@ -227,17 +229,17 @@ export default function Home() {
                 case 'Settings':
                     return <Settings user={user} updateUser={updateUser} />;
 
-                case 'DailyFocus':
+                case 'MoodCheckIn':
                     
                     return (
                         <MoodCheckIn
                             getAccessTokenSilently={getAccessTokenSilently}
                             isAuthenticated={isAuthenticated}
+                            onSubmitSuccess={() => setStatisticsRefreshTrigger(prev => prev + 1)}
                         />
                     );
 
-                case 'MoodCheckIn':
-
+                case 'DailyFocus':
                     return (
                         <DailyFocus
                             user={user}

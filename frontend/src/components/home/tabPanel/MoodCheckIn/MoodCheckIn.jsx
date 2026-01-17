@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../DailyFocus/MoodHabits.module.css';
 
-export default function MoodCheckIn({getAccessTokenSilently, isAuthenticated }) {
+export default function MoodCheckIn({getAccessTokenSilently, isAuthenticated, onSubmitSuccess }) {
   const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
   const [formData, setFormData] = useState({
@@ -156,6 +156,13 @@ export default function MoodCheckIn({getAccessTokenSilently, isAuthenticated }) 
 
       setSuccess(true);
       setCanSubmitToday(false);
+
+      if(onSubmitSuccess){
+        console.log("MoodCheckIn calling onSubmitSuccess callback");
+        onSubmitSuccess();
+      }else {
+        console.log("No onSubmitSuccess callback provided!");
+      }
 
     } catch (err) {
       console.error('Submit error:', err);

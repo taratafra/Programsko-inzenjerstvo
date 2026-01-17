@@ -3,7 +3,6 @@ import {
   Line,
   XAxis,
   YAxis,
-  Tooltip,
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
@@ -16,17 +15,15 @@ export default function MetricChart({ title, data, dataKey }) {
 
       <div className={styles.chartWrapper}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, 5]} />
-            <Tooltip cursor={false} />
+          <LineChart data={data} className={styles.chart}>
+            <CartesianGrid strokeDasharray="3 3" className={styles.grid}/>
+            <XAxis dataKey="date" tick={{ className: styles.axisLabel }}/>
+            <YAxis domain={[0, 10]} tick={{ className: styles.axisLabel }}/>
             <Line
-              type="monotone"
-              dataKey={dataKey}
-              stroke="var(--text-accent)"
-              strokeWidth={3}
-              dot={{ r: 4 }}
+                type="monotone"
+                dataKey={dataKey}
+                className={styles.line} 
+                dot={{ r: 4 }}
             />
           </LineChart>
         </ResponsiveContainer>

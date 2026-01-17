@@ -6,6 +6,25 @@
   color: var(--text-main);
 }
 
+.axisLabel {
+  fill: white; 
+  font-size: 0.9rem;
+}
+
+.grid line {
+  stroke: rgba(255, 255, 255, 0.2); 
+}
+
+.line {
+  stroke: var(--text-accent); 
+  stroke-width: 3;            
+}
+
+.line circle {
+  r: 4;
+  fill: var(--text-accent);
+}
+
 .title {
   font-size: 1.4rem;
   font-weight: bold;
