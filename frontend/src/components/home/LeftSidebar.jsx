@@ -24,7 +24,7 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
           👥 Trainers
         </li> 
         <li className={getNavItemClass("Videos")} onClick={() => setActiveTab('Videos')}>
-          <span className={homeStyles.navItemLogout}>🎥 Videos</span>
+          🎥 Videos
         </li>
         <li className={getNavItemClass("Make Appointment")} onClick={() => setActiveTab('Make Appointment')}>
           📅 Make Appointment
@@ -33,16 +33,16 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
           🗓️ Calendar
         </li>
         <li className={getNavItemClass("DailyFocus")} onClick={() => setActiveTab('DailyFocus')}>
-           <span className={homeStyles.navItemLogout}>📒 Daily Focus</span>
+          📒 Daily Focus
         </li>
         <li className={getNavItemClass("MoodCheckIn")} onClick={() => setActiveTab('MoodCheckIn')}>
-           <span className={homeStyles.navItemLogout}>😊 Mood & Habits</span>
+          😊 Mood & Habits
         </li>        
         <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics
         </li>
         <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
-          <span className={homeStyles.navItemLogout}>⚙️ Settings</span>
+          ⚙️ Settings
         </li>
         <li className={homeStyles.navItem} onClick={handleLogout}>
           ➡️ Log Out
