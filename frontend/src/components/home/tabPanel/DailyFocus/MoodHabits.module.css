@@ -413,7 +413,7 @@
 .divider {
   height: 2px;
   background: linear-gradient(90deg, transparent 0%, rgba(248, 244, 244, 0.3) 50%, transparent 100%);
-  margin: 3rem 0;
+  margin: 5rem 0;
   width: 100%;
 }
 
