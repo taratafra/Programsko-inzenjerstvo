@@ -342,6 +342,9 @@ import Settings from "../../components/home/tabPanel/Settings/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 import TrainerDashboard from "../../components/home/tabPanel/TrainerDashboard";
+import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
+import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
+
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -552,6 +555,24 @@ export default function Home() {
                 case 'Settings':
                     return <Settings user={user} updateUser={updateUser} />;
 
+                case 'DailyFocus':
+                    
+                    return (
+                        <MoodCheckIn
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                        />
+                    );
+
+                case 'MoodCheckIn':
+
+                    return (
+                        <DailyFocus
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                        />
+                    );
                 default:
                     return <GeneralInfoGrid />;
             }
