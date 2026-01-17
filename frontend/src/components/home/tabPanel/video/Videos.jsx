@@ -1,20 +1,12 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Videos.module.css";
 // import { storage } from "../../utils/firebase"; 
 
-import Header from "../../components/home/Header";
-import LeftSidebar from "../../components/home/LeftSidebar";
-import RightSidebar from "../../components/home/RightSidebar";
-
-export default function Videos() {
-    const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated } = useAuth0();
-    const [user, setUser] = useState(null);
+export default function Videos({ user, getAccessTokenSilently, isAuthenticated }) {
     const [videos, setVideos] = useState([]);
-    const [loading, setLoading] = useState(true);
 
-    // --- UPLOAD STATES ---
+    // UPLOAD STATES
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [contentType, setContentType] = useState("VIDEO");
     const [newVideo, setNewVideo] = useState({ title: "", description: "" });
@@ -24,9 +16,8 @@ export default function Videos() {
 
     const navigate = useNavigate();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
-    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
 
-    // --- HELPER: FIXED DETECTION LOGIC ---
+    // HELPER: FIXED DETECTION LOGIC
     const getMediaType = (item) => {
         if (item.type && (item.type === 'AUDIO' || item.type === 'BLOG')) return item.type;
 
@@ -55,68 +46,9 @@ export default function Videos() {
     }, [BACKEND_URL]);
 
     useEffect(() => {
-        const init = async () => {
-            const localToken = localStorage.getItem("token");
-            try {
-                if (isAuthenticated) {
-                    if (!auth0User) return;
-                    setUser(auth0User);
-                    try {
-                        const token = await getAccessTokenSilently({
-                            authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
-                        });
-                        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
-                        if (res.ok) {
-                            const data = await res.json();
-                            setUser(data);
-                            if (!data.isOnboardingComplete) {
-                                navigate("/questions", { replace: true });
-                                return;
-                            }
-                        }
-                    } catch (tokenErr) {
-                        console.error("Error getting token or fetching user with Auth0:", tokenErr);
-                    }
-                    setLoading(false);
-                } else if (localToken) {
-                    const res = await fetch(`${BACKEND_URL}/api/users/me`, {
-                        headers: { Authorization: `Bearer ${localToken}` },
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        setUser(data);
-                        if (!data.isOnboardingComplete) {
-                            navigate("/questions", { replace: true });
-                            return;
-                        }
-                        setLoading(false);
-                    } else {
-                        throw new Error("Failed to fetch user with local token");
-                    }
-                } else {
-                    setLoading(false);
-                }
-            } catch (err) {
-                console.error("Error initializing user:", err);
-                if (!isAuthenticated) {
-                    if (localToken) {
-                        localStorage.removeItem("token");
-                    }
-                    navigate("/login");
-                }
-                setLoading(false);
-            } finally {
-                setLoading(false);
-            }
-        };
+        fetchVideos();
+    }, [fetchVideos]);
 
-        if (!isLoading) {
-            init();
-            fetchVideos();
-        }
-    }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, fetchVideos, navigate]);
 
     const handleFileChange = (e) => {
         if (e.target.files[0]) setFile(e.target.files[0]);
@@ -131,9 +63,11 @@ export default function Videos() {
 
         try {
             let token = localStorage.getItem("token");
-            if (isAuthenticated) {
+            if (isAuthenticated && getAccessTokenSilently) {
                 token = await getAccessTokenSilently({
-                    authorizationParams: { audience: `${BACKEND_URL}`, scope: "openid profile email" },
+                    authorizationParams: { 
+                        audience: `${BACKEND_URL}`,
+                        scope: "openid profile email" },
                 });
             }
 
@@ -175,16 +109,6 @@ export default function Videos() {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        if (isAuthenticated) {
-            import("@auth0/auth0-react").then(({ useAuth0 }) => {
-                window.location.href = `${window.location.origin}/login`;
-            });
-        } else {
-            navigate("/login");
-        }
-    };
 
     const getAcceptedFileTypes = () => {
         if (contentType === "AUDIO") return "audio/*";
@@ -192,28 +116,9 @@ export default function Videos() {
         return "video/*";
     };
 
-    if (loading || isLoading) return <div>Loading...</div>;
-
-    const hasLocalToken = !!localStorage.getItem("token");
-    if (!user && !isAuthenticated && !hasLocalToken) {
-        navigate("/login");
-        return null;
-    }
-
     if (!user) return <div>Loading user data...</div>;
 
     return (
-        <div className={styles.layoutContainer}>
-            <div id="o1"></div>
-            <div id="o2"></div>
-            <div id="o3"></div>
-
-            <div className={styles.dashboardContentWrapper}>
-                <Header navigate={navigate} user={user} />
-
-                <div className={styles.mainGrid}>
-                    <LeftSidebar user={user} activeTab="Videos" setActiveTab={() => { }} handleLogout={handleLogout} />
-
                     <div className={styles.mainContent}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                             <h1>Content Library</h1>
@@ -287,13 +192,8 @@ export default function Videos() {
                                 );
                             })}
                         </div>
-                    </div>
-                    <RightSidebar navigate={navigate} />
-                </div>
-            </div>
-
+            
             {showUploadModal && (
-                <div className={styles.modalOverlay}>
                     <div className={styles.modalContent}>
                         <h2>Upload Content</h2>
                         <form onSubmit={handleUpload}>
@@ -334,7 +234,6 @@ export default function Videos() {
                             </div>
                         </form>
                     </div>
-                </div>
             )}
         </div>
     );

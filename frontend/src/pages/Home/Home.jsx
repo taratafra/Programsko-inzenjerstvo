@@ -16,6 +16,7 @@ import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
 import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn";
+import Videos from "../../components/home/tabPanel/video/Videos";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -253,6 +254,13 @@ export default function Home() {
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
                     />
+                case 'Videos':
+                    return <Videos 
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+                
 
                 default:
                     return <GeneralInfoGrid />;

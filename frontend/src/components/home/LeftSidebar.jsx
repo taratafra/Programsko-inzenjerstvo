@@ -23,8 +23,8 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("Trainers")} onClick={() => setActiveTab('Trainers')}>
           👥 Trainers
         </li> 
-        <li className={getNavItemClass("Videos")} onClick={() => navigate('/videos')}>
-          🎥 Videos
+        <li className={getNavItemClass("Videos")} onClick={() => setActiveTab('Videos')}>
+          <span className={homeStyles.navItemLogout}>🎥 Videos</span>
         </li>
         <li className={getNavItemClass("Make Appointment")} onClick={() => setActiveTab('Make Appointment')}>
           📅 Make Appointment
