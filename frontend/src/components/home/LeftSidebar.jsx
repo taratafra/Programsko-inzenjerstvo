@@ -35,6 +35,9 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("DailyFocus")} onClick={() => setActiveTab('DailyFocus')}>
            <span className={homeStyles.navItemLogout}>📒 Daily Focus</span>
         </li>
+        <li className={getNavItemClass("MoodCheckIn")} onClick={() => setActiveTab('MoodCheckIn')}>
+           <span className={homeStyles.navItemLogout}>😊 Mood & Habits</span>
+        </li>        
         <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics
         </li>

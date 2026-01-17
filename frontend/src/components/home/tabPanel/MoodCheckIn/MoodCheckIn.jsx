@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import styles from './MoodHabits.module.css';
+import styles from '../DailyFocus/MoodHabits.module.css';
 
-export default function MoodHabits({getAccessTokenSilently, isAuthenticated }) {
+export default function MoodCheckIn({getAccessTokenSilently, isAuthenticated }) {
   const BACKEND_URL = process.env.REACT_APP_BACKEND;
 
   const [formData, setFormData] = useState({
@@ -170,7 +170,7 @@ export default function MoodHabits({getAccessTokenSilently, isAuthenticated }) {
       <div className={styles.container}>
         <h2 className={styles.completedTitle}>Successfully submitted!</h2>
         <p className={styles.completedSubtext}>
-          Come back tomorrow to continue your streak
+          You can track your progress through statistics.
         </p>
       </div>
     );
