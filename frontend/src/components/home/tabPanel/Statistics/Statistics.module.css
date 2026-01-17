@@ -6,6 +6,42 @@
   color: var(--text-main);
 }
 
+.title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: var(--text-accent);
+  margin-bottom: 10px;
+}
+
+/* Chart Styles */
+.chartCard {
+  background-color: rgba(55, 35, 124, 0.23);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.chartCard:hover {
+  transform: translateY(-4px);
+}
+
+.chartTitle {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.chartWrapper {
+  width: 100%;
+  height: 260px;
+}
+
 .axisLabel {
   fill: white; 
   font-size: 0.9rem;
@@ -25,32 +61,147 @@
   fill: var(--text-accent);
 }
 
-.title {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: var(--text-accent);
-  margin-bottom: 10px;
-}
-
-.chartCard {
-  background-color: var(--bg-card);
-  border-radius: 12px;
+/* Emotions Chart Styles */
+.emotionsGrid {
   padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  transition: transform 0.2s ease;
 }
 
-.chartCard:hover {
-  transform: translateY(-4px);
+.emotionBar {
+  margin-bottom: 16px;
 }
 
-.chartTitle {
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-  color: var(--text-accent);
+.emotionInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
-.chartWrapper {
-  width: 100%;
-  height: 260px;
+.emotionIcon {
+  font-size: 20px;
+}
+
+.emotionName {
+  font-weight: 500;
+  flex: 1;
+  color: #ffffff;
+}
+
+.emotionCount {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.barContainer {
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: rgb(255, 255, 255);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Textual Data Display Styles */
+.entriesContainer {
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.entriesContainer::-webkit-scrollbar {
+  width: 10px;
+}
+
+.entriesContainer::-webkit-scrollbar-thumb {
+  background-color: rgba(35, 13, 59, 0.5);
+  border-radius: 5px;
+}
+
+.entryCard {
+  background: rgb(255, 255, 255);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 15px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.entryHeader {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.entryHeader:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.entryDate {
+  font-weight: 600;
+  color: #250549;
+  font-size: 1rem;
+}
+
+.expandIcon {
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.entryCard:hover .expandIcon {
+  color: rgb(238, 45, 55);
+}
+
+.entryContent {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.entryItem {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.entryItem:last-child {
+  margin-bottom: 0;
+}
+
+.entryLabel {
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.entryValue {
+  color: rgba(0, 0, 0, 0.85);
+  line-height: 1.5;
+  padding-left: 8px;
+  font-size: 0.95rem;
 }

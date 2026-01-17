@@ -1,5 +1,7 @@
 import {useEffect, useState } from "react";
 import MetricChart from "./MetricChart";
+import EmotionsChart from "./EmotionsChart";
+import TextualDataDisplay from "./TextualDataDisplay";
 import styles from "./Statistics.module.css";
 
 export default function Statistics({getAccessTokenSilently, isAuthenticated, refreshTrigger}) {
@@ -75,9 +77,22 @@ export default function Statistics({getAccessTokenSilently, isAuthenticated, ref
     return checkIns.some(checkIn => checkIn[dataKey] != null);
   };
 
+  const hasEmotionsData = () => {
+    return checkIns.some(checkIn => checkIn.emotions && checkIn.emotions.length > 0);
+  };
+
+  const hasTextualData = () => {
+    return checkIns.some(checkIn => 
+      checkIn.caffeineIntake || 
+      checkIn.alcoholIntake || 
+      checkIn.physicalActivity || 
+      checkIn.notes
+    );
+  };
+
   return (
     <div className={styles.statisticsContainer}>
-      <h2 className={styles.title}>Your Wellbeing Statistics</h2>
+      <h2 className={styles.title}>Your Mood & Habits Statistics</h2>
         {checkIns.length === 0 ? (
         <p className={styles.noData}>
           <strong>No data available yet.</strong>
@@ -86,6 +101,7 @@ export default function Statistics({getAccessTokenSilently, isAuthenticated, ref
         </p>
       ) : (
         <>
+          {/* Numeric metrics charts */}
           {hasDataForMetric('moodScore') && (
             <MetricChart title="Mood" data={checkIns} dataKey="moodScore" />
           )}
@@ -97,6 +113,16 @@ export default function Statistics({getAccessTokenSilently, isAuthenticated, ref
           )}
           {hasDataForMetric('focusLevel') && (
             <MetricChart title="Focus Level" data={checkIns} dataKey="focusLevel" />
+          )}
+
+          {/* Emotions visualization */}
+          {hasEmotionsData() && (
+            <EmotionsChart data={checkIns} />
+          )}
+
+          {/* Textual data display */}
+          {hasTextualData() && (
+            <TextualDataDisplay data={checkIns} />
           )}
         </>
       )}
