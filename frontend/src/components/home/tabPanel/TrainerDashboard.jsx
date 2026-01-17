@@ -42,16 +42,35 @@ export default function TrainerDashboard({ setActiveTab }) {
         try {
             const token = await getToken();
             
-            // Load clients/subscribers
-            const clientsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/subscribers`, {
+            // Load client IDs (users subscribed to me as a trainer)
+            const clientIdsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/users`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (clientsResponse.ok) {
-                const clientsData = await clientsResponse.json();
-                setClients(clientsData);
+            if (clientIdsResponse.ok) {
+                const clientIds = await clientIdsResponse.json();
+                
+                // Fetch full user details for each client
+                if (clientIds.length > 0) {
+                    const clientDetailsPromises = clientIds.map(async (userId) => {
+                        const userResponse = await fetch(`${BACKEND_URL}/api/users/${userId}`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        if (userResponse.ok) {
+                            return await userResponse.json();
+                        }
+                        return null;
+                    });
+                    
+                    const clientDetails = await Promise.all(clientDetailsPromises);
+                    setClients(clientDetails.filter(client => client !== null));
+                } else {
+                    setClients([]);
+                }
             }
 
             // Load schedules for trainer
