@@ -1,7 +1,9 @@
 package Pomna_Sedmica.Mindfulnes.service;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
@@ -25,7 +27,7 @@ public class TrainerService {
     private final UserRepository userRepository;
 
     @Transactional
-    public UserDTOResponse saveOrUpdateTrainer(SaveAuth0UserRequestDTO dto) {
+    public TrainerDTOResponse saveOrUpdateTrainer(SaveAuth0UserRequestDTO dto) {
         Optional<User> existingUser = Optional.empty();
 
         if (dto.auth0Id() != null && !dto.auth0Id().isEmpty()) {
@@ -36,58 +38,63 @@ public class TrainerService {
             existingUser = userRepository.findByEmail(dto.email());
         }
 
-        User user = existingUser.map(existing -> {
-            return TrainerMapper.updateExisting(existing, dto);
+        Trainer user = existingUser.map(existing -> {
+            return TrainerMapper.updateExisting(new Trainer(existing), dto);
         }).orElseGet(() -> {
             return TrainerMapper.toNewEntity(dto);
         });
 
-        User savedUser = userRepository.save(user);
+        Trainer savedUser = userRepository.save(user);
         return TrainerMapper.toDTO(savedUser);
     }
 
 
-    public List<UserDTOResponse> getAllTrainers() {
+    public List<TrainerDTOResponse> getAllTrainers() {
         return userRepository.findAllByRole(Role.TRAINER)
                 .stream()
+                .map(Trainer::new)
                 .map(TrainerMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
-    public Optional<UserDTOResponse> getTrainerByEmail(String email) {
+    public Optional<TrainerDTOResponse> getTrainerByEmail(String email) {
         return userRepository.findByEmail(email)
+                .map(Trainer::new)
                 .map(TrainerMapper::toDTO);
     }
 
-    public Optional<UserDTOResponse> getTrainerByAuth0Id(String auth0Id) {
+    public Optional<TrainerDTOResponse> getTrainerByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
+                .map(Trainer::new)
                 .map(TrainerMapper::toDTO);
     }
 
 
 
     @Transactional
-    public Optional<UserDTOResponse> completeOnboarding(String email) {
+    public Optional<TrainerDTOResponse> completeOnboarding(String email) {
 
         return userRepository.findByEmail(email)
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     user.setRequiresPasswordReset(false);
                     user.setRole(Role.TRAINER);
-                    User savedUser = userRepository.save(user);
+                    userRepository.delete(user);
+                    Trainer savedUser = userRepository.save(new Trainer(user));
 //log.info("Onboarding completed for user: {}", email);
                     return TrainerMapper.toDTO(savedUser);
                 });
     }
 
     @Transactional
-    public Optional<UserDTOResponse> completeOnboardingByAuth0Id(String auth0Id) {
+    public Optional<TrainerDTOResponse> completeOnboardingByAuth0Id(String auth0Id) {
 
         return userRepository.findByAuth0Id(auth0Id)
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     user.setRole(Role.TRAINER);
-                    User savedUser = userRepository.save(user);
+                    userRepository.delete(user);
+                    Trainer savedUser = userRepository.save(new Trainer(user));
                     return TrainerMapper.toDTO(savedUser);
                 });
     }

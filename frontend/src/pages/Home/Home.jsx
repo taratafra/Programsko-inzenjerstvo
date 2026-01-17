@@ -12,12 +12,12 @@ import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 import Settings from "../../components/home/tabPanel/Settings/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
-import CalendarMain from "../../components/home/tabPanel/CalendarMain";
-
+import TrainerDashboard from "../../components/home/tabPanel/TrainerDashboard";
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
-import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn";
-import Videos from "../../components/home/tabPanel/video/Videos";
+
 import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
+import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
+import Video from "../../components/home/tabPanel/video/Videos.jsx";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -31,14 +31,12 @@ export default function Home() {
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
     useEffect(() => {
-        // Don't run if still loading Auth0 or already initialized
         if (isLoading || hasInitialized.current) return;
         
         const init = async () => {
             hasInitialized.current = true;
             const localToken = localStorage.getItem("token");
 
-            // CHECK AUTHENTICATION FIRST - before any other logic
             if (!isAuthenticated && !localToken) {
                 console.log("No authentication found, redirecting to login");
                 setLoading(false);
@@ -47,14 +45,12 @@ export default function Home() {
             }
 
             try {
-                // Auth0 login (Google, etc.)
                 if (isAuthenticated && auth0User) {
                     const userResponse = await sendUserDataToBackend(auth0User);
 
                     if (userResponse) {
                         setUser(userResponse);
                         
-                        // Check if questionnaire needs to be completed
                         if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
@@ -64,7 +60,6 @@ export default function Home() {
                         setUser(auth0User);
                     }
                 }
-                // Local JWT login
                 else if (localToken) {
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
@@ -77,7 +72,6 @@ export default function Home() {
                     const data = await res.json();
                     setUser(data);
 
-                    // Check if questionnaire needs to be completed
                     if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
                         hasNavigatedToQuestions.current = true;
                         navigate("/questions", { replace: true });
@@ -202,9 +196,11 @@ export default function Home() {
                 case 'Trainers':
                     return <Trainers />;
 
+                case 'Trainer Dashboard':
+                    return <TrainerDashboard setActiveTab={setActiveTab} />;
+
                 case 'Make Appointment':
                     return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
-
 
                 case 'Statistics':
                     return <Statistics 
@@ -213,17 +209,6 @@ export default function Home() {
                         isAuthenticated={isAuthenticated}
                     />
                 
-                case 'Calendar':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <CalendarMain 
-                                navigate={navigate} 
-                                setActiveTab={setActiveTab}
-                                // Pass any other props your specific CalendarMain needs
-                            />
-                        </div>
-                    );
-
                 case 'Breathing':
                     return (
                         <div className={styles.tabPanel}>
@@ -240,28 +225,28 @@ export default function Home() {
                     );
                 
                 case 'Settings':
-                    return <Settings user={user} updateUser={updateUser}/>;
-                
-                case 'DailyFocus':
-                    return <DailyFocus 
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                    />
-                case 'MoodCheckIn':
-                    return <MoodCheckIn 
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                    />
-                case 'Videos':
-                    return <Videos 
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                    />
-                
+                    return <Settings user={user} updateUser={updateUser} />;
 
+                case 'DailyFocus':
+                    
+                    return (
+                        <MoodCheckIn
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                        />
+                    );
+
+                case 'MoodCheckIn':
+
+                    return (
+                        <DailyFocus
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                        />
+                    );
+                case 'Videos' :
+                   return <Video/> 
                 default:
                     return <GeneralInfoGrid />;
             }
@@ -269,7 +254,6 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
-                {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
                 <div id="o3"></div>
@@ -306,13 +290,10 @@ export default function Home() {
         );
     }
 
-    // Show loading while checking authentication
     if (loading || isLoading) {
         return <div>Loading...</div>;
     }
 
-    // If no user after loading, this means authentication failed
-    // The useEffect will handle the redirect
     if (!user) {
         return null;
     }

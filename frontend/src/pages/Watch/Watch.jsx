@@ -45,11 +45,10 @@ export default function Watch() {
     const [user, setUser] = useState(null);
 
     // --- COMMENTS STATE ---
-    const [comments, setComments] = useState([
-        { id: 1, user: "Trainer Mike", text: "Great form on the second set!", date: "2 hours ago" },
-        { id: 2, user: "Sarah J.", text: "Can you upload the PDF version of this?", date: "1 day ago" }
-    ]);
+    const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState("");
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [replyText, setReplyText] = useState("");
 
     // --- CONTENT DATA STATE ---
     const [contentData, setContentData] = useState({
@@ -162,29 +161,176 @@ export default function Watch() {
         };
 
         fetchContent();
+        fetchComments();
     }, [id, location.state?.type, BACKEND_URL]);
 
-    const handlePostComment = () => {
+    const fetchComments = async () => {
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                try {
+                    token = await getAccessTokenSilently({
+                        authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                } catch (e) {
+                    console.error("Error getting token for comments:", e);
+                }
+            }
+
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${BACKEND_URL}/api/videos/${id}/comments`, { headers });
+            if (res.ok) {
+                const data = await res.json();
+                setComments(data);
+            }
+        } catch (err) {
+            console.error("Error fetching comments:", err);
+        }
+    };
+
+    const handlePostComment = async () => {
         if (!newComment.trim()) return;
 
-        const commentObject = {
-            id: Date.now(),
-            user: user?.name || "Guest User",
-            text: newComment,
-            date: "Just now"
-        };
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
 
-        setComments([commentObject, ...comments]);
-        setNewComment("");
+            const res = await fetch(`${BACKEND_URL}/api/videos/${id}/comments`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ text: newComment })
+            });
+
+            if (res.ok) {
+                const savedComment = await res.json();
+                setComments([savedComment, ...comments]);
+                setNewComment("");
+            }
+        } catch (err) {
+            console.error("Error posting comment:", err);
+        }
+    };
+
+    const handleReply = async (parentId) => {
+        if (!replyText.trim()) return;
+
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
+
+            const res = await fetch(`${BACKEND_URL}/api/comments/${parentId}/replies`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ text: replyText })
+            });
+
+            if (res.ok) {
+                await fetchComments(); // Refresh comments to show nested reply
+                setReplyingTo(null);
+                setReplyText("");
+            }
+        } catch (err) {
+            console.error("Error posting reply:", err);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm("Are you sure you want to delete this comment?")) return;
+
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
+
+            const res = await fetch(`${BACKEND_URL}/api/comments/${commentId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                fetchComments(); // Refresh to remove deleted comment
+            }
+        } catch (err) {
+            console.error("Error deleting comment:", err);
+        }
     };
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') handlePostComment();
     };
 
-    const handleDeleteComment = (commentId) => {
-        setComments(comments.filter(c => c.id !== commentId));
-    };
+    const CommentItem = ({ comment, depth = 0 }) => (
+        <div className={styles.comment} style={{ marginLeft: depth > 0 ? '20px' : '0', borderLeft: depth > 0 ? '2px solid #eee' : 'none', paddingLeft: depth > 0 ? '10px' : '0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {comment.authorPicture ? (
+                        <img src={comment.authorPicture} alt="u" className={styles.avatarImage} style={{ width: '24px', height: '24px' }} />
+                    ) : (
+                        <div className={styles.userAvatar} style={{ width: '24px', height: '24px', fontSize: '12px' }}>👤</div>
+                    )}
+                    <strong style={{ color: '#2b3674' }}>{comment.authorName}</strong>
+                </div>
+                <span style={{ fontSize: '0.8rem', color: '#999' }}>{new Date(comment.createdAt).toLocaleString()}</span>
+            </div>
+            <div style={{ marginBottom: '5px' }}>{comment.text}</div>
+
+            <div style={{ display: 'flex', gap: '10px', fontSize: '0.9rem' }}>
+                <button
+                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                    style={{ background: 'none', border: 'none', color: '#4318FF', cursor: 'pointer', padding: 0 }}
+                >
+                    Reply
+                </button>
+                {comment.isOwner && (
+                    <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className={styles.deleteButton}
+                    >
+                        Delete
+                    </button>
+                )}
+            </div>
+
+            {replyingTo === comment.id && (
+                <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+                    <input
+                        type="text"
+                        placeholder="Write a reply..."
+                        className={styles.commentInput}
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        autoFocus
+                    />
+                    <button className={styles.postBtn} onClick={() => handleReply(comment.id)}>Reply</button>
+                </div>
+            )}
+
+            {comment.replies && comment.replies.length > 0 && (
+                <div style={{ marginTop: '10px' }}>
+                    {comment.replies.map(reply => (
+                        <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 
     if (loading || isLoading) return <div className={styles.layoutContainer}><div className={styles.centerContainer}>Loading content...</div></div>;
 
@@ -285,22 +431,7 @@ export default function Watch() {
 
                                 <div className={styles.commentList}>
                                     {comments.map((comment) => (
-                                        <div key={comment.id} className={styles.comment}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                                <strong style={{ color: '#2b3674' }}>{comment.user}</strong>
-                                                <span style={{ fontSize: '0.8rem', color: '#999' }}>{comment.date}</span>
-                                            </div>
-                                            <div>{comment.text}</div>
-
-                                            {comment.user === (user?.name || "Guest User") && (
-                                                <button
-                                                    onClick={() => handleDeleteComment(comment.id)}
-                                                    className={styles.deleteButton}
-                                                >
-                                                    Delete
-                                                </button>
-                                            )}
-                                        </div>
+                                        <CommentItem key={comment.id} comment={comment} />
                                     ))}
                                 </div>
                             </div>

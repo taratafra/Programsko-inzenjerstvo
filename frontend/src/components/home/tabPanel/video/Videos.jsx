@@ -1,240 +1,376 @@
-import { useEffect, useState, useCallback } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Videos.module.css";
-// import { storage } from "../../utils/firebase"; 
 
-export default function Videos({ user, getAccessTokenSilently, isAuthenticated }) {
-    const [videos, setVideos] = useState([]);
+export default function Videos(props) {
+  const auth0 = useAuth0();
+  const navigate = useNavigate();
 
-    // UPLOAD STATES
-    const [showUploadModal, setShowUploadModal] = useState(false);
-    const [contentType, setContentType] = useState("VIDEO");
-    const [newVideo, setNewVideo] = useState({ title: "", description: "" });
-    const [file, setFile] = useState(null);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [isUploading, setIsUploading] = useState(false);
+  const isAuthenticated = props?.isAuthenticated ?? auth0.isAuthenticated;
+  const getAccessTokenSilently =
+    props?.getAccessTokenSilently ?? auth0.getAccessTokenSilently;
+  const auth0User = props?.user ?? auth0.user;
+  const isLoadingAuth0 = props?.isLoading ?? auth0.isLoading;
 
-    const navigate = useNavigate();
-    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+  const [me, setMe] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const [pageLoading, setPageLoading] = useState(true);
 
-    // HELPER: FIXED DETECTION LOGIC
-    const getMediaType = (item) => {
-        if (item.type && (item.type === 'AUDIO' || item.type === 'BLOG')) return item.type;
+  // Upload UI state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [contentType, setContentType] = useState("VIDEO");
+  const [newContent, setNewContent] = useState({ title: "", description: "" });
+  const [file, setFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-        if (!item.url) return "VIDEO";
-        const urlLower = item.url.toLowerCase();
+  const BACKEND_URL = useMemo(
+    () => process.env.REACT_APP_BACKEND || "http://localhost:8080",
+    []
+  );
+  const AUDIENCE = useMemo(
+    () => process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL,
+    [BACKEND_URL]
+  );
 
-        // Debugging log
-        // console.log(`Checking ${item.title}:`, urlLower);
+  const inferType = (item) => {
+    if (item?.type && ["VIDEO", "AUDIO", "BLOG"].includes(item.type)) return item.type;
 
-        if (urlLower.includes('.mp3') || urlLower.includes('.wav') || urlLower.includes('.ogg') || urlLower.includes('audio')) return "AUDIO";
-        if (urlLower.includes('.txt') || urlLower.includes('.md') || urlLower.includes('.pdf') || urlLower.includes('document')) return "BLOG";
+    const url = (item?.url || "").toLowerCase();
+    if (url.includes(".mp3") || url.includes(".wav") || url.includes(".ogg") || url.includes("audio"))
+      return "AUDIO";
+    if (url.includes(".txt") || url.includes(".md") || url.includes(".pdf") || url.includes("document"))
+      return "BLOG";
+    return "VIDEO";
+  };
 
-        return "VIDEO";
-    };
+  const getAcceptedFileTypes = () => {
+    if (contentType === "AUDIO") return "audio/*";
+    if (contentType === "BLOG") return ".txt,.md,.pdf";
+    return "video/*";
+  };
 
-    const fetchVideos = useCallback(async () => {
-        try {
-            const res = await fetch(`${BACKEND_URL}/api/videos`);
-            if (res.ok) {
-                const data = await res.json();
-                setVideos(data);
-            }
-        } catch (err) {
-            console.error("Error fetching content:", err);
+  const getToken = useCallback(async () => {
+    // Local JWT flow
+    const localToken = localStorage.getItem("token");
+    if (!isAuthenticated) return localToken || null;
+
+    // Auth0 flow
+    try {
+      return await getAccessTokenSilently({
+        authorizationParams: {
+          audience: `${AUDIENCE}`,
+          scope: "openid profile email",
+        },
+      });
+    } catch (e) {
+      console.error("Failed to get Auth0 token:", e);
+      return null;
+    }
+  }, [AUDIENCE, getAccessTokenSilently, isAuthenticated]);
+
+  const fetchMe = useCallback(async () => {
+    const token = await getToken();
+    if (!token) return null;
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      console.error("Failed to fetch /api/users/me:", e);
+      return null;
+    }
+  }, [BACKEND_URL, getToken]);
+
+  const fetchVideos = useCallback(async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/videos`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setVideos(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("Failed to fetch /api/videos:", e);
+    }
+  }, [BACKEND_URL]);
+
+  useEffect(() => {
+    const init = async () => {
+      setPageLoading(true);
+
+      if (isAuthenticated && isLoadingAuth0) return;
+
+      const hasLocalToken = !!localStorage.getItem("token");
+      if (!isAuthenticated && !hasLocalToken) {
+        setPageLoading(false);
+        navigate("/login");
+        return;
+      }
+
+      const backendMe = await fetchMe();
+      if (backendMe) {
+        setMe(backendMe);
+        if (backendMe.isOnboardingComplete === false) {
+          setPageLoading(false);
+          navigate("/questions", { replace: true });
+          return;
         }
-    }, [BACKEND_URL]);
+      } else {
+        setMe(auth0User || null);
+      }
 
-    useEffect(() => {
-        fetchVideos();
-    }, [fetchVideos]);
-
-
-    const handleFileChange = (e) => {
-        if (e.target.files[0]) setFile(e.target.files[0]);
+      await fetchVideos();
+      setPageLoading(false);
     };
 
-    const handleUpload = async (e) => {
-        e.preventDefault();
-        if (!file) return alert("Please select a file first.");
+    init();
+  }, [isAuthenticated, isLoadingAuth0, fetchMe, fetchVideos, navigate]);
 
-        setIsUploading(true);
-        setUploadProgress(10);
+  const handleFileChange = (e) => {
+    const f = e?.target?.files?.[0];
+    setFile(f || null);
+  };
 
-        try {
-            let token = localStorage.getItem("token");
-            if (isAuthenticated && getAccessTokenSilently) {
-                token = await getAccessTokenSilently({
-                    authorizationParams: { 
-                        audience: `${BACKEND_URL}`,
-                        scope: "openid profile email" },
-                });
-            }
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      alert("Please select a file first.");
+      return;
+    }
 
-            const formData = new FormData();
-            formData.append("title", newVideo.title);
-            formData.append("description", newVideo.description);
-            formData.append("type", contentType);
-            formData.append("file", file);
+    const token = await getToken();
+    if (!token) {
+      alert("Not authenticated.");
+      return;
+    }
 
-            const progressInterval = setInterval(() => {
-                setUploadProgress(prev => (prev >= 90 ? prev : prev + 10));
-            }, 500);
+    setIsUploading(true);
+    setUploadProgress(10);
 
-            const res = await fetch(`${BACKEND_URL}/api/videos`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData,
-            });
+    const interval = setInterval(() => {
+      setUploadProgress((p) => (p >= 90 ? p : p + 10));
+    }, 400);
 
-            clearInterval(progressInterval);
-            setUploadProgress(100);
+    try {
+      const formData = new FormData();
+      formData.append("title", newContent.title);
+      formData.append("description", newContent.description);
+      formData.append("type", contentType);
+      formData.append("file", file);
 
-            if (res.ok) {
-                setShowUploadModal(false);
-                setNewVideo({ title: "", description: "" });
-                setFile(null);
-                setContentType("VIDEO");
-                setUploadProgress(0);
-                fetchVideos();
-                alert("Upload successful!");
-            } else {
-                alert("Failed to upload: " + await res.text());
-            }
-        } catch (err) {
-            console.error("Error uploading:", err);
-            alert("Error uploading file");
-        } finally {
-            setIsUploading(false);
-        }
-    };
+      const res = await fetch(`${BACKEND_URL}/api/videos`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
 
+      clearInterval(interval);
+      setUploadProgress(100);
 
-    const getAcceptedFileTypes = () => {
-        if (contentType === "AUDIO") return "audio/*";
-        if (contentType === "BLOG") return ".txt,.md,.pdf";
-        return "video/*";
-    };
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        alert(`Upload failed: ${text || res.status}`);
+        return;
+      }
 
-    if (!user) return <div>Loading user data...</div>;
+      setShowUploadModal(false);
+      setContentType("VIDEO");
+      setNewContent({ title: "", description: "" });
+      setFile(null);
+      setUploadProgress(0);
+      await fetchVideos();
+      alert("Upload successful!");
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Error uploading file.");
+    } finally {
+      clearInterval(interval);
+      setIsUploading(false);
+    }
+  };
 
-    return (
-                    <div className={styles.mainContent}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h1>Content Library</h1>
-                            {user?.role === 'TRAINER' && (
-                                <button className={styles.uploadButton} onClick={() => setShowUploadModal(true)}>
-                                    Upload New Content
-                                </button>
-                            )}
-                        </div>
+  if (pageLoading) return <div>Loading...</div>;
 
-                        <div className={styles.videoGrid}>
-                            {videos.map((item) => {
-                                const itemType = getMediaType(item);
+  return (
+    <>
+      <div className={styles.mainContent}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 20,
+          }}
+        >
+          <h1>Content Library</h1>
 
-                                return (
-                                    <div key={item.id} className={styles.videoCard}>
-                                        <div
-                                            className={styles.videoThumbnail}
-                                            style={{ cursor: "pointer" }}
-                                            onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
-                                            onMouseEnter={(e) => {
-                                                if (itemType === 'VIDEO') {
-                                                    const v = e.currentTarget.querySelector("video");
-                                                    if (v) v.play().catch(() => { });
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                if (itemType === 'VIDEO') {
-                                                    const v = e.currentTarget.querySelector("video");
-                                                    if (v) { v.pause(); v.currentTime = 0; }
-                                                }
-                                            }}
-                                        >
-                                            {/* RENDER CONTENT BASED ON TYPE */}
-                                            {itemType === 'VIDEO' && (
-                                                <video src={item.url} muted width="100%" height="100%" style={{ objectFit: 'cover', pointerEvents: 'none' }} />
-                                            )}
-
-                                            {itemType === 'AUDIO' && (
-                                                <div className={`${styles.placeholderIcon} ${styles.audioIcon}`}>
-                                                    🎧
-                                                </div>
-                                            )}
-
-                                            {itemType === 'BLOG' && (
-                                                <div className={`${styles.placeholderIcon} ${styles.blogIcon}`}>
-                                                    📄
-                                                </div>
-                                            )}
-
-                                            {/* Type Badge */}
-                                            <span className={styles.typeBadge}>
-                                                {itemType}
-                                            </span>
-                                        </div>
-
-                                        <div className={styles.videoInfo}>
-                                            <div
-                                                className={styles.videoTitle}
-                                                style={{ cursor: "pointer" }}
-                                                onClick={() => navigate(`/watch/${item.id}`, { state: { type: itemType } })}
-                                            >
-                                                {item.title}
-                                            </div>
-                                            <div className={styles.videoDescription}>{item.description}</div>
-                                            <div style={{ fontSize: '0.8rem', color: '#888' }}>
-                                                {itemType} • By {item.trainerName}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-            
-            {showUploadModal && (
-                    <div className={styles.modalContent}>
-                        <h2>Upload Content</h2>
-                        <form onSubmit={handleUpload}>
-                            <div className={styles.formGroup}>
-                                <label>Content Type</label>
-                                <select
-                                    value={contentType}
-                                    onChange={(e) => setContentType(e.target.value)}
-                                    className={styles.selectInput}
-                                >
-                                    <option value="VIDEO">Video</option>
-                                    <option value="AUDIO">Audio (MP3)</option>
-                                    <option value="BLOG">Blog (Text File)</option>
-                                </select>
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Title</label>
-                                <input type="text" value={newVideo.title} onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })} required />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>Description</label>
-                                <textarea value={newVideo.description} onChange={(e) => setNewVideo({ ...newVideo, description: e.target.value })} required />
-                            </div>
-                            <div className={styles.formGroup}>
-                                <label>File</label>
-                                <input type="file" accept={getAcceptedFileTypes()} onChange={handleFileChange} required />
-                            </div>
-
-                            {isUploading && (
-                                <div className={styles.progressContainer}>
-                                    <div className={styles.progressFill} style={{ width: `${uploadProgress}%` }} />
-                                </div>
-                            )}
-
-                            <div className={styles.modalActions}>
-                                <button type="button" className={styles.cancelButton} onClick={() => setShowUploadModal(false)}>Cancel</button>
-                                <button type="submit" className={styles.submitButton} disabled={isUploading}>{isUploading ? 'Uploading...' : 'Upload'}</button>
-                            </div>
-                        </form>
-                    </div>
-            )}
+          {me?.role === "TRAINER" && (
+            <button
+              className={styles.uploadButton}
+              onClick={() => setShowUploadModal(true)}
+            >
+              Upload New Content
+            </button>
+          )}
         </div>
-    );
+
+        <div className={styles.videoGrid}>
+          {videos.map((item) => {
+            const itemType = inferType(item);
+
+            return (
+              <div key={item.id} className={styles.videoCard}>
+                <div
+                  className={styles.videoThumbnail}
+                  style={{ cursor: "pointer" }}
+                  onClick={() =>
+                    navigate(`/watch/${item.id}`, { state: { type: itemType } })
+                  }
+                  onMouseEnter={(e) => {
+                    if (itemType !== "VIDEO") return;
+                    const v = e.currentTarget.querySelector("video");
+                    if (v) v.play().catch(() => {});
+                  }}
+                  onMouseLeave={(e) => {
+                    if (itemType !== "VIDEO") return;
+                    const v = e.currentTarget.querySelector("video");
+                    if (v) {
+                      v.pause();
+                      v.currentTime = 0;
+                    }
+                  }}
+                >
+                  {itemType === "VIDEO" && (
+                    <video
+                      src={item.url}
+                      muted
+                      width="100%"
+                      height="100%"
+                      style={{ objectFit: "cover", pointerEvents: "none" }}
+                    />
+                  )}
+
+                  {itemType === "AUDIO" && (
+                    <div className={`${styles.placeholderIcon} ${styles.audioIcon}`}>
+                      🎧
+                    </div>
+                  )}
+
+                  {itemType === "BLOG" && (
+                    <div className={`${styles.placeholderIcon} ${styles.blogIcon}`}>
+                      📄
+                    </div>
+                  )}
+
+                  <span className={styles.typeBadge}>{itemType}</span>
+                </div>
+
+                <div className={styles.videoInfo}>
+                  <div
+                    className={styles.videoTitle}
+                    style={{ cursor: "pointer" }}
+                    onClick={() =>
+                      navigate(`/watch/${item.id}`, { state: { type: itemType } })
+                    }
+                  >
+                    {item.title}
+                  </div>
+                  <div className={styles.videoDescription}>{item.description}</div>
+                  <div style={{ fontSize: "0.8rem", color: "#888" }}>
+                    {itemType} • By {item.trainerName}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {showUploadModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Upload Content</h2>
+
+            <form onSubmit={handleUpload}>
+              <div className={styles.formGroup}>
+                <label>Content Type</label>
+                <select
+                  value={contentType}
+                  onChange={(e) => setContentType(e.target.value)}
+                  className={styles.selectInput}
+                >
+                  <option value="VIDEO">Video</option>
+                  <option value="AUDIO">Audio (MP3)</option>
+                  <option value="BLOG">Blog (Text File)</option>
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Title</label>
+                <input
+                  type="text"
+                  value={newContent.title}
+                  onChange={(e) =>
+                    setNewContent((p) => ({ ...p, title: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Description</label>
+                <textarea
+                  value={newContent.description}
+                  onChange={(e) =>
+                    setNewContent((p) => ({ ...p, description: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>File</label>
+                <input
+                  type="file"
+                  accept={getAcceptedFileTypes()}
+                  onChange={handleFileChange}
+                  required
+                />
+              </div>
+
+              {isUploading && (
+                <div className={styles.progressContainer}>
+                  <div
+                    className={styles.progressFill}
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
+
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  onClick={() => setShowUploadModal(false)}
+                  disabled={isUploading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={styles.submitButton}
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
