@@ -1,24 +1,33 @@
 package Pomna_Sedmica.Mindfulnes.service;
 
-import Pomna_Sedmica.Mindfulnes.domain.dto.CreateVideoRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.VideoResponseDTO;
-import Pomna_Sedmica.Mindfulnes.domain.entity.User;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer; // Promijenjeno iz User
 import Pomna_Sedmica.Mindfulnes.domain.entity.Video;
+import Pomna_Sedmica.Mindfulnes.domain.enums.ContentType;
+import Pomna_Sedmica.Mindfulnes.domain.enums.Goal;
+import Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience;
+import Pomna_Sedmica.Mindfulnes.repository.TrainerRepository; // Dodano
 import Pomna_Sedmica.Mindfulnes.repository.VideoRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 public class VideoService {
 
     private final VideoRepository videoRepository;
+    private final TrainerRepository trainerRepository; // Dodan repozitorij za provjeru
     private final com.google.cloud.storage.Bucket storageBucket;
 
-    public VideoService(VideoRepository videoRepository, com.google.cloud.storage.Bucket storageBucket) {
+    // Ažuriran konstruktor
+    public VideoService(VideoRepository videoRepository,
+                        TrainerRepository trainerRepository,
+                        com.google.cloud.storage.Bucket storageBucket) {
         this.videoRepository = videoRepository;
+        this.trainerRepository = trainerRepository;
         this.storageBucket = storageBucket;
     }
 
@@ -28,44 +37,63 @@ public class VideoService {
                 .collect(Collectors.toList());
     }
 
-    public VideoResponseDTO createVideo(String title, String description, String type, String goal, String level, Integer duration, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
+    // IZMJENA: Metoda sada prima Trainer objekt umjesto User
+    public VideoResponseDTO createVideo(String title,
+                                        String description,
+                                        String type,
+                                        String goal,
+                                        String level,
+                                        Integer duration,
+                                        org.springframework.web.multipart.MultipartFile file,
+                                        Trainer trainer) throws IOException { // <-- Trainer tip
+
         String fileName = "videos/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        
+
         com.google.cloud.storage.Blob blob = storageBucket.create(
                 fileName,
                 file.getInputStream(),
                 file.getContentType()
         );
 
-        String url = blob.signUrl(7, java.util.concurrent.TimeUnit.DAYS).toString();
+        // Generiranje potpisanog URL-a (vrijedi 7 dana)
+        String url = blob.signUrl(7, TimeUnit.DAYS).toString();
 
         Video video = new Video();
         video.setTitle(title);
         video.setDescription(description);
         video.setUrl(url);
+
+        // Ovdje je bila greška: sada spremamo Trainer objekt u Trainer polje
         video.setTrainer(trainer);
+
+        // Sigurnije parsiranje Enuma
         try {
-            video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.valueOf(type));
+            video.setType(ContentType.valueOf(type));
         } catch (Exception e) {
-            video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
+            video.setType(ContentType.VIDEO); // Default
         }
-        
+
         try {
-            video.setGoal(Pomna_Sedmica.Mindfulnes.domain.enums.Goal.valueOf(goal));
+            if (goal != null && !goal.isEmpty()) {
+                video.setGoal(Goal.valueOf(goal));
+            }
         } catch (Exception e) {
-            // optional
+            // Ignoriraj ili logiraj grešku, polje ostaje null
         }
+
         try {
-            video.setLevel(Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience.valueOf(level));
+            if (level != null && !level.isEmpty()) {
+                video.setLevel(MeditationExperience.valueOf(level));
+            }
         } catch (Exception e) {
-            // optional
+            // Ignoriraj
         }
+
         video.setDuration(duration);
-        
+
         Video savedVideo = videoRepository.save(video);
         return mapToDTO(savedVideo);
     }
-
 
     public VideoResponseDTO getVideoById(Long id) {
         return videoRepository.findById(id)
@@ -84,6 +112,8 @@ public class VideoService {
         dto.setGoal(video.getGoal() != null ? video.getGoal().name() : null);
         dto.setLevel(video.getLevel() != null ? video.getLevel().name() : null);
         dto.setDuration(video.getDuration());
+
+        // Trainer nasljeđuje Usera, pa ovo i dalje radi normalno
         if (video.getTrainer() != null) {
             dto.setTrainerName(video.getTrainer().getName() + " " + video.getTrainer().getSurname());
         } else {
@@ -94,7 +124,7 @@ public class VideoService {
 
     public List<VideoResponseDTO> getFilteredVideos(String type, String goal, String level, String durationRange) {
         List<Video> videos = videoRepository.findAllByOrderByCreatedAtDesc();
-        
+
         return videos.stream()
                 .filter(v -> type == null || type.isEmpty() || (v.getType() != null && v.getType().name().equals(type)))
                 .filter(v -> goal == null || goal.isEmpty() || (v.getGoal() != null && v.getGoal().name().equals(goal)))
@@ -102,8 +132,8 @@ public class VideoService {
                 .filter(v -> {
                     if (durationRange == null || durationRange.isEmpty()) return true;
                     if (v.getDuration() == null) return false;
-                    
-                    // Podcast specific filters (in hours)
+
+                    // Logika za Audio/Video filtraciju
                     if ("AUDIO".equals(type)) {
                         switch (durationRange) {
                             case "short": return v.getDuration() < 60;
@@ -112,8 +142,7 @@ public class VideoService {
                             default: return true;
                         }
                     }
-                    
-                    // Video specific filters (in minutes)
+
                     switch (durationRange) {
                         case "5-10": return v.getDuration() >= 5 && v.getDuration() <= 10;
                         case "10-15": return v.getDuration() >= 10 && v.getDuration() <= 15;

@@ -1,8 +1,10 @@
 package Pomna_Sedmica.Mindfulnes.controller;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.VideoResponseDTO;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer; // <--- NOVI IMPORT
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
+import Pomna_Sedmica.Mindfulnes.repository.TrainerRepository; // <--- NOVI IMPORT
 import Pomna_Sedmica.Mindfulnes.service.TrainerService;
 import Pomna_Sedmica.Mindfulnes.service.VideoService;
 import org.springframework.http.HttpStatus;
@@ -20,10 +22,15 @@ public class VideoController {
 
     private final VideoService videoService;
     private final TrainerService trainerService;
+    private final TrainerRepository trainerRepository; // <--- DODANO
 
-    public VideoController(VideoService videoService, TrainerService trainerService) {
+    // Ažuriran konstruktor
+    public VideoController(VideoService videoService,
+                           TrainerService trainerService,
+                           TrainerRepository trainerRepository) {
         this.videoService = videoService;
         this.trainerService = trainerService;
+        this.trainerRepository = trainerRepository;
     }
 
     @GetMapping
@@ -51,11 +58,21 @@ public class VideoController {
             @RequestParam(value = "duration", required = false) Integer duration,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) throws java.io.IOException {
-        
+
+        // 1. Dohvati Usera preko postojećeg servisa (za validaciju JWT-a)
         User user = trainerService.getOrCreateTrainerFromJwt(jwt);
+
+        // 2. Provjera Role
         if (user.getRole() != Role.TRAINER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can upload videos");
         }
-        return videoService.createVideo(title, description, type, goal, level, duration, file, user);
+
+        // 3. KLJUČNA IZMJENA: Dohvati baš Trainer entitet
+        // Iako imamo 'user', moramo biti sigurni da imamo 'Trainer' proxy za spremanje u bazu
+        Trainer trainer = trainerRepository.findById(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "User is marked as Trainer but not found in Trainer table"));
+
+        // 4. Sada šaljemo 'trainer' objekt, što odgovara novoj metodi u VideoService
+        return videoService.createVideo(title, description, type, goal, level, duration, file, trainer);
     }
 }
