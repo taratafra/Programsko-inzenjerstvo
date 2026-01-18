@@ -16,6 +16,7 @@ import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 import Videos from "../../components/home/tabPanel/Videos/Videos";
 
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
+import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -250,6 +251,13 @@ export default function Home() {
                 
                 case 'DailyFocus':
                     return <DailyFocus 
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+
+                case 'YourPlan':
+                    return <YourPlan
                         user={user}
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
