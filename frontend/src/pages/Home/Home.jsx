@@ -1,6 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../components/home/tabPanel/ToastNotification";
 import styles from "./Home.module.css";
 
 import Header from "../../components/home/Header";
@@ -16,9 +17,11 @@ import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 import Videos from "../../components/home/tabPanel/Videos/Videos";
 
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
+import NotificationService from "../../components/home/tabPanel/NotificationService";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
+    const { addToast } = useToast();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -69,7 +72,11 @@ export default function Home() {
                     });
 
                     if (!res.ok) {
-                        throw new Error("Failed to fetch user info");
+                        console.error("Token validation failed");
+                        localStorage.removeItem("token");
+                        sessionStorage.clear();
+                        navigate("/login", { replace: true });
+                        return;
                     }
 
                     const data = await res.json();
@@ -84,7 +91,9 @@ export default function Home() {
                 }
             } catch (err) {
                 console.error("Error in init:", err);
+                addToast('Failed to load user data. Please try logging in again.', 'error');
                 localStorage.removeItem("token");
+                sessionStorage.clear();
                 navigate("/login", { replace: true });
             } finally {
                 setLoading(false);
@@ -92,7 +101,7 @@ export default function Home() {
         };
 
         init();
-    }, [isLoading, isAuthenticated, auth0User, navigate, BACKEND_URL, AUDIENCE]);
+    }, [isLoading, isAuthenticated, auth0User, navigate, BACKEND_URL, AUDIENCE, addToast]);
 
     const sendUserDataToBackend = async (auth0User) => {
         try {
@@ -136,21 +145,33 @@ export default function Home() {
     const handleLogout = () => {
         try {
             localStorage.removeItem("token");
+            sessionStorage.clear();
 
             if (isAuthenticated) {
-                logout({ logoutParams: { returnTo: window.location.origin + "/login" } });
+                logout({ 
+                    logoutParams: { 
+                        returnTo: window.location.origin + "/login" 
+                    } 
+                });
             } else {
                 navigate("/login");
             }
         } catch (err) {
             console.error("Logout error:", err);
+            addToast('Error during logout', 'error');
             navigate("/login");
         }
     };
 
     function HomeLayout() {
-        const [activeTab, setActiveTab] = useState('General Information');
+        const [activeTab, setActiveTab] = useState(() => {
+            return sessionStorage.getItem("activeTab") || 'General Information';
+        });
         const [reloadCalendar, setReloadCalendar] = useState(null);
+
+        useEffect(() => {
+            sessionStorage.setItem("activeTab", activeTab);
+        }, [activeTab]);
 
         const updateUser = (updatedFields) => {
             setUser(prevUser => ({
@@ -203,7 +224,6 @@ export default function Home() {
                 case 'Make Appointment':
                     return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
 
-
                 case 'Statistics':
                     return (
                         <div className={styles.tabPanel}>
@@ -218,7 +238,6 @@ export default function Home() {
                             <CalendarMain 
                                 navigate={navigate} 
                                 setActiveTab={setActiveTab}
-                                // Pass any other props your specific CalendarMain needs
                             />
                         </div>
                     );
@@ -262,6 +281,7 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
+                
                 {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
@@ -299,13 +319,10 @@ export default function Home() {
         );
     }
 
-    // Show loading while checking authentication
     if (loading || isLoading) {
         return <div>Loading...</div>;
     }
 
-    // If no user after loading, this means authentication failed
-    // The useEffect will handle the redirect
     if (!user) {
         return null;
     }

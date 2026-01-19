@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
+import { useToast } from './ToastNotification'; // Import the toast hook
 import styles from './MakeAppointment.module.css';
+
 
 export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+    const { addToast } = useToast(); // Use the toast hook
+    
     const [subscribedTrainers, setSubscribedTrainers] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
@@ -12,7 +16,9 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     const [selectedDays, setSelectedDays] = useState([]);
     const [appointmentData, setAppointmentData] = useState({
         title: '',
-        trainerId: null
+        trainerId: null,
+        reminderEnabled: true,
+        reminderMinutesBefore: 30
     });
     const [loading, setLoading] = useState(true);
     const [editingScheduleId, setEditingScheduleId] = useState(null);
@@ -27,6 +33,16 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weekDaysForSelection = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+
+    const reminderOptions = [
+        { value: 5, label: '5 minutes before' },
+        { value: 10, label: '10 minutes before' },
+        { value: 15, label: '15 minutes before' },
+        { value: 30, label: '30 minutes before' },
+        { value: 60, label: '1 hour before' },
+        { value: 120, label: '2 hours before' },
+        { value: 1440, label: '1 day before' }
+    ];
 
     const getToken = async () => {
         try {
@@ -53,7 +69,6 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     useEffect(() => {
         loadSubscribedTrainers();
         
-        // Check if we're editing a schedule
         const scheduleToEdit = localStorage.getItem('scheduleToEdit');
         if (scheduleToEdit) {
             const schedule = JSON.parse(scheduleToEdit);
@@ -68,11 +83,12 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
         setEditingScheduleId(schedule.id);
         setAppointmentData({
             title: schedule.title,
-            trainerId: schedule.trainerId
+            trainerId: schedule.trainerId,
+            reminderEnabled: schedule.reminderMinutesBefore !== null && schedule.reminderMinutesBefore !== undefined,
+            reminderMinutesBefore: schedule.reminderMinutesBefore || 30
         });
         setScheduleType(schedule.repeatType);
         
-        // Set time
         if (schedule.startTime) {
             const hour = parseInt(schedule.startTime.split(':')[0]);
             setSelectedTime({
@@ -81,14 +97,12 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             });
         }
         
-        // Set date for ONCE type
         if (schedule.repeatType === 'ONCE' && schedule.date) {
             const date = new Date(schedule.date);
             setSelectedDate(date);
             setCurrentMonth(date);
         }
         
-        // Set days for WEEKLY type
         if (schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek) {
             setSelectedDays(schedule.daysOfWeek);
         }
@@ -125,6 +139,7 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             setLoading(false);
         } catch (error) {
             console.error('Error loading trainers:', error);
+            addToast('Failed to load trainers', 'error');
             setLoading(false);
         }
     };
@@ -186,43 +201,39 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
     const handleSubmitAppointment = async () => {
         if (!appointmentData.title || !appointmentData.trainerId) {
-            alert('Please fill in title and select a trainer');
+            addToast('Please fill in title and select a trainer', 'warning');
             return;
         }
 
-        // Validation based on schedule type
         if (scheduleType === 'ONCE' && !selectedDate) {
-            alert('Please select a date for one-time appointment');
+            addToast('Please select a date for one-time appointment', 'warning');
             return;
         }
 
         if (scheduleType === 'WEEKLY' && selectedDays.length === 0) {
-            alert('Please select at least one day for weekly schedule');
+            addToast('Please select at least one day for weekly schedule', 'warning');
             return;
         }
 
         if (!selectedTime) {
-            alert('Please select a time');
+            addToast('Please select a time', 'warning');
             return;
         }
 
         try {
             const token = await getToken();
-            
             const timeOnly = selectedTime.hour24 + ':00';
             
-            // Build request based on schedule type
             let scheduleRequest = {
                 title: appointmentData.title.trim(),
                 startTime: timeOnly,
                 repeatType: scheduleType,
                 trainerId: appointmentData.trainerId,
                 timezone: 'Europe/Zagreb',
-                reminderMinutesBefore: 30,
+                reminderMinutesBefore: appointmentData.reminderEnabled ? appointmentData.reminderMinutesBefore : null,
                 enabled: true
             };
 
-            // Add type-specific fields
             if (scheduleType === 'ONCE') {
                 const year = selectedDate.getFullYear();
                 const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -234,7 +245,6 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
             console.log('Sending schedule request:', scheduleRequest);
 
-            // Determine if creating or updating
             const url = editingScheduleId 
                 ? `${BACKEND_URL}/api/schedules/me/${editingScheduleId}`
                 : `${BACKEND_URL}/api/schedules/me`;
@@ -251,9 +261,9 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             });
 
             if (response.ok) {
-                alert(editingScheduleId ? 'Schedule updated successfully!' : 'Schedule created successfully!');
+                const action = editingScheduleId ? 'updated' : 'created';
+                addToast(`Schedule ${action} successfully!`, 'success');
                 
-                // Reload the calendar
                 if (reloadCalendar) {
                     reloadCalendar();
                 }
@@ -262,17 +272,22 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                 setSelectedDate(null);
                 setSelectedTime(null);
                 setSelectedDays([]);
-                setAppointmentData({ title: '', trainerId: null });
+                setAppointmentData({ 
+                    title: '', 
+                    trainerId: null,
+                    reminderEnabled: true,
+                    reminderMinutesBefore: 30
+                });
                 setScheduleType('ONCE');
                 setEditingScheduleId(null);
             } else {
                 const error = await response.json();
                 console.error('Server error:', error);
-                alert(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule: ${error.message || JSON.stringify(error)}`);
+                addToast(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule`, 'error');
             }
         } catch (error) {
             console.error('Error with schedule:', error);
-            alert(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule: ` + error.message);
+            addToast(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule`, 'error');
         }
     };
 
@@ -281,7 +296,12 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
         setSelectedDate(null);
         setSelectedTime(null);
         setSelectedDays([]);
-        setAppointmentData({ title: '', trainerId: null });
+        setAppointmentData({ 
+            title: '', 
+            trainerId: null,
+            reminderEnabled: true,
+            reminderMinutesBefore: 30
+        });
         setScheduleType('ONCE');
     };
 
@@ -467,6 +487,48 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                         </div>
                     </div>
 
+                    {/* Reminder Settings */}
+                    <div className={styles.reminderSection}>
+                        <div className={styles.reminderHeader}>
+                            <label className={styles.reminderLabel}>
+                                🔔 Reminder Notification
+                            </label>
+                            <label className={styles.toggleSwitch}>
+                                <input
+                                    type="checkbox"
+                                    checked={appointmentData.reminderEnabled}
+                                    onChange={(e) => setAppointmentData({
+                                        ...appointmentData, 
+                                        reminderEnabled: e.target.checked
+                                    })}
+                                />
+                                <span className={styles.toggleSlider}></span>
+                            </label>
+                        </div>
+
+                        {appointmentData.reminderEnabled && (
+                            <div className={styles.reminderOptions}>
+                                <p className={styles.reminderDescription}>
+                                    Get notified before your practice session starts
+                                </p>
+                                <select
+                                    value={appointmentData.reminderMinutesBefore}
+                                    onChange={(e) => setAppointmentData({
+                                        ...appointmentData, 
+                                        reminderMinutesBefore: parseInt(e.target.value)
+                                    })}
+                                    className={styles.reminderSelect}
+                                >
+                                    {reminderOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+
                     <div className={styles.summary}>
                         <h4 className={styles.summaryTitle}>📋 Schedule Summary</h4>
                         <div className={styles.summaryContent}>
@@ -481,6 +543,11 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                             <p><strong>Title:</strong> {appointmentData.title || 'Not set'}</p>
                             <p><strong>Trainer:</strong> {
                                 subscribedTrainers.find(t => t.id === appointmentData.trainerId)?.name || 'Not selected'
+                            }</p>
+                            <p><strong>Reminder:</strong> {
+                                appointmentData.reminderEnabled 
+                                    ? reminderOptions.find(r => r.value === appointmentData.reminderMinutesBefore)?.label
+                                    : 'Disabled'
                             }</p>
                         </div>
                     </div>

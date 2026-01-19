@@ -53,6 +53,9 @@ public class SecurityConfigDev {
                         .requestMatchers("/api/user/settings/**").authenticated() //trebat ce dodat jos putanje za trenera content i admina
                         .requestMatchers("/api/daily-focus/**").authenticated()
                         .requestMatchers("/api/mood-checkins/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        .requestMatchers("/api/messages/**").authenticated()//mozda ne treba
+                        .requestMatchers("/api/reminders/**").authenticated()//mozda ne treba
                         .requestMatchers("/public").permitAll()
                         .requestMatchers("/onboarding/**").authenticated()
                         .anyRequest().permitAll()

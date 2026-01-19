@@ -58,4 +58,7 @@ public class ReminderLog {
 
     @Column(name="error_message", length = 1000)
     private String errorMessage;
+
+    @Column(nullable = true)
+    private Instant occurrenceStartAt;
 }

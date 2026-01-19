@@ -11,6 +11,7 @@ import Pomna_Sedmica.Mindfulnes.repository.ReminderLogRepository;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
@@ -30,11 +31,18 @@ public class ReminderEngineService {
     private final EmailReminderSenderStub emailSender;
     private final PushReminderSenderStub pushSender;
 
+    // ✅ Look-ahead buffer to catch reminders before their exact time
+    private static final long REMINDER_LOOKAHEAD_SECONDS = 30;
+
+    // ✅ Time window to prevent duplicate reminders (5 minutes)
+    private static final long REMINDER_WINDOW_SECONDS = 300; // 5 minutes
+
     /**
      * Glavni entrypoint koji se može zvati iz schedulera (npr. @Scheduled).
      * Ide kroz enabled schedule-ove i šalje reminder(e) ako treba.
      */
-    public void tick() {
+    @Transactional
+    public synchronized void tick() {
         Instant now = Instant.now();
 
         List<PracticeSchedule> enabled = schedules.findByEnabledTrue();
@@ -55,27 +63,38 @@ public class ReminderEngineService {
             int minutesBefore = minutesBeforeObj == null ? 10 : minutesBeforeObj;
             Instant reminderAt = occurrenceStartAt.minusSeconds(minutesBefore * 60L);
 
-            // 3) šaljemo samo ako je "sad" nakon reminderAt (ili unutar prozora koji ti želiš)
-            if (now.isBefore(reminderAt)) {
+            // ✅ 3) Only send if we're within the reminder window
+            // Window: [reminderAt - 30s, reminderAt + 5 minutes]
+            Instant windowStart = reminderAt.minusSeconds(REMINDER_LOOKAHEAD_SECONDS);
+            Instant windowEnd = reminderAt.plusSeconds(REMINDER_WINDOW_SECONDS);
+
+            if (now.isBefore(windowStart) || now.isAfter(windowEnd)) {
                 continue;
             }
 
-            // 4) pošalji za svaki channel koji podržavaš
-            sendOnce(s, u, ReminderChannel.EMAIL, reminderAt, occurrenceStartAt, minutesBefore);
-            sendOnce(s, u, ReminderChannel.PUSH, reminderAt, occurrenceStartAt, minutesBefore);
+            // ✅ 4) Send both EMAIL and PUSH notifications
+            boolean emailSent = sendOnce(s, u, ReminderChannel.EMAIL, reminderAt, occurrenceStartAt, minutesBefore);
+            boolean pushSent = sendOnce(s, u, ReminderChannel.PUSH, reminderAt, occurrenceStartAt, minutesBefore);
+
+            // ✅ 5) Auto-disable ONCE schedules after both channels attempted
+            if ((emailSent || pushSent) && s.getRepeatType() == RepeatType.ONCE) {
+                s.setEnabled(false);
+                schedules.save(s);
+            }
         }
     }
 
-    private void sendOnce(PracticeSchedule s,
-                          User u,
-                          ReminderChannel channel,
-                          Instant reminderAt,
-                          Instant occurrenceStartAt,
-                          int minutesBefore) {
+    @Transactional
+    protected boolean sendOnce(PracticeSchedule s,
+                               User u,
+                               ReminderChannel channel,
+                               Instant reminderAt,
+                               Instant occurrenceStartAt,
+                               int minutesBefore) {
 
-        // idempotent: ako je već poslano (ili pokušano), ne šalji ponovno
-        if (logs.existsByScheduleIdAndChannelAndReminderAt(s.getId(), channel, reminderAt)) {
-            return;
+        // ✅ Single robust check using custom query
+        if (logs.hasReminderBeenSent(s.getId(), channel, occurrenceStartAt)) {
+            return false;
         }
 
         ReminderLog log = ReminderLog.builder()
@@ -83,9 +102,8 @@ public class ReminderEngineService {
                 .scheduleId(s.getId())
                 .channel(channel)
                 .status(ReminderStatus.PENDING)
-                // planirani trenutak slanja (koristi se za idempotency check)
                 .reminderAt(reminderAt)
-                // stvarni trenutak slanja ostaje null dok se zaista ne pošalje
+                .occurrenceStartAt(occurrenceStartAt)
                 .sentAt(null)
                 .build();
 
@@ -105,24 +123,27 @@ public class ReminderEngineService {
             log.setErrorMessage(null);
             logs.save(log);
 
+            return true;
+
         } catch (Exception ex) {
             log.setStatus(ReminderStatus.FAILED);
             log.setSentAt(Instant.now());
             log.setErrorMessage(ex.getMessage());
             logs.save(log);
+            return false;
         }
     }
 
     private String buildReminderText(PracticeSchedule s, Instant occurrenceStartAt, int minutesBefore) {
-        return "Reminder: \"" + s.getTitle() + "\" starts in " + minutesBefore
-                + " minutes (at " + occurrenceStartAt + ").";
+        return "🔔 Reminder: \"" + s.getTitle() + "\" starts in " + minutesBefore
+                + " minutes!";
     }
 
     /**
-     * Izračun “sljedećeg starta” termina u vremenskoj zoni schedule-a.
+     * Izračun "sljedećeg starta" termina u vremenskoj zoni schedule-a.
      * ONCE: s.date u startTime ako je u budućnosti.
      * DAILY: danas u startTime ako nije prošlo; inače sutra.
-     * WEEKLY: najbliži idući od daysOfWeek (u max 7 dana).
+     * WEEKLY: najbliži iduće od daysOfWeek (u max 7 dana).
      */
     private Optional<Instant> computeNextOccurrenceStart(PracticeSchedule s, Instant nowUtc) {
         String tz = (s.getTimezone() == null || s.getTimezone().isBlank())
