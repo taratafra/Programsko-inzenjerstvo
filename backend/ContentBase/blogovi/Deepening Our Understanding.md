@@ -1,0 +1,3 @@
+Deepening Our Understanding
+
+At the end of a mindfulness course many people long to maintain the benefits that they have experienced from regular practice and contact with the teacher. Regular, ongoing, one-to-one mindfulness sessions offer a deeply supportive a way to do this. They also offer a space to continue to deepen mindfulness practice, while navigating the inevitable ups and downs of life.

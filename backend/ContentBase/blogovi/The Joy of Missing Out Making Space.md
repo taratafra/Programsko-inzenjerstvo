@@ -1,0 +1,25 @@
+The Joy of Missing Out: Making Space for Clarity and Calm
+
+Written by Jiva Masheder, Mindfulness and Mindful Self-Compassion Teacher at The Mindfulness Project
+
+When was the last time you sat down, maybe with a cup of tea, and just looked out of the window, with no music or podcast? Does this sound like a dream scenario, or your worst nightmare? Sometimes, you may sit down for some quiet time and find it quite relaxing or even joyful. A sense of letting off the pressure and allowing yourself to just ‘be’, without needing to do or achieve anything. You’re giving your nervous system some down time, some ‘rest and digest’ time, and just like your body needs to rest, so does your mind. Time like this protects you from being overly exhausted at the end of the day. You may like to just sit quietly, or perhaps put on guided meditation.
+
+Very often what people say they want is to feel a sense of spaciousness in their lives, yet fill up every waking moment with input - podcasts, music, streaming content. We’ve all heard the term FOMO and even though we know we can’t possibly read or listen to everything that might be useful or interesting.
+
+How about JOMO – the joy of missing out? And prioritising space instead, even when we may often enjoy it and know it’s important?
+
+It's often in these quiet moments or periods of time that we get the best ideas, or find some clarity in our lives. We can’t make the inspiration come, but it generally does need space. One of my favourite teaching toys is a snow globe with a plastic flamingo in it. While I’m shaking the snow globe, no-one can see what’s inside. For people to see the flamingo, all I have to do is to stop shaking it – in our lives, that would mean stop running around and filling every minute – and then the clarity emerges, simply by stopping doing anything at all.
+
+Why is that so difficult?
+
+First of all, as humans, we love information – it feeds our brains and we get a little reward when we learn something new. It’s good to love learning! But we also need a break from it too. We now live in a time where there is unlimited information, so we need to learn to put boundaries around our time and attention.
+
+Second, social pressure – when everyone around is listening and watching endlessly, it’s easy to feel left out if we’re not – FOMO.
+
+Thirdly, and most importantly, although we may crave a sense of peace, when we turn off the podcast, we may find that we don’t feel peaceful at all – we may feel unsettled or even anxious and fearful, or any other difficult emotion. That emotion would have been there anyway, but we just weren’t noticing it. All along, though, it would have been affecting us, perhaps in how we spoke to people or acted– have you ever spoken to someone and been surprised how your words came out, not realising maybe that you felt quite irritable? Or done something, not quite sure why, and then regretted it later? I think everyone can say yes to one or both of those!
+
+You may think, why do I want to notice my difficult emotions? They’re unpleasant! But the problem is, they’re affecting how you feel and how you interact, and very often the underlying emotion will be a breeding ground for worrying and rumination. Far better to make space to acknowledge, kindly, how you really feel, and then already you’ve got some space from the emotion and it’s not in the driving seat any more. If there’s something difficult going on internally for you, far better to bring kind awareness, like a self-compassion break (link) to it than to ignore it – that’s like pushing some out-of-date food to the back of the fridge – not a good strategy! You may also need to take appropriate action – again, not always easy, but always important. And it’s in the quiet time we give ourselves that very often the right approach reveals itself.
+
+So when people say to me ‘I don’t have time to practice mindfulness meditation’ I’m always curious to hear more, and very often it’s that they expect that every practice will be blissfully peaceful, which is unlikely – sorry! But the good news is that every practice, short or long, will still be benefiting you, you just may not see it at the time. If you feel peaceful and relaxed – great! Enjoy that. And if you’re noticing difficult emotions, then by bringing mindful awareness to them, you’re not letting them run the show in the background, and gaining the possibility of being more intentional with how you speak and act.
+
+Regular mindfulness and compassion meditation can transform your life, like it has mine and so many others. Research shows exactly what I have noticed – reduced anxiety and stress, more emotional regulation, better communication, more intentional actions and sense of purpose and living my life as I want to, not being buffeted along by impulse. It just takes that confidence that you can do that too and commit to give yourself that gift.
