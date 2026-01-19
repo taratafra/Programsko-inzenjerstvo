@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
+import { useToast } from './ToastNotification';
 import styles from './MakeAppointment.module.css';
 
+
 export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
-    const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+    const { user, getAccessTokenSilently, isAuthenticated } = useAuth0();
+    const { addToast } = useToast();
+    
     const [subscribedTrainers, setSubscribedTrainers] = useState([]);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedTime, setSelectedTime] = useState(null);
@@ -12,10 +16,15 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     const [selectedDays, setSelectedDays] = useState([]);
     const [appointmentData, setAppointmentData] = useState({
         title: '',
-        trainerId: null
+        trainerId: null,
+        reminderEnabled: true,
+        reminderMinutesBefore: 30,
+        email: '',
+        emailConfirmed: false
     });
     const [loading, setLoading] = useState(true);
     const [editingScheduleId, setEditingScheduleId] = useState(null);
+    const [showEmailWarning, setShowEmailWarning] = useState(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
@@ -27,6 +36,33 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weekDaysForSelection = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+
+    const reminderOptions = [
+        { value: 5, label: '5 minutes before' },
+        { value: 10, label: '10 minutes before' },
+        { value: 15, label: '15 minutes before' },
+        { value: 30, label: '30 minutes before' },
+        { value: 60, label: '1 hour before' },
+        { value: 120, label: '2 hours before' },
+        { value: 1440, label: '1 day before' }
+    ];
+
+    const isValidEmail = (email) => {
+        return email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const hasInvalidEmail = (email) => {
+        if (!email) return true;
+        const invalidPatterns = [
+            /privaterelay\.appleid\.com$/i,
+            /noreply/i,
+            /no-reply/i,
+            /@example\./i,
+            /temp@/i,
+            /placeholder/i
+        ];
+        return invalidPatterns.some(pattern => pattern.test(email));
+    };
 
     const getToken = async () => {
         try {
@@ -53,26 +89,37 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     useEffect(() => {
         loadSubscribedTrainers();
         
-        // Check if we're editing a schedule
+        // Set initial email from user
+        if (user?.email) {
+            setAppointmentData(prev => ({
+                ...prev,
+                email: user.email,
+                emailConfirmed: !hasInvalidEmail(user.email)
+            }));
+            setShowEmailWarning(hasInvalidEmail(user.email));
+        }
+        
         const scheduleToEdit = localStorage.getItem('scheduleToEdit');
         if (scheduleToEdit) {
             const schedule = JSON.parse(scheduleToEdit);
             loadScheduleForEdit(schedule);
             localStorage.removeItem('scheduleToEdit');
         }
-    }, []);
+    }, [user]);
 
     const loadScheduleForEdit = (schedule) => {
         console.log('Loading schedule for edit:', schedule);
         
         setEditingScheduleId(schedule.id);
-        setAppointmentData({
+        setAppointmentData(prev => ({
+            ...prev,
             title: schedule.title,
-            trainerId: schedule.trainerId
-        });
+            trainerId: schedule.trainerId,
+            reminderEnabled: schedule.reminderMinutesBefore !== null && schedule.reminderMinutesBefore !== undefined,
+            reminderMinutesBefore: schedule.reminderMinutesBefore || 30
+        }));
         setScheduleType(schedule.repeatType);
         
-        // Set time
         if (schedule.startTime) {
             const hour = parseInt(schedule.startTime.split(':')[0]);
             setSelectedTime({
@@ -81,14 +128,12 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             });
         }
         
-        // Set date for ONCE type
         if (schedule.repeatType === 'ONCE' && schedule.date) {
             const date = new Date(schedule.date);
             setSelectedDate(date);
             setCurrentMonth(date);
         }
         
-        // Set days for WEEKLY type
         if (schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek) {
             setSelectedDays(schedule.daysOfWeek);
         }
@@ -125,7 +170,26 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             setLoading(false);
         } catch (error) {
             console.error('Error loading trainers:', error);
+            addToast('Failed to load trainers', 'error');
             setLoading(false);
+        }
+    };
+
+    const handleEmailChange = (e) => {
+        const email = e.target.value;
+        setAppointmentData(prev => ({
+            ...prev,
+            email: email,
+            emailConfirmed: false
+        }));
+        setShowEmailWarning(hasInvalidEmail(email));
+    };
+
+    const handleEmailConfirm = () => {
+        if (isValidEmail(appointmentData.email)) {
+            setAppointmentData(prev => ({ ...prev, emailConfirmed: true }));
+            setShowEmailWarning(false);
+            addToast('Email confirmed', 'success');
         }
     };
 
@@ -185,44 +249,70 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
     };
 
     const handleSubmitAppointment = async () => {
+        // Validation
         if (!appointmentData.title || !appointmentData.trainerId) {
-            alert('Please fill in title and select a trainer');
+            addToast('Please fill in title and select a trainer', 'warning');
             return;
         }
 
-        // Validation based on schedule type
         if (scheduleType === 'ONCE' && !selectedDate) {
-            alert('Please select a date for one-time appointment');
+            addToast('Please select a date for one-time appointment', 'warning');
             return;
         }
 
         if (scheduleType === 'WEEKLY' && selectedDays.length === 0) {
-            alert('Please select at least one day for weekly schedule');
+            addToast('Please select at least one day for weekly schedule', 'warning');
             return;
         }
 
         if (!selectedTime) {
-            alert('Please select a time');
+            addToast('Please select a time', 'warning');
+            return;
+        }
+
+        // Email validation
+        if (!appointmentData.email || !isValidEmail(appointmentData.email)) {
+            addToast('Please enter a valid email address for reminders', 'warning');
+            return;
+        }
+
+        if (!appointmentData.emailConfirmed && hasInvalidEmail(appointmentData.email)) {
+            addToast('Please confirm your email address', 'warning');
             return;
         }
 
         try {
             const token = await getToken();
-            
+
+            // Update user email if it changed
+            if (appointmentData.email !== user?.email) {
+                const emailUpdateResponse = await fetch(`${BACKEND_URL}/api/users/me/email`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: appointmentData.email })
+                });
+
+                if (!emailUpdateResponse.ok) {
+                    addToast('Failed to update email', 'error');
+                    return;
+                }
+            }
+
             const timeOnly = selectedTime.hour24 + ':00';
             
-            // Build request based on schedule type
             let scheduleRequest = {
                 title: appointmentData.title.trim(),
                 startTime: timeOnly,
                 repeatType: scheduleType,
                 trainerId: appointmentData.trainerId,
                 timezone: 'Europe/Zagreb',
-                reminderMinutesBefore: 30,
+                reminderMinutesBefore: appointmentData.reminderEnabled ? appointmentData.reminderMinutesBefore : null,
                 enabled: true
             };
 
-            // Add type-specific fields
             if (scheduleType === 'ONCE') {
                 const year = selectedDate.getFullYear();
                 const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
@@ -234,7 +324,6 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
 
             console.log('Sending schedule request:', scheduleRequest);
 
-            // Determine if creating or updating
             const url = editingScheduleId 
                 ? `${BACKEND_URL}/api/schedules/me/${editingScheduleId}`
                 : `${BACKEND_URL}/api/schedules/me`;
@@ -251,9 +340,9 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             });
 
             if (response.ok) {
-                alert(editingScheduleId ? 'Schedule updated successfully!' : 'Schedule created successfully!');
+                const action = editingScheduleId ? 'updated' : 'created';
+                addToast(`Schedule ${action} successfully! You will receive email reminders.`, 'success');
                 
-                // Reload the calendar
                 if (reloadCalendar) {
                     reloadCalendar();
                 }
@@ -262,17 +351,24 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                 setSelectedDate(null);
                 setSelectedTime(null);
                 setSelectedDays([]);
-                setAppointmentData({ title: '', trainerId: null });
+                setAppointmentData({ 
+                    title: '', 
+                    trainerId: null,
+                    reminderEnabled: true,
+                    reminderMinutesBefore: 30,
+                    email: user?.email || '',
+                    emailConfirmed: !hasInvalidEmail(user?.email || '')
+                });
                 setScheduleType('ONCE');
                 setEditingScheduleId(null);
             } else {
                 const error = await response.json();
                 console.error('Server error:', error);
-                alert(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule: ${error.message || JSON.stringify(error)}`);
+                addToast(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule`, 'error');
             }
         } catch (error) {
             console.error('Error with schedule:', error);
-            alert(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule: ` + error.message);
+            addToast(`Failed to ${editingScheduleId ? 'update' : 'create'} schedule`, 'error');
         }
     };
 
@@ -281,7 +377,14 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
         setSelectedDate(null);
         setSelectedTime(null);
         setSelectedDays([]);
-        setAppointmentData({ title: '', trainerId: null });
+        setAppointmentData({ 
+            title: '', 
+            trainerId: null,
+            reminderEnabled: true,
+            reminderMinutesBefore: 30,
+            email: user?.email || '',
+            emailConfirmed: !hasInvalidEmail(user?.email || '')
+        });
         setScheduleType('ONCE');
     };
 
@@ -323,6 +426,7 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
             <h2 className={styles.title}>
                 {editingScheduleId ? 'Edit Practice Schedule' : 'Create Practice Schedule'}
             </h2>
+
 
             {/* Schedule Type Selection */}
             <div className={styles.formSection} style={{marginBottom: '25px'}}>
@@ -467,6 +571,90 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                         </div>
                     </div>
 
+                    {/* Reminder Settings */}
+                    <div className={styles.reminderSection}>
+                        <div className={styles.reminderHeader}>
+                            <label className={styles.reminderLabel}>
+                                🔔 Reminder Notification
+                            </label>
+                            <label className={styles.toggleSwitch}>
+                                <input
+                                    type="checkbox"
+                                    checked={appointmentData.reminderEnabled}
+                                    onChange={(e) => setAppointmentData({
+                                        ...appointmentData, 
+                                        reminderEnabled: e.target.checked
+                                    })}
+                                />
+                                <span className={styles.toggleSlider}></span>
+                            </label>
+                        </div>
+
+                        {appointmentData.reminderEnabled && (
+                            <div className={styles.reminderOptions}>
+                                <p className={styles.reminderDescription}>
+                                    Get notified via email and in-app before your practice session starts
+                                </p>
+                                <select
+                                    value={appointmentData.reminderMinutesBefore}
+                                    onChange={(e) => setAppointmentData({
+                                        ...appointmentData, 
+                                        reminderMinutesBefore: parseInt(e.target.value)
+                                    })}
+                                    className={styles.reminderSelect}
+                                >
+                                    {reminderOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Email Collection Section - Prominent at top */}
+                    <div className={styles.emailSection}>
+                        <h3 className={styles.emailSectionTitle}>
+                            <span>📧</span> Email for Reminders
+                        </h3>
+                        
+                        <div className={styles.emailInputGroup}>
+                            <label className={styles.label}>Email Address *</label>
+                            <input
+                                type="email"
+                                value={appointmentData.email}
+                                onChange={handleEmailChange}
+                                className={styles.emailInput}
+                                placeholder="your.email@example.com"
+                            />
+                        </div>
+
+                        {showEmailWarning && !appointmentData.emailConfirmed && (
+                            <div className={styles.emailWarning}>
+                                <p className={styles.warningText}>
+                                    ⚠️ This email address may not receive notifications. Please confirm this is correct.
+                                </p>
+                                <button
+                                    onClick={handleEmailConfirm}
+                                    className={styles.confirmEmailButton}
+                                >
+                                    Confirm Email
+                                </button>
+                            </div>
+                        )}
+
+                        {appointmentData.emailConfirmed && (
+                            <div className={styles.emailConfirmed}>
+                                <p className={styles.confirmedText}>✓ Email confirmed and ready for reminders</p>
+                            </div>
+                        )}
+
+                        <p className={styles.emailDescription}>
+                            You'll receive email notifications {appointmentData.reminderMinutesBefore} minutes before your practice session.
+                        </p>
+                    </div>
+
                     <div className={styles.summary}>
                         <h4 className={styles.summaryTitle}>📋 Schedule Summary</h4>
                         <div className={styles.summaryContent}>
@@ -481,6 +669,12 @@ export default function MakeAppointment({ setActiveTab, reloadCalendar }) {
                             <p><strong>Title:</strong> {appointmentData.title || 'Not set'}</p>
                             <p><strong>Trainer:</strong> {
                                 subscribedTrainers.find(t => t.id === appointmentData.trainerId)?.name || 'Not selected'
+                            }</p>
+                            <p><strong>Email:</strong> {appointmentData.email || 'Not set'}</p>
+                            <p><strong>Reminder:</strong> {
+                                appointmentData.reminderEnabled 
+                                    ? reminderOptions.find(r => r.value === appointmentData.reminderMinutesBefore)?.label
+                                    : 'Disabled'
                             }</p>
                         </div>
                     </div>
