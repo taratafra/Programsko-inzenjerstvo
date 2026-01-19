@@ -14,6 +14,7 @@ import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
 import TrainerDashboard from "../../components/home/tabPanel/TrainerDashboard";
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
+import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
 
 import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
 import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
@@ -50,7 +51,7 @@ export default function Home() {
 
                     if (userResponse) {
                         setUser(userResponse);
-                        
+
                         if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
@@ -204,13 +205,13 @@ export default function Home() {
                     return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
 
                 case 'Statistics':
-                    return <Statistics 
+                    return <Statistics
                         user={user}
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
                         refreshTrigger ={statisticsRefreshTrigger}
                     />
-                
+
                 case 'Breathing':
                     return (
                         <div className={styles.tabPanel}>
@@ -230,7 +231,7 @@ export default function Home() {
                     return <Settings user={user} updateUser={updateUser} />;
 
                 case 'MoodCheckIn':
-                    
+
                     return (
                         <MoodCheckIn
                             getAccessTokenSilently={getAccessTokenSilently}
@@ -240,15 +241,20 @@ export default function Home() {
                     );
 
                 case 'DailyFocus':
-                    return (
-                        <DailyFocus
-                            user={user}
-                            getAccessTokenSilently={getAccessTokenSilently}
-                            isAuthenticated={isAuthenticated}
-                        />
-                    );
+                    return <DailyFocus
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+
+                case 'YourPlan':
+                    return <YourPlan
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
                 case 'Videos' :
-                   return <Video/> 
+                   return <Video/>
                 default:
                     return <GeneralInfoGrid />;
             }

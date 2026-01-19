@@ -1,0 +1,331 @@
+{
+  "meta": {
+    "version": "1.0",
+    "language": "en",
+    "notes": "7-day plans generated from onboarding survey. Templates selected by conditions; one template picked deterministically per user+week (seed in PracticePlanService)."
+  },
+  "templates": [
+    {
+      "key": "SLEEP_RESET_HIGH_STRESS_BEGINNER",
+      "conditions": {
+        "stress": ["HIGH"],
+        "sleep": ["POOR"],
+        "experience": ["BEGINNER"],
+        "goalsAny": ["IMPROVE_SLEEP", "STRESS_MANAGEMENT", "REDUCE_ANXIETY"]
+      },
+      "days": [
+        {
+          "title": "Day 1 — Downshift & Decompress",
+          "estimatedMinutes": 12,
+          "description": "Tonight is about lowering the volume. Do 4 minutes of slow breathing (inhale 4, exhale 6), then a short body scan. End by dimming screens 30 minutes earlier and preparing tomorrow’s morning as a kindness-to-yourself ritual."
+        },
+        {
+          "title": "Day 2 — Sleep Anchors",
+          "estimatedMinutes": 15,
+          "description": "Create two anchors: a fixed wake time and a 10-minute wind-down. Practice a gentle ‘counting breaths’ meditation. If thoughts race, label them (‘planning’, ‘worry’) and return to the breath without fighting them."
+        },
+        {
+          "title": "Day 3 — Nervous System Safety",
+          "estimatedMinutes": 14,
+          "description": "Try a calming practice: 5 minutes of breathing + 5 minutes of progressive muscle relaxation. Choose one small evening habit (warm shower, herbal tea, reading) and repeat it consistently."
+        },
+        {
+          "title": "Day 4 — Stress-to-Sleep Bridge",
+          "estimatedMinutes": 16,
+          "description": "Do a short ‘worry dump’ on paper for 3 minutes, then close it. Follow with a soothing guided body scan. Finish by making your bedroom slightly cooler and darker (sleep environment matters more than we think)."
+        },
+        {
+          "title": "Day 5 — Micro-Recovery During the Day",
+          "estimatedMinutes": 12,
+          "description": "Build daytime recovery: 3 micro-pauses (60 seconds) where you relax shoulders and slow the breath. Evening practice: a soft attention meditation—notice sounds, then return to breath."
+        },
+        {
+          "title": "Day 6 — Gentle Consistency",
+          "estimatedMinutes": 18,
+          "description": "Repeat what worked best so far. Add a short gratitude reflection (3 items) to redirect the brain from threat-scanning to safety cues. Keep it simple—sleep improves with consistency, not intensity."
+        },
+        {
+          "title": "Day 7 — Your Personal Sleep Protocol",
+          "estimatedMinutes": 20,
+          "description": "Combine your top 2 calming tools into a repeatable 15-minute routine. Write a one-sentence commitment: ‘This week I protect my sleep by…’. You’re building a system, not chasing perfect nights."
+        }
+      ]
+    },
+    {
+      "key": "ANXIETY_RELIEF_HIGH_STRESS_ANY_SLEEP_BEGINNER",
+      "conditions": {
+        "stress": ["HIGH"],
+        "sleep": ["POOR", "OK", "GOOD"],
+        "experience": ["BEGINNER"],
+        "goalsAny": ["REDUCE_ANXIETY", "STRESS_MANAGEMENT"]
+      },
+      "days": [
+        {
+          "title": "Day 1 — Calm the Alarm",
+          "estimatedMinutes": 10,
+          "description": "Start with 2 minutes of slow exhale breathing. Then do a basic mindfulness practice: notice breath, notice thoughts, return. Aim for ‘kind repetition’ instead of ‘perfect focus’."
+        },
+        {
+          "title": "Day 2 — Name It to Tame It",
+          "estimatedMinutes": 12,
+          "description": "Practice labeling: when anxiety shows up, silently name it (‘anxiety’, ‘worry’, ‘tension’). Then return to one physical anchor: breath, feet on floor, or hands."
+        },
+        {
+          "title": "Day 3 — Expand Your Window",
+          "estimatedMinutes": 15,
+          "description": "Try a short grounding cycle: 5 senses scan + 5 slow breaths. Add one small exposure to avoidance (e.g., sending that message) and reward yourself afterwards."
+        },
+        {
+          "title": "Day 4 — Thought Distance",
+          "estimatedMinutes": 14,
+          "description": "Learn cognitive defusion: ‘I’m having the thought that…’. Use it for 3 recurring worries. Finish with 2 minutes of compassionate self-talk like you would speak to a friend."
+        },
+        {
+          "title": "Day 5 — Breath + Body",
+          "estimatedMinutes": 16,
+          "description": "Do a body scan, but gently. When you hit tension, soften 10%. You’re training the nervous system to downshift—not forcing relaxation."
+        },
+        {
+          "title": "Day 6 — Your Coping Stack",
+          "estimatedMinutes": 15,
+          "description": "Build a ‘coping stack’: 1) breathe 60s, 2) name emotion, 3) choose one next action. Practice it once when you’re calm, so it’s available when you’re stressed."
+        },
+        {
+          "title": "Day 7 — Make Calm Repeatable",
+          "estimatedMinutes": 18,
+          "description": "Review what helped most (breathing, labeling, grounding). Choose one 5-minute daily habit to keep. The goal is reliability, not intensity."
+        }
+      ]
+    },
+    {
+      "key": "FOCUS_BUILD_MEDIUM_STRESS_OK_SLEEP_ANY",
+      "conditions": {
+        "stress": ["MEDIUM"],
+        "sleep": ["OK", "GOOD"],
+        "experience": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
+        "goalsAny": ["INCREASE_FOCUS"]
+      },
+      "days": [
+        {
+          "title": "Day 1 — One-Task Mind",
+          "estimatedMinutes": 12,
+          "description": "Practice 8 minutes of focused attention on breath. Then do a 4-minute ‘single-task sprint’: one small task with all distractions off."
+        },
+        {
+          "title": "Day 2 — Attention Training",
+          "estimatedMinutes": 14,
+          "description": "Try ‘counting breaths’ up to 10, then restart. If you lose count, restart gently. Afterwards, write your top 3 priorities for tomorrow."
+        },
+        {
+          "title": "Day 3 — Reduce Mental Tabs",
+          "estimatedMinutes": 15,
+          "description": "Do a short open awareness practice—notice sounds/thoughts without chasing them. Then close 2 open loops: one message, one small pending task."
+        },
+        {
+          "title": "Day 4 — Deep Work Ritual",
+          "estimatedMinutes": 16,
+          "description": "Before work: 2 minutes breathing + one sentence intention (‘Today I focus on…’). Then 20 minutes deep work (Pomodoro)."
+        },
+        {
+          "title": "Day 5 — Focus Recovery",
+          "estimatedMinutes": 12,
+          "description": "Add a micro-walk or stretch between tasks. Practice attention reset: 5 slow breaths while relaxing jaw/shoulders."
+        },
+        {
+          "title": "Day 6 — Distraction Audit",
+          "estimatedMinutes": 18,
+          "description": "Notice your top distraction pattern (phone, tabs, procrastination). Choose one rule: ‘phone in another room’, ‘single tab’, or ‘timer first’. Practice a short meditation afterwards."
+        },
+        {
+          "title": "Day 7 — Sustainable Focus Plan",
+          "estimatedMinutes": 20,
+          "description": "Combine: 10 minutes meditation + a simple daily focus routine (intention + 1 deep work block). Make it repeatable and realistic."
+        }
+      ]
+    },
+    {
+      "key": "STRESS_MANAGEMENT_MEDIUM_SLEEP_POOR_INTERMEDIATE",
+      "conditions": {
+        "stress": ["MEDIUM", "HIGH"],
+        "sleep": ["POOR"],
+        "experience": ["INTERMEDIATE"],
+        "goalsAny": ["STRESS_MANAGEMENT", "IMPROVE_SLEEP"]
+      },
+      "days": [
+        {
+          "title": "Day 1 — Reset the Body",
+          "estimatedMinutes": 15,
+          "description": "Do 10 minutes body scan + 5 minutes slow breathing. Add one small boundary today: reduce one optional commitment or say ‘not today’ once."
+        },
+        {
+          "title": "Day 2 — Stress Signals",
+          "estimatedMinutes": 16,
+          "description": "Identify 3 personal stress signals (tight chest, fast thoughts, irritability). When you notice them, do a 90-second pause: exhale longer than inhale."
+        },
+        {
+          "title": "Day 3 — Recovery Blocks",
+          "estimatedMinutes": 18,
+          "description": "Schedule one 15-minute recovery block (walk, stretch, quiet). Evening: calming breathwork + minimal screens."
+        },
+        {
+          "title": "Day 4 — Emotional Regulation",
+          "estimatedMinutes": 18,
+          "description": "Practice ‘RAIN’ briefly: Recognize, Allow, Investigate, Nurture. Use it on one recurring worry. Keep it gentle and practical."
+        },
+        {
+          "title": "Day 5 — Sleep Protection",
+          "estimatedMinutes": 14,
+          "description": "Shift caffeine earlier (if relevant) and do a 10-minute wind-down routine. Meditation: soft attention on breath + body."
+        },
+        {
+          "title": "Day 6 — Choice Point",
+          "estimatedMinutes": 18,
+          "description": "Ask: ‘What choice reduces stress 5% today?’ Pick one micro-action. Meditation: open awareness, observe thoughts like clouds."
+        },
+        {
+          "title": "Day 7 — Your Stress System",
+          "estimatedMinutes": 20,
+          "description": "Write your personal ‘stress system’: triggers, signals, and 3 best tools. Decide your default daily practice for next week."
+        }
+      ]
+    },
+    {
+      "key": "ADVANCED_OPTIMIZE_LOW_STRESS_GOOD_SLEEP_ADVANCED",
+      "conditions": {
+        "stress": ["LOW"],
+        "sleep": ["GOOD"],
+        "experience": ["ADVANCED"],
+        "goalsAny": ["INCREASE_FOCUS", "STRESS_MANAGEMENT", "REDUCE_ANXIETY", "IMPROVE_SLEEP"]
+      },
+      "days": [
+        {
+          "title": "Day 1 — Precision Attention",
+          "estimatedMinutes": 20,
+          "description": "Focused attention with clear counting, then switch to open awareness. End with a short intention practice: align behavior with values for the day."
+        },
+        {
+          "title": "Day 2 — Equanimity Practice",
+          "estimatedMinutes": 22,
+          "description": "Observe sensations and thoughts without preference. Train balanced attention: ‘pleasant, unpleasant, neutral’ labels—then release."
+        },
+        {
+          "title": "Day 3 — Compassion Expansion",
+          "estimatedMinutes": 20,
+          "description": "Metta practice: self → friend → neutral → difficult → all beings. Keep it grounded and non-performative."
+        },
+        {
+          "title": "Day 4 — Deep Focus Block",
+          "estimatedMinutes": 25,
+          "description": "Meditation first, then a single deep work block. Minimize novelty. Treat concentration as a skill you protect."
+        },
+        {
+          "title": "Day 5 — Subtle Body Awareness",
+          "estimatedMinutes": 20,
+          "description": "Body scan at a subtler layer: temperature, vibration, micro-movements. End by relaxing effort: ‘do less’ in attention."
+        },
+        {
+          "title": "Day 6 — Integration Day",
+          "estimatedMinutes": 18,
+          "description": "Bring mindfulness into routine actions: shower, eating, walking. Practice ‘noting’ in daily life without forcing it."
+        },
+        {
+          "title": "Day 7 — Design Your Next Week",
+          "estimatedMinutes": 20,
+          "description": "Choose a theme (focus, compassion, equanimity). Create a sustainable schedule: duration, time, and fallback on busy days."
+        }
+      ]
+    },
+    {
+      "key": "GENERAL_BALANCED_ANY",
+      "conditions": {
+        "stress": ["LOW", "MEDIUM", "HIGH"],
+        "sleep": ["POOR", "OK", "GOOD"],
+        "experience": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
+        "goalsAny": ["REDUCE_ANXIETY", "IMPROVE_SLEEP", "INCREASE_FOCUS", "STRESS_MANAGEMENT"]
+      },
+      "days": [
+        {
+          "title": "Day 1 — Start Small, Start Now",
+          "estimatedMinutes": 10,
+          "description": "Short breath meditation. Keep it simple: notice, return, repeat. Add one tiny wellbeing action today (water, short walk, stretching)."
+        },
+        {
+          "title": "Day 2 — Body & Breath",
+          "estimatedMinutes": 12,
+          "description": "Body scan + calm breathing. Practice listening to the body without judgment. One practical goal: reduce one unnecessary stressor today."
+        },
+        {
+          "title": "Day 3 — Mindful Moments",
+          "estimatedMinutes": 14,
+          "description": "Open awareness meditation. Add 3 mindful moments during the day: before eating, before opening social media, before sleep."
+        },
+        {
+          "title": "Day 4 — Focus & Clarity",
+          "estimatedMinutes": 15,
+          "description": "Focused attention meditation. Pick one priority task and do it in a distraction-free 15–20 minute block."
+        },
+        {
+          "title": "Day 5 — Emotional Balance",
+          "estimatedMinutes": 16,
+          "description": "Practice labeling emotions and softening tension. End with a short self-compassion phrase: ‘This is hard, and I’m doing my best.’"
+        },
+        {
+          "title": "Day 6 — Recovery & Rest",
+          "estimatedMinutes": 15,
+          "description": "Choose a restorative practice (slow breathing, body scan, or gentle stretching). Protect sleep by creating a brief wind-down routine."
+        },
+        {
+          "title": "Day 7 — Reflect & Continue",
+          "estimatedMinutes": 18,
+          "description": "Review your week: what helped most? Choose a realistic default practice for next week and a backup plan for busy days."
+        }
+      ]
+    },
+    {
+      "key": "FALLBACK_DEFAULT",
+      "conditions": {
+        "stress": ["LOW", "MEDIUM", "HIGH"],
+        "sleep": ["POOR", "OK", "GOOD"],
+        "experience": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
+        "goalsAny": []
+      },
+      "days": [
+        {
+          "title": "Day 1 — Gentle Start",
+          "estimatedMinutes": 10,
+          "description": "Breathing meditation + one small supportive action (hydration, short walk, early bedtime)."
+        },
+        {
+          "title": "Day 2 — Mindful Awareness",
+          "estimatedMinutes": 12,
+          "description": "Open awareness meditation. Notice thoughts and return to the present without judgment."
+        },
+        {
+          "title": "Day 3 — Body Scan Basics",
+          "estimatedMinutes": 14,
+          "description": "Body scan from head to toe. Soften tension by 10% where you find it."
+        },
+        {
+          "title": "Day 4 — Focus Practice",
+          "estimatedMinutes": 15,
+          "description": "Focused attention on breath. Keep it steady and kind."
+        },
+        {
+          "title": "Day 5 — Stress Release",
+          "estimatedMinutes": 16,
+          "description": "Slow exhale breathing + gentle relaxation. Reduce one avoidable stressor today."
+        },
+        {
+          "title": "Day 6 — Rest & Restore",
+          "estimatedMinutes": 15,
+          "description": "Choose a calming practice and protect a short wind-down window before sleep."
+        },
+        {
+          "title": "Day 7 — Plan Your Next Week",
+          "estimatedMinutes": 18,
+          "description": "Pick a default practice time and a backup plan. Consistency beats intensity."
+        }
+      ]
+    }
+  ]
+}

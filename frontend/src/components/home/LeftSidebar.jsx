@@ -38,6 +38,9 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("Calendar")} onClick={() => setActiveTab('Calendar')}>
           🗓️ Calendar
         </li>
+        <li className={getNavItemClass("YourPlan")} onClick={() => setActiveTab('YourPlan')}>
+           ☀️ 7-Day Plan
+        </li>
         <li className={getNavItemClass("DailyFocus")} onClick={() => setActiveTab('DailyFocus')}>
           📒 Daily Focus
         </li>
