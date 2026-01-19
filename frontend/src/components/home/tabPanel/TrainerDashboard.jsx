@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from "@auth0/auth0-react";
+import MetricChart from './Statistics/MetricChart';
+import EmotionsChart from './Statistics/EmotionsChart';
+import TextualDataDisplay from './Statistics/TextualDataDisplay';
 import styles from './TrainerDashboard.module.css';
 
 export default function TrainerDashboard({ setActiveTab }) {
@@ -7,7 +10,12 @@ export default function TrainerDashboard({ setActiveTab }) {
     const [clients, setClients] = useState([]);
     const [schedules, setSchedules] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeSection, setActiveSection] = useState('overview'); // overview, clients, schedules
+    const [activeSection, setActiveSection] = useState('overview');
+    
+    // Client statistics states
+    const [selectedClient, setSelectedClient] = useState(null);
+    const [clientCheckIns, setClientCheckIns] = useState([]);
+    const [loadingStats, setLoadingStats] = useState(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
@@ -42,38 +50,18 @@ export default function TrainerDashboard({ setActiveTab }) {
         try {
             const token = await getToken();
             
-            // Load client IDs (users subscribed to me as a trainer)
-            const clientIdsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/users`, {
+            // Load clients with full details in one call
+            const clientsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/clients`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (clientIdsResponse.ok) {
-                const clientIds = await clientIdsResponse.json();
-                
-                // Fetch full user details for each client
-                if (clientIds.length > 0) {
-                    const clientDetailsPromises = clientIds.map(async (userId) => {
-                        const userResponse = await fetch(`${BACKEND_URL}/api/users/${userId}`, {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        if (userResponse.ok) {
-                            return await userResponse.json();
-                        }
-                        return null;
-                    });
-                    
-                    const clientDetails = await Promise.all(clientDetailsPromises);
-                    setClients(clientDetails.filter(client => client !== null));
-                } else {
-                    setClients([]);
-                }
+            if (clientsResponse.ok) {
+                const clientsData = await clientsResponse.json();
+                setClients(clientsData);
             }
 
-            // Load schedules for trainer
             const schedulesResponse = await fetch(`${BACKEND_URL}/api/schedules/trainer/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -92,6 +80,44 @@ export default function TrainerDashboard({ setActiveTab }) {
         }
     };
 
+    const loadClientStatistics = async (clientId) => {
+        setLoadingStats(true);
+        try {
+            const token = await getToken();
+            
+            const response = await fetch(`${BACKEND_URL}/api/mood-checkins/${clientId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setClientCheckIns(Array.isArray(data) ? data : []);
+            } else {
+                console.error('Failed to load client statistics');
+                setClientCheckIns([]);
+            }
+        } catch (error) {
+            console.error('Error loading client statistics:', error);
+            setClientCheckIns([]);
+        } finally {
+            setLoadingStats(false);
+        }
+    };
+
+    const handleClientSelect = (client) => {
+        setSelectedClient(client);
+        setActiveSection('statistics');
+        loadClientStatistics(client.id);
+    };
+
+    const handleBackToClients = () => {
+        setSelectedClient(null);
+        setClientCheckIns([]);
+        setActiveSection('clients');
+    };
+
     const getUpcomingSchedules = () => {
         const now = new Date();
         return schedules
@@ -103,6 +129,23 @@ export default function TrainerDashboard({ setActiveTab }) {
                 return true;
             })
             .slice(0, 5);
+    };
+
+    const hasDataForMetric = (dataKey) => {
+        return clientCheckIns.some(checkIn => checkIn[dataKey] != null);
+    };
+
+    const hasEmotionsData = () => {
+        return clientCheckIns.some(checkIn => checkIn.emotions && checkIn.emotions.length > 0);
+    };
+
+    const hasTextualData = () => {
+        return clientCheckIns.some(checkIn => 
+            checkIn.caffeineIntake || 
+            checkIn.alcoholIntake || 
+            checkIn.physicalActivity || 
+            checkIn.notes
+        );
     };
 
     if (loading) {
@@ -128,7 +171,10 @@ export default function TrainerDashboard({ setActiveTab }) {
                     📊 Overview
                 </button>
                 <button
-                    onClick={() => setActiveSection('clients')}
+                    onClick={() => {
+                        setActiveSection('clients');
+                        setSelectedClient(null);
+                    }}
                     className={`${styles.sectionButton} ${
                         activeSection === 'clients' ? styles.sectionButtonActive : ''
                     }`}
@@ -217,7 +263,12 @@ export default function TrainerDashboard({ setActiveTab }) {
                     {clients.length > 0 ? (
                         <div className={styles.clientsGrid}>
                             {clients.map(client => (
-                                <div key={client.id} className={styles.clientCard}>
+                                <div 
+                                    key={client.id} 
+                                    className={styles.clientCard}
+                                    onClick={() => handleClientSelect(client)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className={styles.clientAvatar}>
                                         {client.name?.[0]}{client.surname?.[0]}
                                     </div>
@@ -229,6 +280,9 @@ export default function TrainerDashboard({ setActiveTab }) {
                                                 Subscribed: {new Date(client.subscriptionDate).toLocaleDateString()}
                                             </p>
                                         )}
+                                        <p className={styles.viewStats}>
+                                            📊 Click to view statistics
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -236,6 +290,49 @@ export default function TrainerDashboard({ setActiveTab }) {
                     ) : (
                         <div className={styles.emptyState}>
                             <p>No clients subscribed yet</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Client Statistics Section */}
+            {activeSection === 'statistics' && selectedClient && (
+                <div className={styles.statisticsSection}>
+                    <div className={styles.statisticsHeader}>
+                        <button onClick={handleBackToClients} className={styles.backButton}>
+                            ← Back to Clients
+                        </button>
+                        <h3 className={styles.sectionTitle}>
+                            📊 Statistics for {selectedClient.name} {selectedClient.surname}
+                        </h3>
+                    </div>
+
+                    {loadingStats ? (
+                        <div className={styles.loading}>Loading statistics...</div>
+                    ) : clientCheckIns.length === 0 ? (
+                        <p className={styles.noData}>
+                            No mood check-in data available for this client yet.
+                        </p>
+                    ) : (
+                        <div className={styles.chartsContainer}>
+                            {hasDataForMetric('moodScore') && (
+                                <MetricChart title="Mood" data={clientCheckIns} dataKey="moodScore" />
+                            )}
+                            {hasDataForMetric('sleepQuality') && (
+                                <MetricChart title="Sleep Quality" data={clientCheckIns} dataKey="sleepQuality" />
+                            )}
+                            {hasDataForMetric('stressLevel') && (
+                                <MetricChart title="Stress Level" data={clientCheckIns} dataKey="stressLevel" />
+                            )}
+                            {hasDataForMetric('focusLevel') && (
+                                <MetricChart title="Focus Level" data={clientCheckIns} dataKey="focusLevel" />
+                            )}
+                            {hasEmotionsData() && (
+                                <EmotionsChart data={clientCheckIns} />
+                            )}
+                            {hasTextualData() && (
+                                <TextualDataDisplay data={clientCheckIns} />
+                            )}
                         </div>
                     )}
                 </div>

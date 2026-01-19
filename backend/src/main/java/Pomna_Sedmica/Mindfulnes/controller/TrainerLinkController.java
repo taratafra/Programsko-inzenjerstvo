@@ -124,7 +124,28 @@ public class TrainerLinkController {
 
         return ResponseEntity.ok(userIds);
     }
+/**
+ * Get full user details for all clients subscribed to me as a trainer
+ * GET /trainers/me/clients
+ */
+@GetMapping("/me/clients")
+public ResponseEntity<List<User>> getMyClientsDetails(@AuthenticationPrincipal Jwt jwt) {
+    User me = userService.getOrCreateUserFromJwt(jwt);
 
+    var clientIds = trainerLinks.listUsersForTrainer(me.getId())
+            .stream()
+            .map(UserTrainer::getUserId)
+            .distinct()
+            .toList();
+
+    // Fetch full user details for each client
+    var clients = clientIds.stream()
+            .map(userId -> userService.getUserById(userId).orElse(null))
+            .filter(user -> user != null)
+            .toList();
+
+    return ResponseEntity.ok(clients);
+}
 
     // ---------------------- DEV/TEST (H2/Postman bez user tokena) ----------------------
     // Ove metode postoje SAMO kad je aktivan "dev" profil.

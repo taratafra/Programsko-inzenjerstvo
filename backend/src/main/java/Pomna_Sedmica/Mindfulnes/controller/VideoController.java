@@ -51,4 +51,15 @@ public class VideoController {
         }
         return videoService.createVideo(title, description, type, file, user);
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('TRAINER')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteVideo(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        User user = trainerService.getOrCreateTrainerFromJwt(jwt);
+        if (user.getRole() != Role.TRAINER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can delete videos");
+        }
+        videoService.deleteVideoFromDb(id, user);
+    }
 }

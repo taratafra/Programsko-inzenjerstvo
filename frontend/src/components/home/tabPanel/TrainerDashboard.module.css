@@ -332,6 +332,77 @@
     font-size: 1.1rem;
 }
 
+/* Client Statistics Section */
+.statisticsSection {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statisticsHeader {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.backButton {
+    padding: 10px 20px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.backButton:hover {
+    background: #357abd;
+}
+
+.viewStats {
+    margin-top: 8px !important;
+    color: #4a90e2 !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+}
+
+.chartsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.noData {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+/* Chart Card Styles (from Statistics.module.css) */
+.chartCard {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chartTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.chartWrapper {
+    height: 300px;
+    width: 100%;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
@@ -363,5 +434,10 @@
     .scheduleTime {
         flex-direction: column;
         gap: 5px;
+    }
+
+    .statisticsHeader {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
