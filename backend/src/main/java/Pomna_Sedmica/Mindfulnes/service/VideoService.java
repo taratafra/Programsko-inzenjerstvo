@@ -16,10 +16,12 @@ public class VideoService {
 
     private final VideoRepository videoRepository;
     private final com.google.cloud.storage.Bucket storageBucket;
+    private final Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository onboardingSurveyRepository;
 
-    public VideoService(VideoRepository videoRepository, com.google.cloud.storage.Bucket storageBucket) {
+    public VideoService(VideoRepository videoRepository, com.google.cloud.storage.Bucket storageBucket, Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository onboardingSurveyRepository) {
         this.videoRepository = videoRepository;
         this.storageBucket = storageBucket;
+        this.onboardingSurveyRepository = onboardingSurveyRepository;
     }
 
     public List<VideoResponseDTO> getAllVideos() {
@@ -124,5 +126,49 @@ public class VideoService {
                 })
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+    public List<VideoResponseDTO> getRecommendations(User user) {
+        List<Video> videos = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
+        List<Video> blogs = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.BLOG);
+        List<Video> audios = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.AUDIO);
+
+        // Fetch user preferences
+        java.util.Optional<Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey> surveyOpt = onboardingSurveyRepository.findByUserId(user.getId());
+        
+        List<VideoResponseDTO> recommendations = new java.util.ArrayList<>();
+        java.util.Random random = new java.util.Random();
+
+        if (surveyOpt.isPresent()) {
+            Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey survey = surveyOpt.get();
+            java.util.Set<Pomna_Sedmica.Mindfulnes.domain.enums.Goal> userGoals = survey.getGoals();
+            Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience userLevel = survey.getMeditationExperience();
+
+            // Filter content based on user preferences
+            videos = filterContent(videos, userGoals, userLevel);
+            blogs = filterContent(blogs, userGoals, userLevel);
+            audios = filterContent(audios, userGoals, userLevel);
+        }
+
+        if (!videos.isEmpty()) {
+            recommendations.add(mapToDTO(videos.get(random.nextInt(videos.size()))));
+        }
+        if (!blogs.isEmpty()) {
+            recommendations.add(mapToDTO(blogs.get(random.nextInt(blogs.size()))));
+        }
+        if (!audios.isEmpty()) {
+            recommendations.add(mapToDTO(audios.get(random.nextInt(audios.size()))));
+        }
+
+        return recommendations;
+    }
+
+    private List<Video> filterContent(List<Video> content, java.util.Set<Pomna_Sedmica.Mindfulnes.domain.enums.Goal> goals, Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience level) {
+        List<Video> filtered = content.stream()
+            .filter(v -> v.getLevel() == level || v.getLevel() == null)
+            .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
+            .collect(Collectors.toList());
+        
+        // If filtering results in empty list, return original list (fallback)
+        return filtered.isEmpty() ? content : filtered;
     }
 }

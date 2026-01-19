@@ -1,0 +1,11 @@
+"Tell me, what is it you plan to do…"
+Mary Oliver - Summer's Day
+
+"Tell me, what is it you plan to do…"
+ 
+
+Mary Oliver in the poem ‘A Summer Day’ asks us the question, ‘Tell me, what is it you plan to do with your one wild and precious life?’ The question challenges us to face the fact that life is precious and that it doesn’t last forever. This question feels particularly pertinent at the beginning of a new year, “Time is passing, opportunity is lost, am I living well?’ It prods complacency, creating a sense of helpful, motivating urgency around making choices that support health, happiness and well – being.
+
+Many people attend mindfulness courses because they understand that the capacity to be present is absolutely fundamental to a sense of being fully alive. After attending an MBSR course people often struggle with continuing to integrate practice into daily life. Graduate courses like Deepening Mindfulness and Interpersonal Mindfulness, ongoing practice groups such as the Weekly Drop-in Sessions and varies one-day retreats, are designed to support people in sustaining practice, and bringing mindfulness more fully into their lives. There is however much we can do ourselves to support our practice.
+
+Intentionality, grounded in a recognition of self- responsibility and accountability is essential.  Recognising that a life lived mindfully centres on actively locating and integrating ones practice within the context of daily life. If you are serious and passionate about living a healthier and more fulfilling life, it is necessary to take a regular, disciplined approach to what you do. Choosing a specific meditation practice that you do each day, and setting aside a specific time are fundamentally important in sustaining a practice. Success as in any other enterprise – business, arts, sports – depends on establishing a disciplined and committed lifestyle. If you live haphazardly, just doing what you feel like when you feel like it, you may not find the time or inclination for things that will benefit you.

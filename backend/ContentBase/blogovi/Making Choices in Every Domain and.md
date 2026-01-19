@@ -1,0 +1,21 @@
+Making Choices in Every Domain and Every Day
+
+Applying mindful awareness to the entire domain of your life involves continuously reflecting on how you are living your life. It means being aware of the choices you have. Angeles Arrien  describes three ways that choices function. It is through choice that we can:
+
+1)Create new ways of being/realities
+
+2)Sustain and maintain current ways of being/realities.
+
+3)Release and let go of ways of being/realities that no longer serve us.
+
+Slowing down, pausing and recognizing the choices that we have enables us to know firstly, that we have a choice, and secondly, the consequences of the choices we make.  It means being aware of the choices you are making and the motivations and intentions behind these, and recognising what these choices are creating in your life; whether it is well -being or its opposite.
+
+For example having the intention to eat mindfully brings many benefits. We slow down while we are eating, notice more; taste, texture, sight and smell, and a deeper level of appreciation emerges in relationship to our food. The routine, everyday activity of eating becomes more enjoyable and vital! This greater sense of awareness extends to the ways in which we consume. We develop a greater awareness of impulses and cravings for foods that are not nourishing, that are unhealthy for our bodies. We perhaps recognise what lies behind these impulses, whether loneliness, fear or stress and make healthier choices about how to be with these. We read labels, paying a greater attention to what we will be ingesting, or consciously reduce our intake of fats, salt and sugar. In this simple act of paying greater attention to our eating we can cultivate a relationship of respect and care for ourselves, our bodies. We ingest foods that are nourishing and that contribute to our bodily health and vitality.
+
+Noticing our patterns of consumption in general can support us in understanding ourselves and taking greater care of our well-being. Noticing our relationship to shopping for example. Do we shop excessively, buying things that we don’t really need? And the media – Do we watch TV programmes and films or read magazines that fill our consciousness with damaging or unhelpful information? What we consume psychologically impacts our well-being. Try noticing how you feel physically when you veg out in front of the computer or TV.
+
+How do we spend our free time, nourish our minds and hearts? Spending time nurturing ourselves through inspiring reading, a hobby that we love, walks in nature, listening to music we enjoy, an audio talk, a deep bath, playing with our children, being in silence, or just being. Making the choice for well-being can be just what we need rather than deepening the groove of habitual unhealthy lifestyle habits.
+
+Mindful movement, whether it be Yoga, Tai-Chi, dance, Aikido, running, walking or gardening can cultivate a greater sense of awareness with regard to our bodies, as well as being fun and good for our health. Developing bodily awareness allows us to be more receptive to our bodies messages of fatigue, discomfort and stress, and to recognise that we need to take care of ourselves. Giving your body regular attention allows you to attend to the build up of tensions and strains that gather from everyday living. In this way we can develop a preventative approach to our health care rather than one of cure; where we give our bodies attention only when they are crying out for it. Mindful movement is as vital a maintenance skill as brushing your teeth and is deeply life enhancing too. It allows us to be more in touch with ourselves and our world and to live more vital, healthy lives.
+
+This mindful enquiry can also extend into the realm of our social relationships –What conversations do we have, are they helpful or unhelpful to others and to ourselves? What is our intention in speaking? How do we listen? Do we listen to speak or do we listen in order to really hear what the speaker is wanting to express? Mindful listening can deeply nourish our relationships creating understanding, empathy and compassion. Check out Nik Askews’ Ted talk for more on this here.

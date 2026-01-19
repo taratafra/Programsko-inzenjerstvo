@@ -35,6 +35,12 @@ public class VideoController {
         return videoService.getFilteredVideos(type, goal, level, durationRange);
     }
 
+    @GetMapping("/recommendations")
+    public List<VideoResponseDTO> getRecommendations(@AuthenticationPrincipal Jwt jwt) {
+        User user = trainerService.getOrCreateTrainerFromJwt(jwt);
+        return videoService.getRecommendations(user);
+    }
+
     @GetMapping("/{id}")
     public VideoResponseDTO getVideoById(@PathVariable Long id) {
         return videoService.getVideoById(id);

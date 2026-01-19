@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findAllByOrderByCreatedAtDesc();
+    List<Video> findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType type);
 }
