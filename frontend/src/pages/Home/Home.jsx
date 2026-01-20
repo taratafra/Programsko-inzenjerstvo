@@ -21,6 +21,8 @@ import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
 import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
 import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
 import Video from "../../components/home/tabPanel/video/Videos.jsx";
+import CalendarMain from "../../components/home/tabPanel/CalendarMain";
+import Videos from "../../components/home/tabPanel/Videos/Videos.jsx";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
