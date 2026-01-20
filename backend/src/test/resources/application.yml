@@ -1,0 +1,141 @@
+# ────────────── DEFAULT / COMMON SETTINGS ──────────────
+spring:
+  application:
+    name: mindfulness-app
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  profiles:
+    active: ${spring.profiles.active:prod} # fallback if not defined
+  reminders:
+    pollDelayMs: 30000
+
+# ────────────── SLEEP INTEGRATIONS (WEBHOOK DEMO) ──────────────
+# Shared secret for /api/webhooks/sleep/** (optional). If empty, endpoint accepts requests without it.
+sleep:
+  webhook:
+    secret: ${SLEEP_WEBHOOK_SECRET:}
+
+# ────────────── TERRA INTEGRATION ──────────────
+# Terra widget session generation and webhook signature verification.
+terra:
+  base-url: ${TERRA_BASE_URL:https://api.tryterra.co/v2}
+  dev-id: ${TERRA_DEV_ID:}
+  api-key: ${TERRA_API_KEY:}
+  signing-secret: ${TERRA_SIGNING_SECRET:}
+  signature-tolerance-seconds: ${TERRA_SIGNATURE_TOLERANCE_SECONDS:300}
+
+  # These are the URLs you register with Terra when creating the widget session.
+  auth:
+    success-redirect-url: ${TERRA_AUTH_SUCCESS_REDIRECT_URL:http://localhost:8080/api/sleep/terra/callback/success}
+    failure-redirect-url: ${TERRA_AUTH_FAILURE_REDIRECT_URL:http://localhost:8080/api/sleep/terra/callback/failure}
+
+  # Where our callback sends the browser after saving the integration.
+  frontend:
+    return-url: ${TERRA_FRONTEND_RETURN_URL:http://localhost:3000/sleep}
+
+
+---
+
+# ────────────── AUTH0 & SECURITY SETTINGS ──────────────
+auth0:
+  domain: ${AUTH0_DOMAIN}
+  clientId: ${AUTH0_CLIENT_ID}
+  clientSecret: ${AUTH0_CLIENT_SECRET}
+  audience: ${AUTH0_AUDIENCE}
+
+jwt:
+  # Reads JWT_SECRET from env
+  secret: ${JWT_SECRET}
+
+cors:
+  # Reads CORS_ALLOWED_ORIGIN from env
+  allowed-origin: ${CORS_ALLOWED_ORIGIN}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH0_DOMAIN}
+
+---
+
+# ────────────── DEV / TEST PROFILE (H2) ──────────────
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  mail:
+    host: ${DEV_MAIL_HOST}
+    port: ${DEV_MAIL_PORT}
+    username: ${DEV_MAIL_USERNAME}
+    password: ${DEV_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  mail:
+    from: ${DEV_MAIL_FROM}
+
+
+---
+
+# ────────────── PRODUCTION PROFILE (PostgreSQL) ──────────────
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: ${PROD_MAIL_HOST}
+    port: ${PROD_MAIL_PORT}
+    username: ${PROD_MAIL_USERNAME}
+    password: ${PROD_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  mail:
+    from: ${PROD_MAIL_FROM}
+
