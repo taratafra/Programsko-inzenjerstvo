@@ -155,7 +155,7 @@ export default function Home() {
             if (isAuthenticated) {
                 logout({
                     logoutParams: {
-                        returnTo: window.location.origin + "/login"
+                        returnTo: window.location.origin
                     }
                 });
             } else {
