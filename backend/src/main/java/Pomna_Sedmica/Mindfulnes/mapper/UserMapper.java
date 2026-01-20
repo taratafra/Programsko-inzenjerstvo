@@ -38,6 +38,10 @@ public class UserMapper {
         existingUser.setSocialLogin(request.isSocialLogin());
         existingUser.setLastLogin(LocalDateTime.now());
         existingUser.setFirstLogin(false);
+
+        if (request.email() != null && !request.email().isBlank()) {
+            existingUser.setEmail(request.email());
+        }
         return existingUser;
     }
 
