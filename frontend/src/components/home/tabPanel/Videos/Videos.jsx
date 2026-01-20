@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Videos.module.css";
 // import { storage } from "../../utils/firebase";
@@ -9,6 +9,9 @@ export default function Videos({ contentType = "VIDEO" }) {
     const [user, setUser] = useState(null);
     const [videos, setVideos] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // --- UPLOAD STATES ---
     const [showUploadModal, setShowUploadModal] = useState(false);
@@ -38,23 +41,55 @@ export default function Videos({ contentType = "VIDEO" }) {
         return "VIDEO";
     };
 
-    const fetchVideos = useCallback(async () => {
+    const fetchVideos = useCallback(async (pageNum = 0, shouldReset = false) => {
         try {
             const queryParams = new URLSearchParams();
             queryParams.append("type", contentType);
             if (filters.goal) queryParams.append("goal", filters.goal);
             if (filters.level) queryParams.append("level", filters.level);
             if (filters.durationRange) queryParams.append("durationRange", filters.durationRange);
+            queryParams.append("page", pageNum);
+            queryParams.append("size", 10);
+
+            if (pageNum > 0) setIsFetchingMore(true);
 
             const res = await fetch(`${BACKEND_URL}/api/videos?${queryParams.toString()}`);
             if (res.ok) {
                 const data = await res.json();
-                setVideos(data);
+                // data is now a Page object: { content: [], number: 0, totalPages: 1, ... }
+                const newVideos = data.content || [];
+
+                setVideos(prev => shouldReset ? newVideos : [...prev, ...newVideos]);
+                setHasMore(!data.last);
             }
         } catch (err) {
             console.error("Error fetching content:", err);
+        } finally {
+            setIsFetchingMore(false);
         }
     }, [BACKEND_URL, filters, contentType]);
+
+    useEffect(() => {
+        setPage(0);
+        setHasMore(true);
+        fetchVideos(0, true);
+    }, [filters, contentType, fetchVideos]);
+
+    const observer = useRef();
+    const lastVideoElementRef = useCallback(node => {
+        if (loading || isFetchingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => {
+                    const nextPage = prevPage + 1;
+                    fetchVideos(nextPage, false);
+                    return nextPage;
+                });
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, hasMore, isFetchingMore, fetchVideos]);
 
     useEffect(() => {
         const init = async () => {
@@ -116,9 +151,9 @@ export default function Videos({ contentType = "VIDEO" }) {
 
         if (!isLoading) {
             init();
-            fetchVideos();
+            // fetchVideos is called by the filter effect
         }
-    }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, fetchVideos, navigate]);
+    }, [isLoading, isAuthenticated, BACKEND_URL, AUDIENCE, getAccessTokenSilently, auth0User, navigate]);
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -322,11 +357,16 @@ export default function Videos({ contentType = "VIDEO" }) {
                 </div>
 
                 <div className={styles.videoGrid}>
-                    {videos.map((item) => {
+                    {videos.map((item, index) => {
                         const itemType = getMediaType(item);
+                        const isLastElement = videos.length === index + 1;
 
                         return (
-                            <div key={item.id} className={styles.videoCard}>
+                            <div
+                                key={item.id}
+                                className={styles.videoCard}
+                                ref={isLastElement ? lastVideoElementRef : null}
+                            >
                                 <div
                                     className={styles.videoThumbnail}
                                     style={{ cursor: "pointer" }}
@@ -383,6 +423,8 @@ export default function Videos({ contentType = "VIDEO" }) {
                             </div>
                         );
                     })}
+
+                    {isFetchingMore && <div style={{ width: '100%', textAlign: 'center', padding: '20px' }}>Loading more...</div>}
                 </div>
             </div>
 

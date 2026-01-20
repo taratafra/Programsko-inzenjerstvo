@@ -27,12 +27,14 @@ public class VideoController {
     }
 
     @GetMapping
-    public List<VideoResponseDTO> getAllVideos(
+    public org.springframework.data.domain.Page<VideoResponseDTO> getAllVideos(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String goal,
             @RequestParam(required = false) String level,
-            @RequestParam(required = false) String durationRange) {
-        return videoService.getFilteredVideos(type, goal, level, durationRange);
+            @RequestParam(required = false) String durationRange,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return videoService.getFilteredVideos(type, goal, level, durationRange, org.springframework.data.domain.PageRequest.of(page, size));
     }
 
     @GetMapping("/recommendations")

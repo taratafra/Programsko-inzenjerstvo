@@ -34,7 +34,7 @@ public class FirebaseStorageService {
             Blob blob = bucket.get(blobName);
             if (blob != null && blob.exists()) {
                 System.out.println("[Firebase] Already exists: " + fileName);
-                return generateSignedUrl(blob);
+                return blobName;
             }
 
             // Upload if doesn't exist
@@ -46,7 +46,7 @@ public class FirebaseStorageService {
                 Blob newBlob = bucket.create(blobName, inputStream, contentType);
                 System.out.println("[Firebase] Successfully uploaded: " + fileName);
 
-                return generateSignedUrl(newBlob);
+                return blobName;
             }
         } catch (IOException e) {
             System.err.println("[Firebase] Failed to upload " + fileName + ": " + e.getMessage());
@@ -59,13 +59,6 @@ public class FirebaseStorageService {
     }
 
     public void makeAllFilesPublic() {
-        // This method is no longer needed with Uniform Bucket-Level Access
-        // but we keep it empty to avoid breaking calls in DataInitializer
         System.out.println("[Firebase] Uniform Bucket-Level Access enabled. Skipping ACL updates.");
-    }
-
-    private String generateSignedUrl(Blob blob) {
-        // Generate a signed URL valid for 7 days
-        return blob.signUrl(7, TimeUnit.DAYS).toString();
     }
 }
