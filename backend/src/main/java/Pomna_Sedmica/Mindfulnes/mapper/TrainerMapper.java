@@ -1,6 +1,7 @@
 package Pomna_Sedmica.Mindfulnes.mapper;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @UtilityClass
 public class TrainerMapper {
 
-    public User toNewEntity(SaveAuth0UserRequestDTO request) {
+    public Trainer toNewEntity(SaveAuth0UserRequestDTO request) {
         Trainer user = new Trainer();
         user.setAuth0Id(request.auth0Id());
         user.setEmail(request.email());
@@ -30,7 +31,7 @@ public class TrainerMapper {
         return user;
     }
 
-    public User updateExisting(User existingUser, SaveAuth0UserRequestDTO request) {
+    public Trainer updateExisting(Trainer existingUser, SaveAuth0UserRequestDTO request) {
         existingUser.setName(request.name());
         existingUser.setSurname(request.surname());
         existingUser.setAuth0Id(request.auth0Id());
@@ -41,8 +42,8 @@ public class TrainerMapper {
         return existingUser;
     }
 
-    public UserDTOResponse toDTO(User user) {
-        return new UserDTOResponse(
+    public TrainerDTOResponse toDTO(Trainer user) {
+        return new TrainerDTOResponse(
                 user.getId(),
                 user.getName(),
                 user.getSurname(),
@@ -55,7 +56,10 @@ public class TrainerMapper {
                 user.getDateOfBirth(),
                 user.getBio(),
                 user.getProfilePictureUrl(),
-                user.isFirstLogin()
+                user.isFirstLogin(),
+                user.isApproved(),
+                user.getSubscribers(),
+                user.getVideoContent()
         );
     }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from '../Videos/Videos.module.css';
+import styles from '../video/Videos.module.css';
 
 export default function SingleVideoPanel({ videoId = null }) {
   const [video, setVideo] = useState(null);

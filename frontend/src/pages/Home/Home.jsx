@@ -13,11 +13,16 @@ import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 import Settings from "../../components/home/tabPanel/Settings/Settings";
 import Trainers from "../../components/home/tabPanel/Trainers";
 import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
-import CalendarMain from "../../components/home/tabPanel/CalendarMain";
-import Videos from "../../components/home/tabPanel/Videos/Videos";
-
+import TrainerDashboard from "../../components/home/tabPanel/TrainerDashboard";
 import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
 import NotificationService from "../../components/home/tabPanel/NotificationService";
+import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
+
+import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
+import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
+import Video from "../../components/home/tabPanel/video/Videos.jsx";
+import CalendarMain from "../../components/home/tabPanel/CalendarMain";
+import Videos from "../../components/home/tabPanel/Videos/Videos.jsx";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -168,6 +173,7 @@ export default function Home() {
             return sessionStorage.getItem("activeTab") || 'General Information';
         });
         const [reloadCalendar, setReloadCalendar] = useState(null);
+        const [statisticsRefreshTrigger, setStatisticsRefreshTrigger] = useState(0);
 
         useEffect(() => {
             sessionStorage.setItem("activeTab", activeTab);
@@ -221,16 +227,20 @@ export default function Home() {
                 case 'Trainers':
                     return <Trainers />;
 
+                case 'Trainer Dashboard':
+                    return <TrainerDashboard setActiveTab={setActiveTab} />;
+
                 case 'Make Appointment':
                     return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
 
+
                 case 'Statistics':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Statistics Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Statistics.</p>
-                        </div>
-                    );
+                    return <Statistics
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        refreshTrigger ={statisticsRefreshTrigger}
+                    />
 
                 case 'Calendar':
                     return (
@@ -257,9 +267,19 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
-
+                
                 case 'Settings':
                     return <Settings user={user} updateUser={updateUser} />;
+
+                case 'MoodCheckIn':
+
+                    return (
+                        <MoodCheckIn
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                            onSubmitSuccess={() => setStatisticsRefreshTrigger(prev => prev + 1)}
+                        />
+                    );
 
                 case 'Videos':
                     return <Videos
@@ -292,6 +312,13 @@ export default function Home() {
                         isAuthenticated={isAuthenticated}
                     />
 
+                case 'YourPlan':
+                    return <YourPlan
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+
                 default:
                     return <GeneralInfoGrid />;
             }
@@ -299,8 +326,6 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
-
-                {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
                 <div id="o3"></div>

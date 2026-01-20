@@ -1,6 +1,9 @@
 package Pomna_Sedmica.Mindfulnes.config;
 
 import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
+import Pomna_Sedmica.Mindfulnes.controller.TrainerController;
+import Pomna_Sedmica.Mindfulnes.domain.dto.SubscribeDTORequest;
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;

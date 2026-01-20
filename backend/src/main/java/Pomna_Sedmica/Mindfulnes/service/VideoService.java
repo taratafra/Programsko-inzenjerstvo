@@ -5,8 +5,13 @@ import Pomna_Sedmica.Mindfulnes.domain.dto.VideoResponseDTO;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.entity.Video;
 import Pomna_Sedmica.Mindfulnes.repository.VideoRepository;
+import Pomna_Sedmica.Mindfulnes.repository.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,11 +20,13 @@ import java.util.stream.Collectors;
 public class VideoService {
 
     private final VideoRepository videoRepository;
+    private final CommentRepository commentRepository;
     private final com.google.cloud.storage.Bucket storageBucket;
     private final Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository onboardingSurveyRepository;
 
-    public VideoService(VideoRepository videoRepository, com.google.cloud.storage.Bucket storageBucket, Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository onboardingSurveyRepository) {
+    public VideoService(VideoRepository videoRepository,CommentRepository commentRepository, com.google.cloud.storage.Bucket storageBucket, Pomna_Sedmica.Mindfulnes.repository.OnboardingSurveyRepository onboardingSurveyRepository) {
         this.videoRepository = videoRepository;
+        this.commentRepository = commentRepository;
         this.storageBucket = storageBucket;
         this.onboardingSurveyRepository = onboardingSurveyRepository;
     }
@@ -63,7 +70,7 @@ public class VideoService {
             // optional
         }
         video.setDuration(duration);
-        
+
         Video savedVideo = videoRepository.save(video);
         return mapToDTO(savedVideo);
     }
@@ -87,8 +94,10 @@ public class VideoService {
         dto.setLevel(video.getLevel() != null ? video.getLevel().name() : null);
         dto.setDuration(video.getDuration());
         if (video.getTrainer() != null) {
+            dto.setTrainerId(video.getTrainer().getId());
             dto.setTrainerName(video.getTrainer().getName() + " " + video.getTrainer().getSurname());
         } else {
+            dto.setTrainerId(null);
             dto.setTrainerName("Unknown Trainer");
         }
         return dto;
@@ -96,7 +105,7 @@ public class VideoService {
 
     public List<VideoResponseDTO> getFilteredVideos(String type, String goal, String level, String durationRange) {
         List<Video> videos = videoRepository.findAllByOrderByCreatedAtDesc();
-        
+
         return videos.stream()
                 .filter(v -> type == null || type.isEmpty() || (v.getType() != null && v.getType().name().equals(type)))
                 .filter(v -> goal == null || goal.isEmpty() || (v.getGoal() != null && v.getGoal().name().equals(goal)))
@@ -104,7 +113,7 @@ public class VideoService {
                 .filter(v -> {
                     if (durationRange == null || durationRange.isEmpty()) return true;
                     if (v.getDuration() == null) return false;
-                    
+
                     // Podcast specific filters (in hours)
                     if ("AUDIO".equals(type)) {
                         switch (durationRange) {
@@ -114,7 +123,7 @@ public class VideoService {
                             default: return true;
                         }
                     }
-                    
+
                     // Video specific filters (in minutes)
                     switch (durationRange) {
                         case "5-10": return v.getDuration() >= 5 && v.getDuration() <= 10;
@@ -127,6 +136,21 @@ public class VideoService {
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
+
+    @Transactional
+    public void deleteVideoFromDb(Long videoId, User trainer) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+
+        if (video.getTrainer() == null || trainer == null || trainer.getId() == null
+                || !video.getTrainer().getId().equals(trainer.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own videos");
+        }
+
+        commentRepository.deleteByVideoId(videoId);
+        videoRepository.delete(video);
+    }
     public List<VideoResponseDTO> getRecommendations(User user) {
         List<Video> videos = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         List<Video> blogs = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.BLOG);
@@ -134,7 +158,7 @@ public class VideoService {
 
         // Fetch user preferences
         java.util.Optional<Pomna_Sedmica.Mindfulnes.domain.entity.OnboardingSurvey> surveyOpt = onboardingSurveyRepository.findByUserId(user.getId());
-        
+
         List<VideoResponseDTO> recommendations = new java.util.ArrayList<>();
         java.util.Random random = new java.util.Random();
 
@@ -167,7 +191,7 @@ public class VideoService {
             .filter(v -> v.getLevel() == level || v.getLevel() == null)
             .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
             .collect(Collectors.toList());
-        
+
         // If filtering results in empty list, return original list (fallback)
         return filtered.isEmpty() ? content : filtered;
     }

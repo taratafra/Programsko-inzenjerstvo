@@ -1,44 +1,35 @@
-import HomeStyles from "../../../../pages/Home/Home.module.css"; // koristi isti CSS kao tabPanel
 import styles from "../../../../pages/Home/Home.module.css";
 
-import { useState, useEffect} from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useState} from "react";
 
 import Exercise from "./Exercise";
-import MoodHabits from "./MoodHabits";
 import Streak from "./Streak";
-import Meditation from "./Meditation";
+import Meditate from "./Meditation";
 
 
-export default function DailyFocus({ user, activeTab, setActiveTab, getAccessTokenSilently, isAuthenticated }) {  
-  const [activeSubTab, setActiveSubTab] = useState("Meditation");
-  const Navigate = useNavigate();
+export default function DailyFocus({ user, getAccessTokenSilently, isAuthenticated }) {  
+  const [activeSubTab, setActiveSubTab] = useState("Meditate");
 
   const tabs = [
-    "Meditation",
+    "Meditate",
     "Excercise",
-    "Mood & Habits",
-    "Streak"
+    "Reflect"
   ];
 
   const renderSubTabContent = () => {
       switch (activeSubTab) {
-        case "Meditation":
-          return <Meditation user={user}/>
+        case "Meditate":
+          return <Meditate user={user}/>
 
         case "Excercise":
           return <Exercise user={user}/>
         
-        case "Mood & Habits":
-          return <MoodHabits 
+        case "Reflect":
+          return <Streak 
             user={user}
             getAccessTokenSilently={getAccessTokenSilently}
             isAuthenticated={isAuthenticated}
-          />  
-        
-        case "Streak":
-          return <Streak user={user}/>
+            />
         
         default:
           return null;
@@ -69,10 +60,3 @@ export default function DailyFocus({ user, activeTab, setActiveTab, getAccessTok
       </div>
     );
 }
-
-{/* Goal badge */}
-{/*<div className={styles.goalBadgeContainer}>
-    <span className={styles.goalBadge}>
-        {getGoalLabel(item.goal)}
-    </span>
-</div>*/}
