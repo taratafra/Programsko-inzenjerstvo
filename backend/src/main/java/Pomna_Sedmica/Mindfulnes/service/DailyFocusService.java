@@ -153,10 +153,14 @@ public class DailyFocusService {
     }
 
     private void awardBadgesIfNeeded(Long userId, int currentStreak) {
+        // NEW: čim korisnik prvi put ikad završi DailyFocus, streak postaje 1
+        if (currentStreak >= 1) awardOnce(userId, BadgeType.FIRST_SUBMISSION);
+
         if (currentStreak >= 7) awardOnce(userId, BadgeType.STREAK_7);
         if (currentStreak >= 30) awardOnce(userId, BadgeType.STREAK_30);
         if (currentStreak >= 100) awardOnce(userId, BadgeType.STREAK_100);
     }
+
 
     private void awardOnce(Long userId, BadgeType type) {
         if (badgeRepo.existsByUserIdAndBadgeType(userId, type)) return;

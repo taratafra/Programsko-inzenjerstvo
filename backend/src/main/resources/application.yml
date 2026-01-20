@@ -11,6 +11,30 @@ spring:
   reminders:
     pollDelayMs: 30000
 
+# ────────────── SLEEP INTEGRATIONS (WEBHOOK DEMO) ──────────────
+# Shared secret for /api/webhooks/sleep/** (optional). If empty, endpoint accepts requests without it.
+sleep:
+  webhook:
+    secret: ${SLEEP_WEBHOOK_SECRET:}
+
+# ────────────── TERRA INTEGRATION ──────────────
+# Terra widget session generation and webhook signature verification.
+terra:
+  base-url: ${TERRA_BASE_URL:https://api.tryterra.co/v2}
+  dev-id: ${TERRA_DEV_ID:}
+  api-key: ${TERRA_API_KEY:}
+  signing-secret: ${TERRA_SIGNING_SECRET:}
+  signature-tolerance-seconds: ${TERRA_SIGNATURE_TOLERANCE_SECONDS:300}
+
+  # These are the URLs you register with Terra when creating the widget session.
+  auth:
+    success-redirect-url: ${TERRA_AUTH_SUCCESS_REDIRECT_URL:http://localhost:8080/api/sleep/terra/callback/success}
+    failure-redirect-url: ${TERRA_AUTH_FAILURE_REDIRECT_URL:http://localhost:8080/api/sleep/terra/callback/failure}
+
+  # Where our callback sends the browser after saving the integration.
+  frontend:
+    return-url: ${TERRA_FRONTEND_RETURN_URL:http://localhost:3000/sleep}
+
 
 ---
 

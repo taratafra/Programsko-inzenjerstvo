@@ -35,7 +35,6 @@ export default function Questionnaire() {
                     headers: { Authorization: `Bearer ${localToken}` },
                 });
 
-
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     console.log(userData)
@@ -146,7 +145,7 @@ export default function Questionnaire() {
                 }
             });
 
-            if (goals.length === 0) {//dodano
+            if (goals.length === 0) {
                 setError("Please select at least one goal");
                 setIsSubmitting(false);
                 return;
@@ -184,6 +183,7 @@ export default function Questionnaire() {
                 return;
             }
 
+            const isTrainer = role === "coach";
 
             const surveyData = {
                 stressLevel: parseInt(formData.get("stress")),
@@ -193,7 +193,7 @@ export default function Questionnaire() {
                 sessionLength: formData.get("session-length") || null,
                 preferredTime: formData.get("preferred-time") || null,
                 note: formData.get("notes") || null,
-                isTrainer: role === "coach"
+                isTrainer: isTrainer
             };
 
             console.log("Submitting survey data:", surveyData);
@@ -240,7 +240,14 @@ export default function Questionnaire() {
                 }
             }
 
-            const onboardingResponse = await fetch(`${BACKEND_URL}/api/users/complete-onboarding`, {
+            // FIXED: Use different endpoint based on role
+            const onboardingEndpoint = isTrainer 
+                ? `${BACKEND_URL}/api/trainers/complete-onboarding`
+                : `${BACKEND_URL}/api/users/complete-onboarding`;
+
+            console.log(`Completing onboarding for ${isTrainer ? 'trainer' : 'user'} at: ${onboardingEndpoint}`);
+
+            const onboardingResponse = await fetch(onboardingEndpoint, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -249,7 +256,13 @@ export default function Questionnaire() {
             });
 
             if (!onboardingResponse.ok) {
-                throw new Error("Failed to complete onboarding");
+                const errorText = await onboardingResponse.text();
+                console.error("Onboarding error:", {
+                    status: onboardingResponse.status,
+                    statusText: onboardingResponse.statusText,
+                    body: errorText
+                });
+                throw new Error(`Failed to complete onboarding: ${onboardingResponse.status} - ${errorText}`);
             }
 
             const updatedUser = await onboardingResponse.json();
@@ -259,12 +272,12 @@ export default function Questionnaire() {
 
         } catch (err) {
             console.error("Error submitting questionnaire:", err);
-            setError("Failed to submit questionnaire. Please try again.");
+            setError(`Failed to submit questionnaire: ${err.message}`);
             setIsSubmitting(false);
         }
     };
 
-    // upitnik
+    // questionnaire form
     const renderQuestionnaireForm = () => (
         <div className={styles.upitnikSvi}>
             <form onSubmit={handleSubmit} id="onboarding-form" method="post" noValidate>
@@ -424,15 +437,12 @@ export default function Questionnaire() {
                     </div>
                 </fieldset>
 
-
-
                 <fieldset className={styles.consent}>
                     <legend>Consent<span aria-hidden="true">*</span></legend>
                     <label>
                         <input type="checkbox" name="consent" value="agree" required /> I agree that my responses will be used to generate a personalized 7-day plan.
                     </label>
                 </fieldset>
-
 
                 <div className={styles.buttonRow}>
                     <button className={styles.submitGoals} type="submit" disabled={isSubmitting}>
@@ -464,6 +474,5 @@ export default function Questionnaire() {
                 </div>
             </div>
         </CloudBackground>
-
     );
 }
