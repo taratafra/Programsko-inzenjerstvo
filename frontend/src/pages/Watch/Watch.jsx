@@ -5,9 +5,13 @@ import styles from "./Watch.module.css";
 import ReactMarkdown from "react-markdown";
 
 // --- STAR RATING ---
-const StarRating = ({ onRate }) => {
-    const [rating, setRating] = useState(0);
+const StarRating = ({ onRate, currentRating = 0, averageRating = 0, totalRatings = 0 }) => {
+    const [rating, setRating] = useState(currentRating);
     const [hover, setHover] = useState(0);
+
+    useEffect(() => {
+        setRating(currentRating);
+    }, [currentRating]);
 
     const handleRate = (value) => {
         setRating(value);
@@ -16,23 +20,34 @@ const StarRating = ({ onRate }) => {
 
     return (
         <div className={styles.starRating}>
-            {[...Array(5)].map((_, index) => {
-                const ratingValue = index + 1;
-                return (
-                    <span
-                        key={index}
-                        className={ratingValue <= (hover || rating) ? styles.starFilled : styles.starEmpty}
-                        onClick={() => handleRate(ratingValue)}
-                        onMouseEnter={() => setHover(ratingValue)}
-                        onMouseLeave={() => setHover(0)}
-                    >
-                        ★
+            <div className={styles.starContainer}>
+                {[...Array(5)].map((_, index) => {
+                    const ratingValue = index + 1;
+                    return (
+                        <span
+                            key={index}
+                            className={ratingValue <= (hover || rating) ? styles.starFilled : styles.starEmpty}
+                            onClick={() => handleRate(ratingValue)}
+                            onMouseEnter={() => setHover(ratingValue)}
+                            onMouseLeave={() => setHover(0)}
+                        >
+                            ★
+                        </span>
+                    );
+                })}
+            </div>
+            <div className={styles.ratingInfo}>
+                {rating > 0 ? (
+                    <span className={styles.ratingText}>Your rating: {rating}/5</span>
+                ) : (
+                    <span className={styles.ratingText}>Click to rate</span>
+                )}
+                {totalRatings > 0 && (
+                    <span className={styles.averageRating}>
+                        Average: {averageRating.toFixed(1)}/5 ({totalRatings} {totalRatings === 1 ? 'rating' : 'ratings'})
                     </span>
-                );
-            })}
-            <span className={styles.ratingText}>
-                {rating > 0 ? `You rated: ${rating}/5` : "Rate"}
-            </span>
+                )}
+            </div>
         </div>
     );
 };
@@ -54,6 +69,12 @@ export default function Watch() {
     // --- SUBSCRIBE STATE ---
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isSubscribing, setIsSubscribing] = useState(false);
+
+    // --- RATING STATE ---
+    const [userRating, setUserRating] = useState(0);
+    const [averageRating, setAverageRating] = useState(0);
+    const [totalRatings, setTotalRatings] = useState(0);
+    const [isRating, setIsRating] = useState(false);
 
     // --- CONTENT DATA STATE ---
     const [contentData, setContentData] = useState({
@@ -173,7 +194,78 @@ export default function Watch() {
 
         fetchContent();
         fetchComments();
+        fetchRatings();
     }, [id, location.state?.type, BACKEND_URL]);
+
+    const fetchRatings = async () => {
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                try {
+                    token = await getAccessTokenSilently({
+                        authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                } catch (e) {
+                    console.error("Error getting token for ratings:", e);
+                }
+            }
+
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${BACKEND_URL}/api/videos/${id}/ratings`, { headers });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setAverageRating(data.averageRating || 0);
+                setTotalRatings(data.totalRatings || 0);
+                setUserRating(data.userRating || 0);
+            }
+        } catch (err) {
+            console.error("Error fetching ratings:", err);
+        }
+    };
+
+    const handleRateVideo = async (ratingValue) => {
+        if (isRating) return;
+        setIsRating(true);
+
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
+
+            if (!token) {
+                alert("Please log in to rate this content");
+                setIsRating(false);
+                return;
+            }
+
+            const res = await fetch(`${BACKEND_URL}/api/videos/${id}/ratings`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating: ratingValue })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setUserRating(data.userRating);
+                setAverageRating(data.averageRating);
+                setTotalRatings(data.totalRatings);
+            } else {
+                alert("Failed to submit rating");
+            }
+        } catch (err) {
+            console.error("Error submitting rating:", err);
+            alert("Error submitting rating");
+        } finally {
+            setIsRating(false);
+        }
+    };
 
     const checkSubscriptionStatus = async (trainerId) => {
         try {
@@ -197,7 +289,6 @@ export default function Watch() {
 
             if (res.ok) {
                 const userData = await res.json();
-                // Check if trainerId is in user's subscriptions
                 setIsSubscribed(userData.subscriptions?.includes(trainerId) || false);
             }
         } catch (err) {
@@ -486,7 +577,12 @@ export default function Watch() {
                             <div className={styles.actionRow}>
                                 <div className={styles.reviewSection}>
                                     <span>Leave a Review:</span>
-                                    <StarRating onRate={(val) => console.log(val)} />
+                                    <StarRating 
+                                        onRate={handleRateVideo} 
+                                        currentRating={userRating}
+                                        averageRating={averageRating}
+                                        totalRatings={totalRatings}
+                                    />
                                 </div>
                             </div>
 
