@@ -51,12 +51,17 @@ export default function Watch() {
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyText, setReplyText] = useState("");
 
+    // --- SUBSCRIBE STATE ---
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [isSubscribing, setIsSubscribing] = useState(false);
+
     // --- CONTENT DATA STATE ---
     const [contentData, setContentData] = useState({
         title: "Loading...",
         type: location.state?.type || "VIDEO",
         url: "",
-        textBody: ""
+        textBody: "",
+        trainerId: null
     });
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
@@ -90,7 +95,6 @@ export default function Watch() {
                     } catch (tokenErr) {
                         console.error("Error getting token in Watch:", tokenErr);
                     }
-                    // We don't set loading false here because fetchContent handles it
                 } else if (localToken) {
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
@@ -141,6 +145,7 @@ export default function Watch() {
                         type: itemType,
                         url: data.url,
                         trainerName: data.trainerName,
+                        trainerId: data.trainerId,
                         createdAt: data.createdAt,
                         textBody: itemType === 'BLOG' ? "Loading blog content..." : ""
                     });
@@ -153,6 +158,11 @@ export default function Watch() {
                             setContentData(prev => ({ ...prev, textBody: text }));
                         }
                     }
+
+                    // Check if already subscribed
+                    if (data.trainerId) {
+                        checkSubscriptionStatus(data.trainerId);
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching content:", err);
@@ -164,6 +174,76 @@ export default function Watch() {
         fetchContent();
         fetchComments();
     }, [id, location.state?.type, BACKEND_URL]);
+
+    const checkSubscriptionStatus = async (trainerId) => {
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                try {
+                    token = await getAccessTokenSilently({
+                        authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                } catch (e) {
+                    console.error("Error getting token:", e);
+                    return;
+                }
+            }
+
+            if (!token) return;
+
+            const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                const userData = await res.json();
+                // Check if trainerId is in user's subscriptions
+                setIsSubscribed(userData.subscriptions?.includes(trainerId) || false);
+            }
+        } catch (err) {
+            console.error("Error checking subscription status:", err);
+        }
+    };
+
+    const handleSubscribe = async () => {
+        if (!contentData.trainerId) {
+            alert("Trainer information not available");
+            return;
+        }
+
+        setIsSubscribing(true);
+
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
+
+            const res = await fetch(`${BACKEND_URL}/api/trainers/me/subscribe`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ trainerId: contentData.trainerId })
+            });
+
+            if (res.ok) {
+                setIsSubscribed(!isSubscribed);
+                alert(isSubscribed ? "Unsubscribed successfully!" : "Subscribed successfully!");
+            } else {
+                const errorText = await res.text();
+                alert("Failed to subscribe: " + errorText);
+            }
+        } catch (err) {
+            console.error("Error subscribing:", err);
+            alert("Error processing subscription");
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
 
     const fetchComments = async () => {
         try {
@@ -240,7 +320,7 @@ export default function Watch() {
             });
 
             if (res.ok) {
-                await fetchComments(); // Refresh comments to show nested reply
+                await fetchComments();
                 setReplyingTo(null);
                 setReplyText("");
             }
@@ -266,7 +346,7 @@ export default function Watch() {
             });
 
             if (res.ok) {
-                fetchComments(); // Refresh to remove deleted comment
+                fetchComments();
             }
         } catch (err) {
             console.error("Error deleting comment:", err);
@@ -389,7 +469,17 @@ export default function Watch() {
                                         By {contentData.trainerName} • {contentData.createdAt ? new Date(contentData.createdAt).toLocaleDateString() : "Recently"}
                                     </p>
                                 </div>
-                                <button className={styles.subscribeBtn}>Subscribe</button>
+                                <button 
+                                    className={styles.subscribeBtn}
+                                    onClick={handleSubscribe}
+                                    disabled={isSubscribing}
+                                    style={{
+                                        backgroundColor: isSubscribed ? '#ccc' : '#4318FF',
+                                        cursor: isSubscribing ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    {isSubscribing ? 'Processing...' : isSubscribed ? 'Subscribed' : 'Subscribe'}
+                                </button>
                             </div>
 
                             {/* --- REVIEWS --- */}
