@@ -79,11 +79,12 @@ public class AuthController {
                     .orElseGet(() -> {
                         User u = new User(
                                 req.getEmail(),
+                                null,
                                 auth0Id,
                                 "Auth0User",
                                 "",
                                 LocalDate.now(),
-                                Role.USER,
+                                Role.USER, //ovo treba promijenit, ne moze vise default bit user, zapravo neka bude user pa neka onboarding promijeni
                                 true
                         );
                         return userRepository.save(u);
@@ -121,10 +122,11 @@ public class AuthController {
         User user = new User(
                 req.getEmail(),
                 encoded,
+                null,
                 req.getName(),
                 req.getSurname(),
                 req.getDateOfBirth(),
-                Role.USER,
+                Role.USER,//isto neka ostane user, a promijeni se kod onboardinga
                 false
         );
 

@@ -1,0 +1,628 @@
+.container {
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    color: #1a1a1a;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* Section Navigation */
+.sectionNav {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.sectionButton {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #666;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+.sectionButton:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.sectionButtonActive {
+    background: #4a90e2;
+    color: white;
+}
+
+.sectionButtonActive:hover {
+    background: #357abd;
+}
+
+/* Overview Section */
+.overviewSection {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.statCard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 25px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.statCard:hover {
+    transform: translateY(-5px);
+}
+
+.statCard:nth-child(2) {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.statCard:nth-child(3) {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.statCard:nth-child(4) {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.statIcon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.statNumber {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.statLabel {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* Upcoming Sessions */
+.upcomingSection {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.scheduleList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.scheduleCard {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    border-left: 4px solid #4a90e2;
+    transition: all 0.3s ease;
+}
+
+.scheduleCard:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.scheduleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.scheduleHeader h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.scheduleBadge {
+    background: #4a90e2;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.scheduleDetails {
+    display: flex;
+    gap: 20px;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.scheduleDetails p {
+    margin: 0;
+    color:  black   ;
+}
+
+/* Clients Section */
+.clientsSection {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.clientsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.clientCard {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.clientCard:hover {
+    border-color: #4a90e2;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+}
+
+.clientAvatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.clientInfo {
+    flex: 1;
+}
+
+.clientInfo h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.clientInfo p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.subscriptionDate {
+    margin-top: 5px !important;
+    font-size: 0.85rem !important;
+    color: #999 !important;
+}
+
+/* Schedules Section */
+.schedulesSection {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.schedulesList {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.scheduleItem {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.scheduleItem:hover {
+    background: #e9ecef;
+}
+
+.scheduleInfo h4 {
+    margin: 0 0 10px 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.scheduleMetadata {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge.once {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge.daily {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.badge.weekly {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.badge.enabled {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.badge.disabled {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.scheduleTime {
+    display: flex;
+    gap: 20px;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.scheduleTime p {
+    margin: 0;
+}
+
+/* Empty States */
+.emptyState,
+.emptyMessage {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+/* Client Statistics Section */
+.statisticsSection {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statisticsHeader {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.backButton {
+    padding: 10px 20px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.backButton:hover {
+    background: #357abd;
+}
+
+.viewStats {
+    margin-top: 8px !important;
+    color: #4a90e2 !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+}
+
+.chartsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.noData {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+/* Chart Card Styles (from Statistics.module.css) */
+.chartCard {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chartTitle {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.chartWrapper {
+    height: 300px;
+    width: 100%;
+}
+
+/* Content Section */
+.contentSection {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.contentGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.contentCard {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.contentCard:hover {
+    border-color: #4a90e2;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    transform: translateY(-2px);
+}
+
+.contentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.contentHeader h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    flex: 1;
+}
+
+.contentBadge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.contentBadge.video {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.contentBadge.audio {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.contentBadge.blog {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.contentDescription {
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.contentMetadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+}
+
+.contentMetadata span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.contentActions {
+    display: flex;
+    gap: 10px;
+    padding-top: 10px;
+}
+
+.deleteButton {
+    padding: 10px 20px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.deleteButton:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.deleteButton:active {
+    transform: translateY(0);
+}
+
+.emptyState {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.emptyState p:first-child {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #666;
+}
+
+.emptyState p:last-child {
+    font-size: 1rem;
+    margin-top: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .contentSection {
+        padding: 20px;
+    }
+
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .contentCard {
+        padding: 18px;
+    }
+
+    .contentHeader h4 {
+        font-size: 1.1rem;
+    }
+
+    .contentBadge {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+    }
+
+    .contentMetadata {
+        gap: 12px;
+    }
+
+    .deleteButton {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .sectionNav {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sectionButton {
+        width: 100%;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .clientsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .scheduleDetails,
+    .scheduleTime {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .statisticsHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

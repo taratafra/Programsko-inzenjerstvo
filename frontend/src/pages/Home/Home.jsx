@@ -1,6 +1,7 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../../components/home/tabPanel/ToastNotification";
 import styles from "./Home.module.css";
 
 import Header from "../../components/home/Header";
@@ -9,86 +10,110 @@ import RightSidebar from "../../components/home/RightSidebar";
 import DashboardTabs from "../../components/home/DashboardTabs";
 import GeneralInfoGrid from "../../components/home/GeneralInfoGrid";
 
+import Settings from "../../components/home/tabPanel/Settings/Settings";
+import Trainers from "../../components/home/tabPanel/Trainers";
+import MakeAppointment from "../../components/home/tabPanel/MakeAppointment";
+import TrainerDashboard from "../../components/home/tabPanel/TrainerDashboard";
+import DailyFocus from "../../components/home/tabPanel/DailyFocus/DailyFocus";
+import NotificationService from "../../components/home/tabPanel/NotificationService";
+import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
+
+import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
+import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
+import Video from "../../components/home/tabPanel/video/Videos.jsx";
+import CalendarMain from "../../components/home/tabPanel/CalendarMain";
+import Videos from "../../components/home/tabPanel/Videos/Videos.jsx";
+import Smartwatch from "../../components/home/tabPanel/Smartwatch/Smartwatch.jsx";
+
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
+    const { addToast } = useToast();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const location = useLocation();
     const hasNavigatedToQuestions = useRef(false);
+    const hasInitialized = useRef(false);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
 
     useEffect(() => {
+        // Don't run if still loading Auth0 or already initialized
+        if (isLoading || hasInitialized.current) return;
+
         const init = async () => {
+            hasInitialized.current = true;
             const localToken = localStorage.getItem("token");
 
-            try {
-                // Auth0 login Google i to
-                if (isAuthenticated && auth0User) {
-                    //console.log("Authenticated via Auth0:", auth0User);
-                    setUser(auth0User);
+            // CHECK AUTHENTICATION FIRST - before any other logic
+            if (!isAuthenticated && !localToken) {
+                console.log("No authentication found, redirecting to login");
+                setLoading(false);
+                navigate("/login", { replace: true });
+                return;
+            }
 
+            try {
+                // Auth0 login (Google, etc.)
+                if (isAuthenticated && auth0User) {
                     const userResponse = await sendUserDataToBackend(auth0User);
 
-                    // provjera za jel rjesia kviz
-                    if (userResponse && !userResponse.isOnboardingComplete) {
-                        if (!hasNavigatedToQuestions.current) {
-                            //console.log("Onboarding not complete, redirecting to questions");
+                    if (userResponse) {
+                        setUser(userResponse);
+
+                        // Check if questionnaire needs to be completed
+                        if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
+                    } else {
+                        setUser(auth0User);
                     }
-
-                    //console.log("Auth0 user fully onboarded, showing home");
-                    setLoading(false);
                 }
                 // Local JWT login
                 else if (localToken) {
-                    //console.log("Authenticated via local JWT");
-
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
 
-                    if (!res.ok) throw new Error("Failed to fetch user info");
-
-                    const data = await res.json();
-                    //console.log("User data from backend:", data);
-                    setUser(data);
-
-                    // vrijeme za kviz
-                    if (!data.isOnboardingComplete) {
-                        if (!hasNavigatedToQuestions.current) {
-                            //console.log("Onboarding not complete, redirecting to questions");
-                            hasNavigatedToQuestions.current = true;
-                            navigate("/questions", { replace: true });
-                            return;
-                        }
+                    if (!res.ok) {
+                        console.error("Token validation failed");
+                        localStorage.removeItem("token");
+                        sessionStorage.clear();
+                        navigate("/login", { replace: true });
+                        return;
                     }
 
-                    //console.log("Local user fully set up, showing home");
-                    setLoading(false);
-                } else {
-                    setLoading(false);
+                    const data = await res.json();
+                    setUser(data);
+
+                    // Check if questionnaire needs to be completed
+                    if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                        hasNavigatedToQuestions.current = true;
+                        navigate("/questions", { replace: true });
+                        return;
+                    }
                 }
             } catch (err) {
-                console.error("Error initializing user:", err);
+                console.error("Error in init:", err);
+                addToast('Failed to load user data. Please try logging in again.', 'error');
+                localStorage.removeItem("token");
+                sessionStorage.clear();
+                navigate("/login", { replace: true });
+            } finally {
                 setLoading(false);
             }
         };
 
-        if (!isLoading) {
-            init();
-        }
-    }, [isLoading, isAuthenticated, location.pathname, navigate, BACKEND_URL]);
+        init();
+    }, [isLoading, isAuthenticated, auth0User, navigate, BACKEND_URL, AUDIENCE, addToast]);
 
     const sendUserDataToBackend = async (auth0User) => {
         try {
             const token = await getAccessTokenSilently({
                 authorizationParams: {
-                    audience: `${BACKEND_URL}`,
+                    audience: `${AUDIENCE}`,
                     scope: "openid profile email",
                 },
             });
@@ -116,7 +141,6 @@ export default function Home() {
             if (!res.ok) return null;
 
             const userData = await res.json();
-            //console.log("User data synced successfully:", userData);
             return userData;
         } catch (err) {
             console.error("Error sending user data to backend:", err);
@@ -127,25 +151,45 @@ export default function Home() {
     const handleLogout = () => {
         try {
             localStorage.removeItem("token");
+            sessionStorage.clear();
 
             if (isAuthenticated) {
-                import("@auth0/auth0-react").then(({ useAuth0 }) => {
-                    window.location.href = `${window.location.origin}/login`;
+                logout({
+                    logoutParams: {
+                        returnTo: window.location.origin
+                    }
                 });
             } else {
                 navigate("/login");
             }
         } catch (err) {
             console.error("Logout error:", err);
+            addToast('Error during logout', 'error');
             navigate("/login");
         }
     };
 
     function HomeLayout() {
-        const [activeTab, setActiveTab] = useState('Personalized recomendations');
+        const [activeTab, setActiveTab] = useState(() => {
+            return sessionStorage.getItem("activeTab") || 'General Information';
+        });
+        const [reloadCalendar, setReloadCalendar] = useState(null);
+        const [statisticsRefreshTrigger, setStatisticsRefreshTrigger] = useState(0);
+
+        useEffect(() => {
+            sessionStorage.setItem("activeTab", activeTab);
+        }, [activeTab]);
+
+        const updateUser = (updatedFields) => {
+            setUser(prevUser => ({
+                ...prevUser,
+                ...updatedFields
+            }));
+        };
 
         const renderTabContent = () => {
             switch (activeTab) {
+                case 'General Information':
                 case 'Personalized recomendations':
                     return <GeneralInfoGrid />;
 
@@ -181,25 +225,32 @@ export default function Home() {
                         </div>
                     );
 
+                case 'Trainers':
+                    return <Trainers />;
+
+                case 'Trainer Dashboard':
+                    return <TrainerDashboard setActiveTab={setActiveTab} />;
+
+                case 'Make Appointment':
+                    return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
+
+
+                case 'Statistics':
+                    return <Statistics
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        refreshTrigger ={statisticsRefreshTrigger}
+                    />
+
                 case 'Calendar':
                     return (
                         <div className={styles.tabPanel}>
-                            <h1>Calendar Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Calendar.</p>
-                        </div>
-                    );
-                case 'Journal':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Journal Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Journal.</p>
-                        </div>
-                    );
-                case 'Statistics':
-                    return (
-                        <div className={styles.tabPanel}>
-                            <h1>Statistics Placeholder</h1>
-                            <p>Kolege će ovdje implementirati Statistics.</p>
+                            <CalendarMain
+                                navigate={navigate}
+                                setActiveTab={setActiveTab}
+                                // Pass any other props your specific CalendarMain needs
+                            />
                         </div>
                     );
 
@@ -217,6 +268,64 @@ export default function Home() {
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
+                
+                case 'Settings':
+                    return <Settings user={user} updateUser={updateUser} />;
+
+                case 'MoodCheckIn':
+
+                    return (
+                        <MoodCheckIn
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                            onSubmitSuccess={() => setStatisticsRefreshTrigger(prev => prev + 1)}
+                        />
+                    );
+
+                case 'Videos':
+                    return <Videos
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        contentType="VIDEO"
+                    />;
+
+                case 'Articles':
+                    return <Videos
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        contentType="BLOG"
+                    />;
+
+                case 'Podcasts':
+                    return <Videos
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                        contentType="AUDIO"
+                    />;
+
+                case 'DailyFocus':
+                    return <DailyFocus
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+
+                case 'Smartwatch':
+                    return <Smartwatch
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+
+                case 'YourPlan':
+                    return <YourPlan
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
 
                 default:
                     return <GeneralInfoGrid />;
@@ -225,7 +334,6 @@ export default function Home() {
 
         return (
             <div className={styles.layoutContainer}>
-                {/* oblaci */}
                 <div id="o1"></div>
                 <div id="o2"></div>
                 <div id="o3"></div>
@@ -250,15 +358,25 @@ export default function Home() {
                             {renderTabContent()}
                         </div>
 
-                        <RightSidebar navigate={navigate} />
+                        <RightSidebar
+                            navigate={navigate}
+                            setActiveTab={setActiveTab}
+                            activeTab={activeTab}
+                            onSchedulesReload={(reloadFn) => setReloadCalendar(() => reloadFn)}
+                        />
                     </div>
                 </div>
             </div>
         );
     }
 
-    if (loading || isLoading) return <div>Loading...</div>;
-    if (!user) return <div>No user found...</div>;
+    if (loading || isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (!user) {
+        return null;
+    }
 
     return <HomeLayout />;
 }

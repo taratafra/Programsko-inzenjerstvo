@@ -1,4 +1,4 @@
-import styles from "../../Home.module.css";
+import styles from "../../pages/Home/Home.module.css";
 import DailyMessages from "./DailyMessages";
 
 export default function Header({ navigate, user }) {
@@ -8,18 +8,9 @@ export default function Header({ navigate, user }) {
         <h1 className={styles.logo} onClick={() => navigate("/home")}>
           Mindfulness
         </h1>
-        <div className={styles.headerQuote}>
+        <div className={styles.headerQuoteFull}>
           <DailyMessages user={user} />
         </div>
-      </div>
-
-      <div className={styles.headerActions}>
-        <input
-          type="text"
-          placeholder="🔍 Search something..."
-          className={styles.searchInput}
-        />
-        <button className={styles.upgradeButton}>Upgrade</button>
       </div>
     </div>
   );

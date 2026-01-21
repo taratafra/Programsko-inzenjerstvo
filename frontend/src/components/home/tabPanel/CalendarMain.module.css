@@ -1,0 +1,623 @@
+.calendarSidebar {
+  background: rgba(53, 32, 90, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: fit-content;
+}
+
+.calendarTitle {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+}
+
+.calendar {
+  width: 100%;
+}
+
+/* Centered Month/Year Title */
+.monthYearTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  margin: 0;          /* Remove bottom margin as it's now inside the flex row */
+  flex: 1;            /* Takes up all available space between buttons */
+}
+
+/* Navigation buttons side by side with title in middle */
+.calendarHeader {
+  display: flex;
+  justify-content: space-between; /* Pushes left button left, right button right */
+  align-items: center;            /* Vertically centers items */
+  margin-bottom: 15px;
+  padding: 0 5px;
+  width: 100%;                    /* Ensure it takes full width */
+}
+
+
+
+.monthYear {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.navButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.dayNames {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.dayName {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 5px 0;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.dayCell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-size: 0.85rem;
+  color: white;
+  overflow: hidden;
+}
+
+.dayCell:hover:not(.emptyCell) {
+  background: rgba(255, 255, 255, 0.15);
+  z-index: 2;
+  transform: scale(1.05);
+}
+
+.emptyCell {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.emptyCell:hover {
+  background: transparent;
+  transform: none;
+}
+
+.pastDay {
+  color: rgba(255, 255, 255, 0.3) !important;
+  cursor: not-allowed !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  pointer-events: none;
+}
+
+.pastDay:hover {
+  background: rgba(255, 255, 255, 0.02) !important;
+  transform: none !important;
+}
+
+/* Override color classes for past days - make them dimmer */
+.pastDay.cellOnce {
+  background: rgba(220, 38, 38, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.pastDay.cellWeekly {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+}
+
+.pastDay.cellDaily {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+}
+
+/* --- NEW COLOR CLASSES (Replaces Dots) --- */
+
+/* Priority 1: One-time (Red) */
+.cellOnce {
+  background: rgba(220, 38, 38, 0.75) !important; /* Strong Red */
+  border-color: #ef4444 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Priority 2: Weekly (Green) */
+.cellWeekly {
+  background: rgba(16, 185, 129, 0.75) !important; /* Strong Green */
+  border-color: #34d399 !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Priority 3: Daily (Blue) */
+.cellDaily {
+  background: rgba(59, 130, 246, 0.75) !important; /* Strong Blue */
+  border-color: #60a5fa !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Selected State (White border to stand out against colors) */
+.selected {
+  border: 2px solid white !important;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+.today {
+  box-shadow: inset 0 0 0 2px #fff; /* Inner white border for today */
+}
+
+/* --- REMOVED DOTS --- */
+/* We simply hide these if the React code still renders them, 
+   but it's better to remove them from JSX */
+.appointmentDots, .appointmentDot, .dotOnce, .dotDaily, .dotWeekly {
+  display: none;
+}
+
+.dayNumber {
+  font-weight: 500;
+}
+
+.today {
+  background: rgba(102, 126, 234, 0.3);
+  border-color: #667eea;
+  font-weight: bold;
+}
+
+.selected {
+  background: rgba(102, 126, 234, 0.5);
+  border-color: #667eea;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+}
+
+.hasAppointment {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.hasAppointment:hover {
+  background: rgba(220, 38, 38, 0.3);
+}
+
+.appointmentDots {
+  position: absolute;
+  bottom: 3px;
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+}
+
+.appointmentDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.dotOnce {
+  background: #dc2626;
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.8);
+}
+
+.dotDaily {
+  background: #3b82f6;
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.8);
+}
+
+.dotWeekly {
+  background: #10b981;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.8);
+}
+
+/* Add these to your existing RightSidebar.module.css */
+
+.syncButton {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.syncButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.syncButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modalClose {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+}
+
+.modalClose:hover {
+  color: #333;
+}
+
+.modalContent h3 {
+  margin: 0 0 20px 0;
+  color: #34a853;
+  font-size: 24px;
+}
+
+.instructions {
+  text-align: left;
+  line-height: 1.6;
+}
+
+.instructions ol {
+  padding-left: 20px;
+  margin: 15px 0;
+}
+
+.instructions li {
+  margin: 10px 0;
+  color: #333;
+}
+
+.instructions strong {
+  color: #4285f4;
+}
+
+.instructions code {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #d63384;
+}
+
+.instructions a {
+  color: #4285f4;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.instructions a:hover {
+  text-decoration: underline;
+}
+
+.note {
+  background: #e8f5e9;
+  border-left: 4px solid #34a853;
+  padding: 12px;
+  margin: 15px 0 0 0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.okButton {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.okButton:hover {
+  background: #3367d6;
+}
+
+/* Schedule Details Panel */
+.scheduleDetails {
+  margin-top: 15px;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detailsHeader h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.schedulesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.scheduleItem {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  transition: all 0.2s ease;
+}
+
+.scheduleItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
+}
+
+.scheduleTime {
+  font-size: 0.9rem;
+  color: #a5b4fc;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.scheduleTitle {
+  font-size: 0.95rem;
+  color: white;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.scheduleType {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
+}
+
+.scheduleDays {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+}
+
+/* Add these styles to your RightSidebar.module.css */
+
+.scheduleActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+
+.deleteButton {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.deleteThisDateButton {
+  padding: 6px 12px;
+  background-color: #ff8c00;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
+}
+
+.deleteThisDateButton:hover {
+  background-color: #e67e00;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
+}
+
+
+.calendarNote {
+  margin-top: 15px;
+  text-align: center;
+  padding: 15px;
+  background: rgba(102, 126, 234, 0.15);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 10px;
+}
+
+.calendarNote p {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Scrollbar styling for schedules list */
+.schedulesList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.schedulesList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.schedulesList::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.schedulesList::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .calendarSidebar {
+    padding: 15px;
+  }
+
+  .dayCell {
+    font-size: 0.75rem;
+  }
+
+  .scheduleDetails {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .calendarSidebar {
+    margin-top: 20px;
+  }
+
+  .dayNames {
+    gap: 3px;
+  }
+
+  .daysGrid {
+    gap: 3px;
+  }
+
+  .dayCell {
+    font-size: 0.7rem;
+  }
+
+  .appointmentDots {
+    gap: 2px;
+  }
+
+  .appointmentDot {
+    width: 4px;
+    height: 4px;
+    bottom: 2px;
+  }
+}

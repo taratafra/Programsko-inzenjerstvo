@@ -1,88 +1,92 @@
-import styles from "../../Home.module.css";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import homeStyles from "../../pages/Home/Home.module.css";
+import styles from "./GeneralInfoGrid.module.css";
+
+import { useAuth0 } from "@auth0/auth0-react";
 
 export default function GeneralInfoGrid() {
+  const [recommendations, setRecommendations] = useState([]);
+  const navigate = useNavigate();
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const BACKEND_URL = process.env.REACT_APP_BACKEND;
+  const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        let token = localStorage.getItem("token");
+
+        if (isAuthenticated) {
+          token = await getAccessTokenSilently({
+            authorizationParams: {
+              audience: `${AUDIENCE}`,
+              scope: "openid profile email",
+            },
+          });
+        }
+
+        if (!token) return;
+
+        const res = await fetch(`${BACKEND_URL}/api/videos/recommendations`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setRecommendations(data);
+        }
+      } catch (err) {
+        console.error("Error fetching recommendations:", err);
+      }
+    };
+
+    fetchRecommendations();
+  }, [BACKEND_URL, isAuthenticated, getAccessTokenSilently, AUDIENCE]);
+
+  const handleCardClick = (item) => {
+    navigate(`/watch/${item.id}`);
+  };
+
+  const getVideo = () => recommendations.find(r => r.type === 'VIDEO');
+  const getBlog = () => recommendations.find(r => r.type === 'BLOG');
+  const getAudio = () => recommendations.find(r => r.type === 'AUDIO');
+
+  const renderRecommendationCard = (item, titleOverride) => {
+    if (!item) return (
+      <div className={homeStyles.card}>
+        <h4>{titleOverride}</h4>
+        <p>Loading...</p>
+      </div>
+    );
+
+    return (
+      <div className={homeStyles.card} onClick={() => handleCardClick(item)} style={{ cursor: 'pointer' }}>
+        <h4>{titleOverride || item.title}</h4>
+        <p className={styles.deepSleepText}>{item.type} • {item.duration} min</p>
+        <div style={{ margin: '10px 0', fontSize: '14px' }}>
+          {item.title}
+        </div>
+        <p className={styles.unlockedText}>
+          By {item.trainerName}
+        </p>
+      </div>
+    );
+  };
+
   return (
-    <div className={styles.infoGrid}>
-      {/* Kartica 1 */}
-      <div className={styles.card}>
-        <h4>Daily Insights</h4>
-        <p style={{ fontSize: "12px", color: "#999" }}>Deep Sleep: 76%</p>
-        <div className={styles.chartPlaceholderCircle}><img src={"url('https://ppatour.com/athlete/ivan-jakovljevic/') "}/></div>
-        <p style={{ color: "var(--text-accent)", textAlign: "center" }}>
-          20% Unlocked
-        </p>
-      </div>
+    <div className={homeStyles.infoGrid}>
+      {/* Video Recommendation */}
+      {renderRecommendationCard(getVideo(), "Recommended Video")}
 
-      {/* Kartica 2 */}
-      <div className={styles.card}>
-        <h4>Emotional Landscape</h4>
-        <div
-          className={styles.chartPlaceholderBar}
-          style={{
-            height: "100px",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-          }}
-        >
-          <button className={styles.upgradeButton} style={{ padding: '5px 10px', marginBottom: '5px' }}>
-            Weekly Mood Report
-          </button>
-        </div>
-      </div>
+      {/* Article Recommendation */}
+      {renderRecommendationCard(getBlog(), "Recommended Article")}
 
-      {/* Kartica 3 */}
-      <div className={`${styles.card} ${styles.cardWellnessSummary}`}>
-        <h4>Wellness Summary</h4>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            flexDirection: "column",
-            margin: "15px 0",
-          }}
-        >
-          <span className={styles.wellnessScore}>3.95</span>
-          <p>Average wellness score</p>
-        </div>
-      </div>
+      {/* Podcast Recommendation */}
+      {renderRecommendationCard(getAudio(), "Recommended Podcast")}
 
-      {/* Kartica 4 */}
-      <div className={styles.card}>
-        <h4>Mood Distribution</h4>
-        <p style={{ color: "var(--text-accent)", textAlign: "right" }}>43%</p>
-        <div className={styles.chartPlaceholderBar}></div>
-      </div>
-
-      {/* Kartica 5 */}
-      <div className={`${styles.card} ${styles.cardRelaxation}`}>
-        <div className={styles.cardRelaxationContent}>
-          <h4 style={{ marginBottom: "10px" }}>Mindful Relaxation</h4>
-          <button className={styles.upgradeButton} style={{ padding: '8px 15px' }}>
-            Relaxation Therapy &gt;
-          </button>
-        </div>
-      </div>
-
-      {/* Kartica 6 */}
-      <div className={styles.card}>
-        <h4>Daily Mood Trends</h4>
-        <p style={{ color: "var(--text-accent)", textAlign: "right" }}>4.01</p>
-        <div
-          className={styles.chartPlaceholderBar}
-          style={{ height: "100px" }}
-        ></div>
-        <p
-          style={{
-            fontSize: "12px",
-            color: "#999",
-            textAlign: "center",
-          }}
-        >
-          Average mood score
-        </p>
-      </div>
     </div>
   );
 }

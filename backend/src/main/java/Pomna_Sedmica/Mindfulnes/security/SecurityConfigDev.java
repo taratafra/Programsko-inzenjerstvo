@@ -47,8 +47,17 @@ public class SecurityConfigDev {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
-                        .requestMatchers("/api/user/settings/**").authenticated()
+                        .requestMatchers("/api/schedules/**").authenticated()
+                        .requestMatchers("/api/trainers/**").permitAll()
+                        .requestMatchers("/api/admins/**").authenticated()
+                        .requestMatchers("/api/user/settings/**").authenticated() //trebat ce dodat jos putanje za trenera content i admina
+                        .requestMatchers("/api/daily-focus/**").authenticated()
+                        .requestMatchers("/api/mood-checkins/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        .requestMatchers("/api/messages/**").authenticated()//mozda ne treba
+                        .requestMatchers("/api/reminders/**").authenticated()//mozda ne treba
                         .requestMatchers("/public").permitAll()
+                        .requestMatchers("/onboarding/**").authenticated()
                         .anyRequest().permitAll()
                 )
                 .cors(Customizer.withDefaults())
@@ -78,9 +87,18 @@ public class SecurityConfigDev {
         // Try Auth0 first, fallback to local
         return token -> {
             try {
-                return auth0Decoder.decode(token);
+                Jwt decoded = auth0Decoder.decode(token);
+                System.out.println("DEBUG: Decoded via Auth0. Sub: " + decoded.getSubject());
+                return decoded;
             } catch (Exception e) {
-                return localDecoder.decode(token);
+                try {
+                    Jwt decoded = localDecoder.decode(token);
+                    System.out.println("DEBUG: Decoded via Local. Sub: " + decoded.getSubject());
+                    return decoded;
+                } catch (Exception e2) {
+                    System.err.println("DEBUG: Failed to decode token. Auth0 error: " + e.getMessage() + ", Local error: " + e2.getMessage());
+                    throw e2;
+                }
             }
         };
     }
@@ -110,6 +128,7 @@ public class SecurityConfigDev {
             }
         };
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

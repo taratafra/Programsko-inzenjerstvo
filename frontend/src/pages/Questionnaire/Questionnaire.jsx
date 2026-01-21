@@ -35,7 +35,6 @@ export default function Questionnaire() {
                     headers: { Authorization: `Bearer ${localToken}` },
                 });
 
-
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     console.log(userData)
@@ -146,10 +145,10 @@ export default function Questionnaire() {
                 }
             });
 
-            const otherGoal = formData.get("goal-other");
-            let noteText = formData.get("notes") || "";
-            if (otherGoal && otherGoal.trim()) {
-                noteText = noteText ? `${noteText}\n\nOther goal: ${otherGoal.trim()}` : `Other goal: ${otherGoal.trim()}`;
+            if (goals.length === 0) {
+                setError("Please select at least one goal");
+                setIsSubmitting(false);
+                return;
             }
 
             const experienceMapping = {
@@ -165,12 +164,36 @@ export default function Questionnaire() {
                 return;
             }
 
+            const roleMapping = {
+                "user": "USER",
+                "coach": "COACH"
+            }
+
+            const role = formData.get("role");
+            if (!role) {
+                setError("Please select your role");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const consent = formData.get("consent");
+            if (!consent) {
+                setError("You must give consent to continue.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const isTrainer = role === "coach";
+
             const surveyData = {
                 stressLevel: parseInt(formData.get("stress")),
                 sleepQuality: parseInt(formData.get("sleep")),
                 meditationExperience: experienceMapping[experience],
                 goals: goals,
-                note: noteText
+                sessionLength: formData.get("session-length") || null,
+                preferredTime: formData.get("preferred-time") || null,
+                note: formData.get("notes") || null,
+                isTrainer: isTrainer
             };
 
             console.log("Submitting survey data:", surveyData);
@@ -217,7 +240,14 @@ export default function Questionnaire() {
                 }
             }
 
-            const onboardingResponse = await fetch(`${BACKEND_URL}/api/users/complete-onboarding`, {
+            // FIXED: Use different endpoint based on role
+            const onboardingEndpoint = isTrainer 
+                ? `${BACKEND_URL}/api/trainers/complete-onboarding`
+                : `${BACKEND_URL}/api/users/complete-onboarding`;
+
+            console.log(`Completing onboarding for ${isTrainer ? 'trainer' : 'user'} at: ${onboardingEndpoint}`);
+
+            const onboardingResponse = await fetch(onboardingEndpoint, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -226,7 +256,13 @@ export default function Questionnaire() {
             });
 
             if (!onboardingResponse.ok) {
-                throw new Error("Failed to complete onboarding");
+                const errorText = await onboardingResponse.text();
+                console.error("Onboarding error:", {
+                    status: onboardingResponse.status,
+                    statusText: onboardingResponse.statusText,
+                    body: errorText
+                });
+                throw new Error(`Failed to complete onboarding: ${onboardingResponse.status} - ${errorText}`);
             }
 
             const updatedUser = await onboardingResponse.json();
@@ -236,12 +272,12 @@ export default function Questionnaire() {
 
         } catch (err) {
             console.error("Error submitting questionnaire:", err);
-            setError("Failed to submit questionnaire. Please try again.");
+            setError(`Failed to submit questionnaire: ${err.message}`);
             setIsSubmitting(false);
         }
     };
 
-    // upitnik
+    // questionnaire form
     const renderQuestionnaireForm = () => (
         <div className={styles.upitnikSvi}>
             <form onSubmit={handleSubmit} id="onboarding-form" method="post" noValidate>
@@ -254,22 +290,24 @@ export default function Questionnaire() {
                     </div>
                 )}
 
-                <fieldset className={styles.basicInfo}>
-                    <legend>Basic information</legend>
-
+                <fieldset className={styles.role}>
+                    <legend>Role<span aria-hidden="true">*</span></legend>
                     <div>
-                        <label htmlFor="name">Full name</label>
-                        <input id="name" name="name" type="text" placeholder="e.g., Ana Horvat" autoComplete="name" />
-                    </div>
-
-                    <div>
-                        <label htmlFor="email">Email</label>
-                        <input id="email" name="email" type="email" placeholder="e.g., ana@example.com" autoComplete="email" />
+                        <label htmlFor="role">What type of account would you like to create?</label>
+                        <div>
+                            <label>
+                                <input type="radio" name="role" value="user" required /> User
+                            </label>
+                        </div>
+                        <div>
+                            <label>
+                                <input type="radio" name="role" value="coach" /> Coach (Enable video uploads)
+                            </label>
+                        </div>
                     </div>
                 </fieldset>
-
                 <fieldset className={styles.wellbeing}>
-                    <legend>Wellbeing</legend>
+                    <legend>Wellbeing<span aria-hidden="true">*</span></legend>
 
                     <div>
                         <label htmlFor="stress">Stress level (1–5) <span aria-hidden="true">*</span></label>
@@ -334,7 +372,7 @@ export default function Questionnaire() {
                 </fieldset>
 
                 <fieldset className={styles.goals}>
-                    <legend>Your goals (select all that apply)</legend>
+                    <legend>Your goals (select all that apply)<span aria-hidden="true">*</span></legend>
 
                     <div>
                         <label>
@@ -360,10 +398,6 @@ export default function Questionnaire() {
                         <label>
                             <input type="checkbox" name="goals" value="build-habit" /> Build a meditation habit
                         </label>
-                    </div>
-                    <div className={styles.otherGoal}>
-                        <label htmlFor="goal-other">Other goal:</label>
-                        <input id="goal-other" name="goal-other" type="text" placeholder="Describe another goal" />
                     </div>
                 </fieldset>
 
@@ -404,13 +438,11 @@ export default function Questionnaire() {
                 </fieldset>
 
                 <fieldset className={styles.consent}>
-                    <legend>Consent</legend>
+                    <legend>Consent<span aria-hidden="true">*</span></legend>
                     <label>
                         <input type="checkbox" name="consent" value="agree" required /> I agree that my responses will be used to generate a personalized 7-day plan.
-                        <span aria-hidden="true">*</span>
                     </label>
                 </fieldset>
-
 
                 <div className={styles.buttonRow}>
                     <button className={styles.submitGoals} type="submit" disabled={isSubmitting}>
@@ -442,6 +474,5 @@ export default function Questionnaire() {
                 </div>
             </div>
         </CloudBackground>
-
     );
 }

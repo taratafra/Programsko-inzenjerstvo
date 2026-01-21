@@ -1,42 +1,68 @@
-import styles from "../../Home.module.css";
+import homeStyles from "../../pages/Home/Home.module.css";
+import { useNavigate, useLocation } from "react-router-dom";
+import styles from "./LeftSidebar.module.css";
 
 export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTab }) {
-  
+  const navigate = useNavigate();
+
   const getNavItemClass = (tabName) => {
     const isActive = (tabName === 'Home' && activeTab === 'General Information') || activeTab === tabName;
-    return `${styles.navItem} ${isActive ? styles.navItemActive : ""}`;
-  };
-
-  const getAvatarClass = () => {
-    return `${styles.profileAvatar} ${activeTab === 'Account' ? styles.profileAvatarActive : ""}`;
+    return `${homeStyles.navItem} ${isActive ? homeStyles.navItemActive : ""}`;
   };
 
   return (
-    <div className={styles.sidebar}>
-      <div className={styles.profileBox}>
-        <img src={user.picture} alt="Profile" className={getAvatarClass()}
-        onClick={() => setActiveTab('Account')} />
-        <p className={styles.profileName}>{ user.name }</p>
-        <p className={styles.profileTitle}>{user.email}</p> 
+    <div className={homeStyles.sidebar}>
+      <div className={homeStyles.profileBox}>
+        <p className={homeStyles.profileName}>{user.name} {user.surname}</p>
+        <p className={homeStyles.profileTitle}>{user.email}</p>
       </div>
-      
-      <ul className={styles.navList}>
+      <ul className={homeStyles.navList}>
         <li className={getNavItemClass("Home")} onClick={() => setActiveTab('General Information')}>
           🏠 Home
         </li>
+        <li className={getNavItemClass("Trainers")} onClick={() => setActiveTab('Trainers')}>
+          👥 Trainers
+        </li>
+        <li className={getNavItemClass("Videos")} onClick={() => setActiveTab('Videos')}>
+          🎥 Videos
+        </li>
+        {user?.role === 'TRAINER' && (
+          <li className={getNavItemClass("Trainer Dashboard")} onClick={() => setActiveTab('Trainer Dashboard')}>
+            💼 Trainer Dashboard
+          </li>
+        )}
+
+        <li className={getNavItemClass("Articles")} onClick={() => setActiveTab('Articles')}>
+          📄 Articles
+        </li>
+        <li className={getNavItemClass("Podcasts")} onClick={() => setActiveTab('Podcasts')}>
+          🎙️ Podcasts
+        </li>
+        <li className={getNavItemClass("Make Appointment")} onClick={() => setActiveTab('Make Appointment')}>
+          📅 Make Appointment
+        </li>
         <li className={getNavItemClass("Calendar")} onClick={() => setActiveTab('Calendar')}>
-          📅 Calendar
+          🗓️ Calendar
         </li>
-        <li className={getNavItemClass("Journal")} onClick={() => setActiveTab('Journal')}>
-          📒 Journal
+        <li className={getNavItemClass("YourPlan")} onClick={() => setActiveTab('YourPlan')}>
+           ☀️ 7-Day Plan
         </li>
-        <li className={getNavItemClass("Statistics")} onClick={() => setActiveTab('Statistics')} style={{ marginBottom: "80px" }}>
+        <li className={getNavItemClass("DailyFocus")} onClick={() => setActiveTab('DailyFocus')}>
+          📒 Daily Focus
+        </li>
+        <li className={getNavItemClass("MoodCheckIn")} onClick={() => setActiveTab('MoodCheckIn')}>
+          😊 Mood & Habits
+        </li>
+        <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics
         </li>
-        <li classNameG={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
-          <span className={styles.navItemLogout}>⚙️ Settings</span>
+        <li className={`${getNavItemClass("Smartwatch")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Smartwatch')}>
+          ⌚ Smartwatch
         </li>
-        <li className={styles.navItem} onClick={handleLogout}>
+        <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
+          ⚙️ Settings
+        </li>
+        <li className={homeStyles.navItem} onClick={handleLogout}>
           ➡️ Log Out
         </li>
       </ul>

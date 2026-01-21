@@ -1,0 +1,494 @@
+.card {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 15px;
+  padding: 2rem;
+  color: rgb(248, 244, 244);
+}
+
+.title {
+  margin-top: 0rem;
+  margin-bottom: 3rem;
+  font-weight: 700;
+  color: rgb(248, 244, 244);
+}
+
+
+.formContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.12);
+  padding: 1.5rem;
+  border-radius: 10px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgb(248, 244, 244);
+  margin-bottom: 1rem;
+}
+
+.labelIcon {
+  font-size: 1.25rem;
+}
+
+.moodButtons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.moodButton {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 8px;
+  font-weight: 600;
+  background-color: rgba(242, 238, 243, 0.5);
+  color: rgb(248, 244, 244);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.moodButton:hover {
+  background-color: rgba(242, 238, 243, 0.7);
+  transform: scale(1.05);
+}
+
+.moodButtonActive {
+  background-color: rgb(238, 45, 55) !important;
+  color: white !important;
+  transform: scale(1.1);
+  box-shadow: 0 0 9px rgba(238, 45, 55, 0.7);
+}
+
+.scaleLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: rgb(248, 244, 244);
+  margin-top: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.emotionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .emotionGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.emotionButton {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 2px solid rgba(242, 238, 243, 0.3);
+  background-color: rgba(242, 238, 243, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 4rem;
+  margin-right: 4rem;
+}
+
+.emotionButton:hover {
+  border-color: rgba(242, 238, 243, 0.5);
+  background-color: rgba(242, 238, 243, 0.3);
+  transform: scale(1.02);
+}
+
+.emotionButtonActive {
+  background-color: rgba(242, 238, 243, 0.4);
+  transform: scale(1.05);
+  box-shadow: 0 0 9px rgba(238, 45, 55, 0.4);
+}
+
+.emotionEmoji {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  display: block;
+  pointer-events: none;
+}
+
+.emotionLabel {
+  font-size: 0.875rem;
+  color: rgb(248, 244, 244);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.emotionButton[data-emotion="HAPPY"].emotionButtonActive {
+  background-color: #FFD700 !important;
+  border-color: #FFD700 !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+}
+
+.emotionButton[data-emotion="SAD"].emotionButtonActive {
+  background-color: #4682B4 !important;
+  border-color: #4682B4 !important;
+  box-shadow: 0 0 12px rgba(70, 130, 180, 0.6);
+}
+
+.emotionButton[data-emotion="ANXIOUS"].emotionButtonActive {
+  background-color: #1E90FF !important;
+  border-color: #1E90FF !important;
+  box-shadow: 0 0 12px rgba(30, 144, 255, 0.6);
+}
+
+.emotionButton[data-emotion="CALM"].emotionButtonActive {
+  background-color: #90EE90 !important;
+  border-color: #90EE90 !important;
+  box-shadow: 0 0 12px rgba(144, 238, 144, 0.6);
+}
+
+.emotionButton[data-emotion="ENERGETIC"].emotionButtonActive {
+  background-color: #FFA500 !important;
+  border-color: #FFA500 !important;
+  box-shadow: 0 0 12px rgba(255, 165, 0, 0.6);
+}
+
+.emotionButton[data-emotion="TIRED"].emotionButtonActive {
+  background-color: #2F4F2F !important;
+  border-color: #2F4F2F !important;
+  box-shadow: 0 0 12px rgba(47, 79, 47, 0.6);
+}
+
+.emotionButton[data-emotion="FRUSTRATED"].emotionButtonActive {
+  background-color: #DC143C !important;
+  border-color: #DC143C !important;
+  box-shadow: 0 0 12px rgba(220, 20, 60, 0.6);
+}
+
+.emotionButton[data-emotion="GRATEFUL"].emotionButtonActive {
+  background-color: #FF69B4 !important;
+  border-color: #FF69B4 !important;
+  box-shadow: 0 0 12px rgba(255, 105, 180, 0.6);
+}
+
+
+.slider {
+  width: 100%;
+  height: 0.5rem;
+  background-color: rgba(242, 238, 243, 0.3);
+  border-radius: 5px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: rgb(238, 45, 55);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: rgb(238, 45, 55);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: rgb(248, 244, 244);
+  margin-top: 0.5rem;
+}
+
+.sliderValue {
+  font-weight: 600;
+  color: rgb(248, 244, 244);
+}
+
+
+.textInput {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: rgba(242, 238, 243, 0.5);
+  color: rgb(0, 0, 0);
+}
+
+.textInput::placeholder {
+  color: rgba(248, 244, 244, 0.6);
+}
+
+.textInput:focus {
+  outline: none;
+  box-shadow: 0 0 9px rgba(245, 245, 245, 0.6);
+  background-color: rgba(240, 248, 255, 0.84);
+  color: #000;
+}
+
+
+.textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  resize: none;
+  background-color: rgba(242, 238, 243, 0.5);
+  color: rgb(0, 0, 0);
+}
+
+.textarea::placeholder {
+  color: rgba(248, 244, 244, 0.6);
+}
+
+.textarea:focus {
+  outline: none;
+  box-shadow: 0 0 9px rgba(245, 245, 245, 0.6);
+  background-color: rgba(240, 248, 255, 0.84);
+  color: #000;
+}
+
+
+.errorMessage {
+  background-color: rgba(220, 53, 69, 0.2);
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  color: rgb(248, 244, 244);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.successMessage {
+  background-color: rgba(40, 167, 69, 0.2);
+  border: 1px solid rgba(40, 167, 69, 0.5);
+  color: rgb(248, 244, 244);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+
+.submitButton {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 100px;
+  font-weight: 600;
+  color: rgb(231, 223, 223);
+  font-size: 1.1rem;
+  background-color: rgba(79, 48, 255, 0.7);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  margin-top: 1rem;
+}
+
+.submitButton:hover {
+  background-color: rgb(238, 45, 55);
+  transform: scale(1.05);
+}
+
+.submitButton:active {
+  box-shadow: 0 0 9px rgba(13, 13, 15, 0.7);
+}
+
+.submitButtonDisabled {
+  background-color: rgba(108, 117, 125, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.submitButtonDisabled:hover {
+  background-color: rgba(108, 117, 125, 0.5);
+  transform: none;
+}
+
+
+/* Completed State - FIXED */
+.completedTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgb(248, 244, 244);
+  text-align: center;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.completedSubtext {
+  font-size: 1rem;
+  color: rgba(248, 244, 244, 0.9);
+  text-align: center;
+  font-style: italic;
+  display: block;
+  margin-top: 0;
+}
+
+/* Streak Container */
+.streakContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(79, 48, 255, 0.15) 0%, rgba(79, 48, 255, 0.05) 100%);
+  border: 2px solid rgba(79, 48, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.streakBadge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(79, 48, 255, 0.4) 0%, rgba(79, 48, 255, 0.25) 100%);
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(79, 48, 255, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.streakBadge:hover {
+  transform: scale(1.05);
+}
+
+.streakIcon {
+  font-size: 2.5rem;
+  animation: flicker 2s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.streakInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.streakNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: rgb(248, 244, 244);
+  line-height: 1;
+}
+
+.streakLabel {
+  font-size: 0.875rem;
+  color: rgba(248, 244, 244, 0.9);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.longestStreak {
+  font-size: 0.875rem;
+  color: rgba(248, 244, 244, 0.7);
+  font-style: italic;
+  margin-top: 0.5rem;
+}
+
+/* Divider */
+.divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(248, 244, 244, 0.3) 50%, transparent 100%);
+  margin: 5rem 0;
+  width: 100%;
+}
+
+/* Badges Container */
+.badgesContainer {
+  margin-top: 2rem;
+}
+
+.badgesTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgb(248, 244, 244);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.badgesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.badgeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(79, 48, 255, 0.15) 0%, rgba(79, 48, 255, 0.05) 100%);
+  border: 2px solid rgba(79, 48, 255, 0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.badgeItem:hover {
+  transform: translateY(-5px);
+  border-color: rgba(79, 48, 255, 0.6);
+  box-shadow: 0 8px 16px rgba(79, 48, 255, 0.2);
+}
+
+.badgeIcon {
+  font-size: 3.5rem;
+  transition: transform 0.3s ease;
+}
+
+.badgeItem:hover .badgeIcon {
+  transform: scale(1.1) rotate(10deg);
+}
+
+.badgeName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(248, 244, 244);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* No Badges State */
+.noBadges {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(248, 244, 244, 0.6);
+  font-style: italic;
+}
+
+/* Loading State */
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: rgba(248, 244, 244, 0.8);
+  min-height: 200px;
+}

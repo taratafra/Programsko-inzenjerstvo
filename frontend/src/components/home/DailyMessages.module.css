@@ -1,50 +1,26 @@
+
 .container {
-    padding: 2rem;
+    padding: 0; 
     width: 100%;
-    margin: 0 0;
-}
-
-.loadingContainer {
-    padding: 2rem;
-    text-align: center;
-}
-
-.errorContainer {
-    padding: 1.5rem;
-    background-color: #fff3cd;
-    border: 1px solid #ffc107;
-    border-radius: 8px;
-    margin: 1rem;
-}
-
-.errorText {
-    color: #856404;
-    margin: 0;
-}
-
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.headerTitle {
     margin: 0;
 }
 
 .scrollContainer {
     display: flex;
     flex-direction: row;
-    gap: 1rem;
+    gap: 1.5rem;
     overflow-x: auto;
-    padding: 1rem;
+    padding: 0.5rem 0;
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
+}
+
+.scrollContainer::-webkit-scrollbar {
+    display: none; 
 }
 
 .messageCard {
-    padding: 1rem;
+    padding: 1.5rem;
     background-color: white;
     border: 1px solid #e0e0e0;
     border-left: 4px solid #4a90e2;
@@ -53,8 +29,8 @@
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: default;
     white-space: normal;
-    width: 90%;
-    flex: 0 0 auto;
+    flex: 0 0 100%; 
+    box-sizing: border-box;
 }
 
 .messageCard:hover {
@@ -83,17 +59,10 @@
     color: #333;
 }
 
-.noMessagesContainer {
-    padding: 2rem;
-    text-align: center;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-}
-
 .infoNote {
     margin-top: 1.5rem;
     font-size: 0.9rem;
-    color: #666;
+    color: #fff;
     text-align: center;
     font-style: italic;
     white-space: normal;

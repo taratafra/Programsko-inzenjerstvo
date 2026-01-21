@@ -8,12 +8,18 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @Table(name = "users")
-public class User {
+@Inheritance(strategy = InheritanceType.JOINED)
+public class User{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +54,9 @@ public class User {
     @Column(name = "requires_password_reset")
     private boolean requiresPasswordReset = false;
 
+    //@Column(name = "approved_trainer")
+    //private boolean approvedTrainer = false;
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
@@ -63,15 +72,13 @@ public class User {
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
 
-    public User(String email, String passwordOrAuth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
+    @ManyToMany(cascade = CascadeType.PERSIST)
+    private Set<Trainer> trainers = new HashSet<>();
 
-        if(isSocialLogin) {
-            this.auth0Id = passwordOrAuth0Id; // za korisnika koji se ulogirao preko auth0
-            this.password = null;
-        } else {
-            this.password = passwordOrAuth0Id; // za korisnika koji se lokalno ulogira
-            this.auth0Id = null;
-        }
+    public User(String email, String password, String auth0Id, String name, String surname, LocalDate dob, Role role, boolean isSocialLogin) {
+
+        this.password = password;
+        this.auth0Id = auth0Id;
         this.email = email;
         this.name = name;
         this.surname = surname;
