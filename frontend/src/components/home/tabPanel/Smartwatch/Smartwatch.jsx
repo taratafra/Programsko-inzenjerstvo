@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Watch, Moon, Activity, Timer, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
 import './Smartwatch.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND;
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND?.includes("/api/connect")
+    ? process.env.REACT_APP_BACKEND.replace("/api/connect", "")
+    : process.env.REACT_APP_BACKEND || "http://localhost:8080";
+
 
 const SmartwatchTab = ({ getAccessTokenSilently, isAuthenticated }) => {
   const [integrationStatus, setIntegrationStatus] = useState(null);
@@ -320,8 +324,8 @@ const SmartwatchTab = ({ getAccessTokenSilently, isAuthenticated }) => {
     );
   }
 
-  const latestScore = sleepData && sleepData.length > 0 ? sleepData[0] : null;
-  const last7Days = sleepData ? sleepData.slice(0, 7) : [];
+  const latestScore = sleepData?.latest ?? null;
+  const last7Days = Array.isArray(sleepData?.last7Days) ? sleepData.last7Days.slice(0, 7) : [];
   const averageScore = last7Days.length > 0 
     ? Math.round(last7Days.reduce((sum, day) => sum + (day.score || 0), 0) / last7Days.length)
     : 0;
@@ -369,7 +373,7 @@ const SmartwatchTab = ({ getAccessTokenSilently, isAuthenticated }) => {
           </div>
         )}
 
-        {!sleepData || sleepData.length === 0 ? (
+        {!last7Days || last7Days.length === 0 ? (
           <div className="empty-state">
             <Moon className="empty-icon" />
             <p className="empty-title">Nema dostupnih podataka</p>
