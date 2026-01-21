@@ -76,6 +76,7 @@ export default function Home() {
                         headers: { Authorization: `Bearer ${localToken}` },
                     });
 
+
                     if (!res.ok) {
                         console.error("Token validation failed");
                         localStorage.removeItem("token");

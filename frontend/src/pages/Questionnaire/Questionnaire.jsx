@@ -198,6 +198,7 @@ export default function Questionnaire() {
 
             console.log("Submitting survey data:", surveyData);
 
+
             const surveyResponse = await fetch(`${BACKEND_URL}/onboarding/survey/me`, {
                 method: "POST",
                 headers: {
