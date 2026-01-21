@@ -23,6 +23,7 @@ import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.
 import Video from "../../components/home/tabPanel/video/Videos.jsx";
 import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 import Videos from "../../components/home/tabPanel/Videos/Videos.jsx";
+import Smartwatch from "../../components/home/tabPanel/Smartwatch/Smartwatch.jsx";
 
 export default function Home() {
     const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
@@ -307,6 +308,13 @@ export default function Home() {
 
                 case 'DailyFocus':
                     return <DailyFocus
+                        user={user}
+                        getAccessTokenSilently={getAccessTokenSilently}
+                        isAuthenticated={isAuthenticated}
+                    />
+
+                case 'Smartwatch':
+                    return <Smartwatch
                         user={user}
                         getAccessTokenSilently={getAccessTokenSilently}
                         isAuthenticated={isAuthenticated}
