@@ -49,10 +49,10 @@ public class SecurityConfigProd {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/trainers/**").permitAll()
                         .requestMatchers("/public").permitAll()
 
                         // Authenticated endpoints
+                        .requestMatchers("/api/trainers/**").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/schedules/**").authenticated()
                         .requestMatchers("/api/admins/**").authenticated()
