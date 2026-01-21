@@ -32,6 +32,12 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
           </li>
         )}
 
+        {user?.role === 'ADMIN' && (
+          <li className={getNavItemClass("Admin Dashboard")} onClick={() => setActiveTab('Admin Dashboard')}>
+            💼 Admin Dashboard
+          </li>
+        )}
+
         <li className={getNavItemClass("Articles")} onClick={() => setActiveTab('Articles')}>
           📄 Articles
         </li>

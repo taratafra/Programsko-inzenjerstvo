@@ -144,7 +144,7 @@ public class AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        user.setBanned(!banned);   
+        user.setBanned(banned);   
         userRepository.save(user);
 }
 
@@ -153,7 +153,7 @@ public class AdminService {
         Trainer trainer = trainerRepository.findById(trainerId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
 
-        trainer.setBanned(!banned); // if Trainer extends User
+        trainer.setBanned(banned); // Ako ne radi dodaj uskličnik ode
         trainerRepository.save(trainer);
     }
 }
