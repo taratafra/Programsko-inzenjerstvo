@@ -43,6 +43,17 @@ public class VideoController {
         return videoService.getRecommendations(user);
     }
 
+    // NEW: Get all videos uploaded by the authenticated trainer
+    @GetMapping("/trainer/me")
+    @PreAuthorize("hasRole('TRAINER')")
+    public List<VideoResponseDTO> getMyVideos(@AuthenticationPrincipal Jwt jwt) {
+        User trainer = trainerService.getOrCreateTrainerFromJwt(jwt);
+        if (trainer.getRole() != Role.TRAINER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can access this endpoint");
+        }
+        return videoService.getVideosByTrainer(trainer);
+    }
+
     @GetMapping("/{id}")
     public VideoResponseDTO getVideoById(@PathVariable Long id) {
         return videoService.getVideoById(id);
@@ -59,7 +70,7 @@ public class VideoController {
             @RequestParam(value = "duration", required = false) Integer duration,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) throws java.io.IOException {
-        
+
         User user = trainerService.getOrCreateTrainerFromJwt(jwt);
         if (user.getRole() != Role.TRAINER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can upload videos");

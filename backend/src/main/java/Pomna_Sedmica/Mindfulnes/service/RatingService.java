@@ -11,7 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RatingService {
@@ -69,6 +73,48 @@ public class RatingService {
                 totalRatings != null ? totalRatings : 0L,
                 userRating
         );
+    }
+
+    public Map<String, Object> getTrainerAverageRating(Long trainerId) {
+        // Get all videos by this trainer
+        List<Video> trainerVideos = videoRepository.findByTrainerId(trainerId);
+
+        if (trainerVideos.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("averageRating", 0.0);
+            result.put("totalRatings", 0);
+            result.put("totalVideos", 0);
+            return result;
+        }
+
+        // Get video IDs
+        List<Long> videoIds = trainerVideos.stream()
+                .map(Video::getId)
+                .collect(Collectors.toList());
+
+        // Get all ratings for these videos
+        List<Rating> ratings = ratingRepository.findByVideoIdIn(videoIds);
+
+        if (ratings.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("averageRating", 0.0);
+            result.put("totalRatings", 0);
+            result.put("totalVideos", trainerVideos.size());
+            return result;
+        }
+
+        // Calculate average
+        double average = ratings.stream()
+                .mapToInt(Rating::getRating)
+                .average()
+                .orElse(0.0);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("averageRating", Math.round(average * 10.0) / 10.0); // Round to 1 decimal
+        result.put("totalRatings", ratings.size());
+        result.put("totalVideos", trainerVideos.size());
+
+        return result;
     }
 
     @Transactional

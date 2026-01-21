@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/videos")
@@ -46,5 +49,13 @@ public class RatingController {
             @AuthenticationPrincipal Jwt jwt) {
         User user = trainerService.getOrCreateTrainerFromJwt(jwt);
         ratingService.deleteRating(videoId, user);
+    }
+
+    // NEW: Get average rating for all videos by the authenticated trainer
+    @GetMapping("/trainer/me/average-rating")
+    @PreAuthorize("hasRole('TRAINER')")
+    public Map<String, Object> getMyAverageRating(@AuthenticationPrincipal Jwt jwt) {
+        User trainer = trainerService.getOrCreateTrainerFromJwt(jwt);
+        return ratingService.getTrainerAverageRating(trainer.getId());
     }
 }

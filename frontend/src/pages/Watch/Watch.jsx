@@ -283,13 +283,21 @@ export default function Watch() {
 
             if (!token) return;
 
-            const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+            // Use the correct endpoint that returns list of trainer IDs
+            const res = await fetch(`${BACKEND_URL}/api/trainers/me/subscriptions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
             if (res.ok) {
-                const userData = await res.json();
-                setIsSubscribed(userData.subscriptions?.includes(trainerId) || false);
+                const trainerIds = await res.json(); // This is an array of trainer IDs
+                console.log('📋 User subscriptions (trainer IDs):', trainerIds);
+                console.log('🎯 Checking if subscribed to trainer:', trainerId);
+                
+                // Check if the current trainer's ID is in the list
+                const isCurrentlySubscribed = trainerIds.includes(trainerId);
+                console.log('✅ Is subscribed?', isCurrentlySubscribed);
+                
+                setIsSubscribed(isCurrentlySubscribed);
             }
         } catch (err) {
             console.error("Error checking subscription status:", err);
@@ -312,24 +320,44 @@ export default function Watch() {
                 });
             }
 
-            const res = await fetch(`${BACKEND_URL}/api/trainers/me/subscribe`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ trainerId: contentData.trainerId })
-            });
+            if (!token) {
+                alert("Please log in to subscribe");
+                setIsSubscribing(false);
+                return;
+            }
 
-            if (res.ok) {
-                setIsSubscribed(!isSubscribed);
-                alert(isSubscribed ? "Unsubscribed successfully!" : "Subscribed successfully!");
+            let res;
+            if (isSubscribed) {
+                // Unsubscribe - DELETE request
+                res = await fetch(`${BACKEND_URL}/api/trainers/me/${contentData.trainerId}`, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            } else {
+                // Subscribe - POST request
+                res = await fetch(`${BACKEND_URL}/api/trainers/me/subscribe`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ trainerId: contentData.trainerId })
+                });
+            }
+
+            if (res.ok || res.status === 204) {
+                // Toggle the subscription state
+                const newState = !isSubscribed;
+                setIsSubscribed(newState);
+                alert(newState ? "Subscribed successfully!" : "Unsubscribed successfully!");
             } else {
                 const errorText = await res.text();
-                alert("Failed to subscribe: " + errorText);
+                alert(`Failed to ${isSubscribed ? 'unsubscribe' : 'subscribe'}: ${errorText}`);
             }
         } catch (err) {
-            console.error("Error subscribing:", err);
+            console.error("Error processing subscription:", err);
             alert("Error processing subscription");
         } finally {
             setIsSubscribing(false);
@@ -565,11 +593,11 @@ export default function Watch() {
                                     onClick={handleSubscribe}
                                     disabled={isSubscribing}
                                     style={{
-                                        backgroundColor: isSubscribed ? '#ccc' : '#4318FF',
+                                        backgroundColor: isSubscribed ? '#ff6b6b' : '#4318FF',
                                         cursor: isSubscribing ? 'not-allowed' : 'pointer'
                                     }}
                                 >
-                                    {isSubscribing ? 'Processing...' : isSubscribed ? 'Subscribed' : 'Subscribe'}
+                                    {isSubscribing ? 'Processing...' : isSubscribed ? 'Unsubscribe' : 'Subscribe'}
                                 </button>
                             </div>
 

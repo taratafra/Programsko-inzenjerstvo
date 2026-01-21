@@ -42,9 +42,17 @@ public class VideoService {
                 .collect(Collectors.toList());
     }
 
+    // NEW: Get all videos by a specific trainer
+    public List<VideoResponseDTO> getVideosByTrainer(User trainer) {
+        List<Video> videos = videoRepository.findByTrainerIdOrderByCreatedAtDesc(trainer.getId());
+        return videos.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     public VideoResponseDTO createVideo(String title, String description, String type, String goal, String level, Integer duration, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
         String fileName = "videos/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        
+
         com.google.cloud.storage.Blob blob = storageBucket.create(
                 fileName,
                 file.getInputStream(),
@@ -62,7 +70,7 @@ public class VideoService {
         } catch (Exception e) {
             video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         }
-        
+
         try {
             video.setGoal(Pomna_Sedmica.Mindfulnes.domain.enums.Goal.valueOf(goal));
         } catch (Exception e) {
@@ -151,7 +159,7 @@ public class VideoService {
                     }
                 }
             }
-            
+
             // Order by createdAt desc
             query.orderBy(cb.desc(root.get("createdAt")));
 
@@ -175,6 +183,7 @@ public class VideoService {
         commentRepository.deleteByVideoId(videoId);
         videoRepository.delete(video);
     }
+
     public List<VideoResponseDTO> getRecommendations(User user) {
         List<Video> videos = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         List<Video> blogs = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.BLOG);
@@ -212,9 +221,9 @@ public class VideoService {
 
     private List<Video> filterContent(List<Video> content, java.util.Set<Pomna_Sedmica.Mindfulnes.domain.enums.Goal> goals, Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience level) {
         List<Video> filtered = content.stream()
-            .filter(v -> v.getLevel() == level || v.getLevel() == null)
-            .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
-            .collect(Collectors.toList());
+                .filter(v -> v.getLevel() == level || v.getLevel() == null)
+                .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
+                .collect(Collectors.toList());
 
         return filtered.isEmpty() ? content : filtered;
     }
