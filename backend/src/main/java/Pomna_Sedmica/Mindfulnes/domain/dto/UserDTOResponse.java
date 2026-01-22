@@ -19,6 +19,7 @@ public record UserDTOResponse(
         LocalDate dateOfBirth,
         String bio,
         String profilePictureUrl,
-        Boolean firstLogin
+        Boolean firstLogin,
+        Boolean isBanned
 ) {
 }

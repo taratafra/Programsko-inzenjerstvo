@@ -32,6 +32,12 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
           </li>
         )}
 
+        {user?.role === 'ADMIN' && (
+          <li className={getNavItemClass("Admin Dashboard")} onClick={() => setActiveTab('Admin Dashboard')}>
+            💼 Admin Dashboard
+          </li>
+        )}
+
         <li className={getNavItemClass("Articles")} onClick={() => setActiveTab('Articles')}>
           📄 Articles
         </li>
@@ -53,12 +59,14 @@ export default function LeftSidebar({ user, handleLogout, activeTab, setActiveTa
         <li className={getNavItemClass("MoodCheckIn")} onClick={() => setActiveTab('MoodCheckIn')}>
           😊 Mood & Habits
         </li>
-        <li className={`${getNavItemClass("Statistics")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Statistics')}>
+        <li className={`${getNavItemClass("Statistics")}`} onClick={() => setActiveTab('Statistics')}>
           📈 Statistics
         </li>
-        <li className={`${getNavItemClass("Smartwatch")} ${styles.statisticsItem}`} onClick={() => setActiveTab('Smartwatch')}>
+        <li className={`${getNavItemClass("Smartwatch")} ${styles.smartwatchItem}`} onClick={() => setActiveTab('Smartwatch')}>
           ⌚ Smartwatch
         </li>
+
+
         <li className={getNavItemClass("Settings")} onClick={() => setActiveTab('Settings')}>
           ⚙️ Settings
         </li>

@@ -53,7 +53,8 @@ public class AdminMapper {
                 user.getDateOfBirth(),
                 user.getBio(),
                 user.getProfilePictureUrl(),
-                user.isFirstLogin()
+                user.isFirstLogin(),
+                user.isBanned()
         );
     }
 }

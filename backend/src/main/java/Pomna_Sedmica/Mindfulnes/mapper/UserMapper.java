@@ -59,7 +59,8 @@ public class UserMapper {
                 user.getDateOfBirth(),
                 user.getBio(),
                 user.getProfilePictureUrl(),
-                user.isFirstLogin()
+                user.isFirstLogin(),
+                user.isBanned()
         );
     }
 }

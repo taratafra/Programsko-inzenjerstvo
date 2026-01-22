@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
+import Pomna_Sedmica.Mindfulnes.repository.TrainerRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class AdminService {
 
     private final UserRepository userRepository;
+    private final TrainerRepository trainerRepository;
 
     @Transactional
     public UserDTOResponse saveOrUpdateAdmin(SaveAuth0UserRequestDTO dto) {
@@ -102,6 +105,12 @@ public class AdminService {
         Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub);
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
+
+            // Check if user is banned
+            if (user.isBanned()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+            }
+
             user.setLastLogin(LocalDateTime.now());
             return userRepository.save(user);
         }
@@ -110,6 +119,12 @@ public class AdminService {
             Optional<User> byEmail = userRepository.findByEmail(email);
             if (byEmail.isPresent()) {
                 User user = byEmail.get();
+
+                // Check if user is banned
+                if (user.isBanned()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+                }
+
                 if (user.getAuth0Id() == null || user.getAuth0Id().isEmpty()) {
                     user.setAuth0Id(sub);
                 }
@@ -133,5 +148,24 @@ public class AdminService {
         newUser.setRequiresPasswordReset(false);
 
         return userRepository.save(newUser);
+    }
+
+
+    @Transactional
+    public void setUserBanStatus(Long userId, boolean banned) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setBanned(banned);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void setTrainerBanStatus(Long trainerId, boolean banned) {
+        Trainer trainer = trainerRepository.findById(trainerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+
+        trainer.setBanned(banned);
+        trainerRepository.save(trainer);
     }
 }

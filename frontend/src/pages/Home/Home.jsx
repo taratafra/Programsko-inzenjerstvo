@@ -20,13 +20,21 @@ import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
 
 import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
 import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
-import Video from "../../components/home/tabPanel/video/Videos.jsx";
+import Video from "../../components/home/tabPanel/Videos/Videos.jsx";
+import AdminDashboard from "../../components/home/tabPanel/AdminDashboard/AdminDashboard";
 import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 import Videos from "../../components/home/tabPanel/Videos/Videos.jsx";
 import Smartwatch from "../../components/home/tabPanel/Smartwatch/Smartwatch.jsx";
 
 export default function Home() {
-    const { user: auth0User, getAccessTokenSilently, isLoading, isAuthenticated, logout } = useAuth0();
+    const {
+        user: auth0User,
+        getAccessTokenSilently,
+        isLoading,
+        isAuthenticated,
+        logout,
+    } = useAuth0();
+
     const { addToast } = useToast();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -34,8 +42,38 @@ export default function Home() {
     const hasNavigatedToQuestions = useRef(false);
     const hasInitialized = useRef(false);
 
+    // Prevent double-ban handling (StrictMode / rerenders)
+    const hasHandledBan = useRef(false);
+
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
+
+    const handleBannedUser = async () => {
+        if (hasHandledBan.current) return;
+        hasHandledBan.current = true;
+
+        addToast("You have been banned", "error");
+
+        // clear any local auth
+        localStorage.removeItem("token");
+        sessionStorage.clear();
+
+        // If Auth0 session exists, clear it too to prevent instant re-login
+        try {
+            if (isAuthenticated) {
+                logout({
+                    logoutParams: {
+                        returnTo: window.location.origin + "/login",
+                    },
+                });
+                return;
+            }
+        } catch (e) {
+            console.error("Auth0 logout failed:", e);
+        }
+
+        navigate("/login", { replace: true });
+    };
 
     useEffect(() => {
         // Don't run if still loading Auth0 or already initialized
@@ -59,15 +97,30 @@ export default function Home() {
                     const userResponse = await sendUserDataToBackend(auth0User);
 
                     if (userResponse) {
+                        // BAN CHECK (supports isBanned or banned)
+                        console.log(userResponse.isBanned);
+                        if (
+                            userResponse?.isBanned === true ||
+                            userResponse?.banned === true
+                        ) {
+                            await handleBannedUser();
+                            return;
+                        }
+
                         setUser(userResponse);
 
                         // Check if questionnaire needs to be completed
-                        if (!userResponse.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                        if (
+                            !userResponse.isOnboardingComplete &&
+                            !hasNavigatedToQuestions.current
+                        ) {
                             hasNavigatedToQuestions.current = true;
                             navigate("/questions", { replace: true });
                             return;
                         }
                     } else {
+                        // If backend didn't return a user object, we can't reliably know ban status.
+                        // Fall back to auth0 user object for now.
                         setUser(auth0User);
                     }
                 }
@@ -86,10 +139,20 @@ export default function Home() {
                     }
 
                     const data = await res.json();
+
+                    // BAN CHECK (supports isBanned or banned)
+                    if (data?.isBanned === true || data?.banned === true) {
+                        await handleBannedUser();
+                        return;
+                    }
+
                     setUser(data);
 
                     // Check if questionnaire needs to be completed
-                    if (!data.isOnboardingComplete && !hasNavigatedToQuestions.current) {
+                    if (
+                        !data.isOnboardingComplete &&
+                        !hasNavigatedToQuestions.current
+                    ) {
                         hasNavigatedToQuestions.current = true;
                         navigate("/questions", { replace: true });
                         return;
@@ -97,7 +160,10 @@ export default function Home() {
                 }
             } catch (err) {
                 console.error("Error in init:", err);
-                addToast('Failed to load user data. Please try logging in again.', 'error');
+                addToast(
+                    "Failed to load user data. Please try logging in again.",
+                    "error"
+                );
                 localStorage.removeItem("token");
                 sessionStorage.clear();
                 navigate("/login", { replace: true });
@@ -107,7 +173,16 @@ export default function Home() {
         };
 
         init();
-    }, [isLoading, isAuthenticated, auth0User, navigate, BACKEND_URL, AUDIENCE, addToast]);
+    }, [
+        isLoading,
+        isAuthenticated,
+        auth0User,
+        navigate,
+        BACKEND_URL,
+        AUDIENCE,
+        addToast,
+        logout,
+    ]);
 
     const sendUserDataToBackend = async (auth0User) => {
         try {
@@ -119,8 +194,14 @@ export default function Home() {
             });
 
             const payload = {
-                name: auth0User.given_name || auth0User.name?.split(" ")[0] || "",
-                surname: auth0User.family_name || auth0User.name?.split(" ")[1] || "",
+                name:
+                    auth0User.given_name ||
+                    auth0User.name?.split(" ")[0] ||
+                    "",
+                surname:
+                    auth0User.family_name ||
+                    auth0User.name?.split(" ")[1] ||
+                    "",
                 email: auth0User.email,
                 lastLogin: new Date().toISOString(),
                 isSocialLogin: true,
@@ -164,36 +245,37 @@ export default function Home() {
             }
         } catch (err) {
             console.error("Logout error:", err);
-            addToast('Error during logout', 'error');
+            addToast("Error during logout", "error");
             navigate("/login");
         }
     };
 
     function HomeLayout() {
         const [activeTab, setActiveTab] = useState(() => {
-            return sessionStorage.getItem("activeTab") || 'General Information';
+            return sessionStorage.getItem("activeTab") || "General Information";
         });
         const [reloadCalendar, setReloadCalendar] = useState(null);
-        const [statisticsRefreshTrigger, setStatisticsRefreshTrigger] = useState(0);
+        const [statisticsRefreshTrigger, setStatisticsRefreshTrigger] =
+            useState(0);
 
         useEffect(() => {
             sessionStorage.setItem("activeTab", activeTab);
         }, [activeTab]);
 
         const updateUser = (updatedFields) => {
-            setUser(prevUser => ({
+            setUser((prevUser) => ({
                 ...prevUser,
-                ...updatedFields
+                ...updatedFields,
             }));
         };
 
         const renderTabContent = () => {
             switch (activeTab) {
-                case 'General Information':
-                case 'Personalized recomendations':
+                case "General Information":
+                case "Personalized recomendations":
                     return <GeneralInfoGrid />;
 
-                case 'Focus':
+                case "Focus":
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Focus Placeholder</h1>
@@ -201,7 +283,7 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Sleep':
+                case "Sleep":
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Sleep Placeholder</h1>
@@ -209,7 +291,7 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Stress':
+                case "Stress":
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Stress Placeholder</h1>
@@ -217,7 +299,7 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Gratitude':
+                case "Gratitude":
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Gratitude Placeholder</h1>
@@ -225,25 +307,34 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Trainers':
+                case "Trainers":
                     return <Trainers />;
 
-                case 'Trainer Dashboard':
+                case "Trainer Dashboard":
                     return <TrainerDashboard setActiveTab={setActiveTab} />;
 
-                case 'Make Appointment':
-                    return <MakeAppointment setActiveTab={setActiveTab} reloadCalendar={reloadCalendar} />;
+                case "Admin Dashboard":
+                    return <AdminDashboard setActiveTab={setActiveTab} />;
 
+                case "Make Appointment":
+                    return (
+                        <MakeAppointment
+                            setActiveTab={setActiveTab}
+                            reloadCalendar={reloadCalendar}
+                        />
+                    );
 
-                case 'Statistics':
-                    return <Statistics
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                        refreshTrigger ={statisticsRefreshTrigger}
-                    />
+                case "Statistics":
+                    return (
+                        <Statistics
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                            refreshTrigger={statisticsRefreshTrigger}
+                        />
+                    );
 
-                case 'Calendar':
+                case "Calendar":
                     return (
                         <div className={styles.tabPanel}>
                             <CalendarMain
@@ -254,57 +345,64 @@ export default function Home() {
                         </div>
                     );
 
-                case 'Breathing':
+                case "Breathing":
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Breathing Placeholder</h1>
                         </div>
                     );
 
-                case 'Account':
+                case "Account":
                     return (
                         <div className={styles.tabPanel}>
                             <h1>Account Details Placeholder</h1>
                             <p>Ovdje će biti stranica za uređivanje profila.</p>
                         </div>
                     );
-                
-                case 'Settings':
+
+                case "Settings":
                     return <Settings user={user} updateUser={updateUser} />;
 
-                case 'MoodCheckIn':
-
+                case "MoodCheckIn":
                     return (
                         <MoodCheckIn
                             getAccessTokenSilently={getAccessTokenSilently}
                             isAuthenticated={isAuthenticated}
-                            onSubmitSuccess={() => setStatisticsRefreshTrigger(prev => prev + 1)}
+                            onSubmitSuccess={() =>
+                                setStatisticsRefreshTrigger((prev) => prev + 1)
+                            }
                         />
                     );
 
-                case 'Videos':
-                    return <Videos
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                        contentType="VIDEO"
-                    />;
+                case "Videos":
+                    return (
+                        <Videos
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                            contentType="VIDEO"
+                        />
+                    );
 
-                case 'Articles':
-                    return <Videos
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                        contentType="BLOG"
-                    />;
+                case "Articles":
+                    return (
+                        <Videos
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                            contentType="BLOG"
+                        />
+                    );
 
-                case 'Podcasts':
-                    return <Videos
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                        contentType="AUDIO"
-                    />;
+                case "Podcasts":
+                    return (
+                        <Videos
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                            contentType="AUDIO"
+                        />
+                    );
 
                 case 'DailyFocus':
                     return <DailyFocus
@@ -320,12 +418,14 @@ export default function Home() {
                         isAuthenticated={isAuthenticated}
                     />
 
-                case 'YourPlan':
-                    return <YourPlan
-                        user={user}
-                        getAccessTokenSilently={getAccessTokenSilently}
-                        isAuthenticated={isAuthenticated}
-                    />
+                case "YourPlan":
+                    return (
+                        <YourPlan
+                            user={user}
+                            getAccessTokenSilently={getAccessTokenSilently}
+                            isAuthenticated={isAuthenticated}
+                        />
+                    );
 
                 default:
                     return <GeneralInfoGrid />;
@@ -362,7 +462,9 @@ export default function Home() {
                             navigate={navigate}
                             setActiveTab={setActiveTab}
                             activeTab={activeTab}
-                            onSchedulesReload={(reloadFn) => setReloadCalendar(() => reloadFn)}
+                            onSchedulesReload={(reloadFn) =>
+                                setReloadCalendar(() => reloadFn)
+                            }
                         />
                     </div>
                 </div>

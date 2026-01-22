@@ -84,4 +84,27 @@ public class AdminController {
     }
 
 
+    @PatchMapping("/users/{userId}/ban")
+    public ResponseEntity<Void> banUser(@PathVariable Long userId) {
+        adminService.setUserBanStatus(userId, true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/users/{userId}/unban")
+    public ResponseEntity<Void> unbanUser(@PathVariable Long userId) {
+        adminService.setUserBanStatus(userId, false);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/trainers/{trainerId}/ban")
+    public ResponseEntity<Void> banTrainer(@PathVariable Long trainerId) {
+        adminService.setTrainerBanStatus(trainerId, true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/trainers/{trainerId}/unban")
+    public ResponseEntity<Void> unbanTrainer(@PathVariable Long trainerId) {
+        adminService.setTrainerBanStatus(trainerId, false);
+        return ResponseEntity.noContent().build();
+    }
 }

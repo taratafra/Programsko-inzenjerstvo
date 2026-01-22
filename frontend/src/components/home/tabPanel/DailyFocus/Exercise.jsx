@@ -1,157 +1,140 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from '../video/Videos.module.css';
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "./MoodHabits.module.css";
 
-export default function SingleVideoPanel({ videoId = null }) {
-  const [video, setVideo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+export default function DailyExerciseVideo() {
+    const [video, setVideo] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
+    const navigate = useNavigate();
+    const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
 
-  const getMediaType = (item) => {
-    if (item.type && (item.type === 'AUDIO' || item.type === 'BLOG')) return item.type;
-    if (!item.url) return "VIDEO";
-    
-    const urlLower = item.url.toLowerCase();
-    if (urlLower.includes('.mp3') || urlLower.includes('.wav') || urlLower.includes('.ogg') || urlLower.includes('audio')) return "AUDIO";
-    if (urlLower.includes('.txt') || urlLower.includes('.md') || urlLower.includes('.pdf') || urlLower.includes('document')) return "BLOG";
-    
-    return "VIDEO";
-  };
+    // 🔁 Deterministički daily index (isti video cijeli dan)
+    const getDailyIndex = (length) => {
+        if (!length) return 0;
 
-  useEffect(() => {
-    fetchVideo();
-  }, [videoId]);
+        const today = new Date();
+        const daySeed = Math.floor(
+            Date.UTC(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate()
+            ) / 86400000
+        );
 
-  const fetchVideo = async () => {
-    setLoading(true);
-    setError(null);
+        return daySeed % length;
+    };
 
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/videos`);
-      if (!res.ok) throw new Error('Failed to fetch videos');
+    const fetchDailyVideo = useCallback(async () => {
+        try {
+            setLoading(true);
 
-      const data = await res.json();
-      
-      if (data.length === 0) {
-        setError('No videos available');
-        setLoading(false);
-        return;
-      }
+            const queryParams = new URLSearchParams();
+            queryParams.append("type", "VIDEO");
+            queryParams.append("goal", "BUILD_HABIT");
+            queryParams.append("page", 0);
+            queryParams.append("size", 100); // uzmi sve Build Habit videe
 
-      // Različite strategije odabira videa:
-      let selectedVideo;
+            const res = await fetch(
+                `${BACKEND_URL}/api/videos?${queryParams.toString()}`
+            );
 
-      if (videoId) {
-        // Ako je specificiran ID, traži taj video
-        selectedVideo = data.find(v => v.id === videoId);
-        if (!selectedVideo) {
-          setError('Video not found');
-          setLoading(false);
-          return;
+            if (!res.ok) {
+                console.error("Failed to fetch Build Habit videos");
+                return;
+            }
+
+            const data = await res.json();
+            const videos = data.content || [];
+
+            if (videos.length === 0) {
+                setVideo(null);
+                return;
+            }
+
+            const dailyIndex = getDailyIndex(videos.length);
+            setVideo(videos[dailyIndex]);
+        } catch (err) {
+            console.error("Error fetching daily Build Habit video:", err);
+        } finally {
+            setLoading(false);
         }
-      } else {
-        //ovo se treba dogovoriti sa backendom kako ce oni oznaciti videe koji su za meditaciju/exercise
+    }, [BACKEND_URL]);
 
-        // Opcija 1: Prikaži najnoviji video (prvi u listi)
-        selectedVideo = data[0];
+    useEffect(() => {
+        fetchDailyVideo();
+    }, [fetchDailyVideo]);
 
-        // Opcija 2: Random video (zakomentiraj gornju liniju i odkomentiraj ovu)
-        // selectedVideo = data[Math.floor(Math.random() * data.length)];
+    if (loading) return <div>Loading daily video...</div>;
 
-        // Opcija 3: Featured video (ako imaš to polje u backendu)
-        // selectedVideo = data.find(v => v.featured) || data[0];
-      }
-
-      setVideo(selectedVideo);
-    } catch (err) {
-      console.error('Error fetching video:', err);
-      setError('Failed to load video');
-    } finally {
-      setLoading(false);
+    if (!video) {
+        return (
+            <div className={styles.mainContent}>
+                <h2>No Build Habit videos available</h2>
+            </div>
+        );
     }
-  };
 
-  if (loading) {
     return (
-      <div className={styles.singleVideoPanel}>
-        <div className={styles.loadingContainer}>
-          <p>Loading video...</p>
-        </div>
-      </div>
-    );
-  }
+        <div className={styles.mainContent}>
+            <h1>Daily Exercise Video</h1>
 
-  if (error || !video) {
-    return (
-      <div className={styles.singleVideoPanel}>
-        <div className={styles.errorContainer}>
-          <p>{error || 'No video available'}</p>
-        </div>
-      </div>
-    );
-  }
+            <div className={styles.videoGrid}>
+                <div className={styles.videoCard}>
+                    <div
+                        className={styles.videoThumbnail}
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                            navigate(`/watch/${video.id}`, {
+                                state: { type: "VIDEO" }
+                            })
+                        }
+                        onMouseEnter={(e) => {
+                            const v = e.currentTarget.querySelector("video");
+                            if (v) v.play().catch(() => {});
+                        }}
+                        onMouseLeave={(e) => {
+                            const v = e.currentTarget.querySelector("video");
+                            if (v) {
+                                v.pause();
+                                v.currentTime = 0;
+                            }
+                        }}
+                    >
+                        <video
+                            src={video.url}
+                            muted
+                            width="100%"
+                            height="100%"
+                            style={{ objectFit: "cover", pointerEvents: "none" }}
+                        />
 
-  const itemType = getMediaType(video);
+                        <span className={styles.typeBadge}>VIDEO</span>
+                    </div>
 
-  return (
-    <div className={styles.singleVideoPanel}>      
-      <div className={styles.featuredVideoCard}>
-        {/* Video Thumbnail/Preview */}
-        <div
-          className={styles.featuredThumbnail}
-          onClick={() => navigate(`/watch/${video.id}`, { state: { type: itemType } })}
-        >
-          {/* Render content based on type */}
-          {itemType === 'VIDEO' && (
-            <video 
-              src={video.url} 
-              muted 
-              width="100%" 
-              height="100%" 
-              style={{ objectFit: 'cover', pointerEvents: 'none' }} 
-            />
-          )}
+                    <div className={styles.videoInfo}>
+                        <div
+                            className={styles.videoTitle}
+                            style={{ cursor: "pointer" }}
+                            onClick={() =>
+                                navigate(`/watch/${video.id}`, {
+                                    state: { type: "VIDEO" }
+                                })
+                            }
+                        >
+                            {video.title}
+                        </div>
 
-          {itemType === 'AUDIO' && (
-            <div className={`${styles.placeholderIcon} ${styles.audioIcon}`}>
-              🎧
+                        <div className={styles.videoDescription}>
+                            {video.description}
+                        </div>
+
+                        <div style={{ fontSize: "0.8rem", color: "#888" }}>
+                            VIDEO • By {video.trainerName}
+                        </div>
+                    </div>
+                </div>
             </div>
-          )}
-
-          {itemType === 'BLOG' && (
-            <div className={`${styles.placeholderIcon} ${styles.blogIcon}`}>
-              📄
-            </div>
-          )}
-
-          {/* Type Badge */}
-          <span className={styles.typeBadge}>{itemType}</span>
-
-          {/* Play Overlay */}
-          <div className={styles.playOverlay}>
-            <div className={styles.playButton}>▶</div>
-          </div>
         </div>
-
-        {/* Video Info */}
-        <div className={styles.featuredVideoInfo}>
-          <h3 
-            className={styles.featuredTitle}
-            onClick={() => navigate(`/watch/${video.id}`, { state: { type: itemType } })}
-          >
-            {video.title}
-          </h3>
-          <p className={styles.featuredDescription}>{video.description}</p>
-          <div className={styles.featuredMeta}>
-            <span className={styles.metaType}>{itemType}</span>
-            <span className={styles.metaDivider}>•</span>
-            <span className={styles.metaTrainer}>By {video.trainerName}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }
