@@ -105,6 +105,12 @@ public class AdminService {
         Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub);
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
+
+            // Check if user is banned
+            if (user.isBanned()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+            }
+
             user.setLastLogin(LocalDateTime.now());
             return userRepository.save(user);
         }
@@ -113,6 +119,12 @@ public class AdminService {
             Optional<User> byEmail = userRepository.findByEmail(email);
             if (byEmail.isPresent()) {
                 User user = byEmail.get();
+
+                // Check if user is banned
+                if (user.isBanned()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+                }
+
                 if (user.getAuth0Id() == null || user.getAuth0Id().isEmpty()) {
                     user.setAuth0Id(sub);
                 }
@@ -137,23 +149,23 @@ public class AdminService {
 
         return userRepository.save(newUser);
     }
-    
+
 
     @Transactional
     public void setUserBanStatus(Long userId, boolean banned) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        user.setBanned(banned);   
+        user.setBanned(banned);
         userRepository.save(user);
-}
+    }
 
     @Transactional
     public void setTrainerBanStatus(Long trainerId, boolean banned) {
         Trainer trainer = trainerRepository.findById(trainerId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
 
-        trainer.setBanned(banned); // Ako ne radi dodaj uskličnik ode
+        trainer.setBanned(banned);
         trainerRepository.save(trainer);
     }
 }

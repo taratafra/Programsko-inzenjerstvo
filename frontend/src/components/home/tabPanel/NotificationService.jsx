@@ -14,10 +14,8 @@ export default function NotificationService() {
     const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE;
     const POLL_INTERVAL = 5000;
 
-    // ✅ Reactive local token state
     const [localToken, setLocalToken] = useState(localStorage.getItem("token"));
 
-    // ✅ Watch for token being added after login
     useEffect(() => {
         const interval = setInterval(() => {
             const token = localStorage.getItem("token");
@@ -46,7 +44,7 @@ export default function NotificationService() {
 
     const fetchNotifications = async () => {
         if (isFetchingRef.current) {
-            console.log('⏭️ Skipping fetch - already in progress');
+            //console.log('⏭️ Skipping fetch - already in progress');
             return;
         }
 
@@ -55,20 +53,20 @@ export default function NotificationService() {
         try {
             const token = await getToken();
 
-            console.log('📡 Fetching notifications at:', new Date().toLocaleTimeString());
+            //console.log('📡 Fetching notifications at:', new Date().toLocaleTimeString());
 
             const response = await fetch(`${BACKEND_URL}/api/notifications/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            console.log('📥 Response status:', response.status);
+            //console.log('📥 Response status:', response.status);
 
             if (!response.ok) return;
 
             const notifications = await response.json();
 
             if (!notifications?.length) {
-                console.log('📭 No notifications from backend');
+                //console.log('📭 No notifications from backend');
                 return;
             }
 
@@ -78,11 +76,18 @@ export default function NotificationService() {
 
             if (!newNotifications.length) return;
 
-            console.log(`🔔 Displaying ${newNotifications.length} new notification(s)`);
+            //console.log(`🔔 Displaying ${newNotifications.length} new notification(s)`);
 
             newNotifications.forEach((notif) => {
-                let toastType = "info";
+
                 const text = `${notif.title ?? ""} ${notif.message}`.toLowerCase();
+
+                if (text.includes("banned") || text.includes("account has been suspended")) {
+                    displayedNotificationsRef.current.add(notif.id);
+                    return;
+                }
+
+                let toastType = "info";
 
                 if (text.includes("reminder") || text.includes("starts in")) toastType = "reminder";
                 else if (text.includes("success") || text.includes("completed")) toastType = "success";
@@ -93,7 +98,7 @@ export default function NotificationService() {
                     ? `${notif.title}: ${notif.message}`
                     : notif.message;
 
-                console.log('🎯 Showing toast:', { message, toastType });
+                //console.log('🎯 Showing toast:', { message, toastType });
 
                 addToast(message, toastType, 8000);
                 displayedNotificationsRef.current.add(notif.id);
@@ -117,22 +122,22 @@ export default function NotificationService() {
         }
     };
 
-    // ✅ Main polling effect now reacts to token availability
+    //  Main polling effect now reacts to token availability
     useEffect(() => {
         if (!isAuthenticated && !localToken) return;
 
-        console.log('🎯 NotificationService started');
-        console.log('🕐 Current time:', new Date().toLocaleTimeString());
+        //console.log('🎯 NotificationService started');
+        //console.log('🕐 Current time:', new Date().toLocaleTimeString());
 
         fetchNotifications();
 
         pollingIntervalRef.current = setInterval(() => {
-            console.log('⏰ Polling tick at:', new Date().toLocaleTimeString());
+            //console.log('⏰ Polling tick at:', new Date().toLocaleTimeString());
             fetchNotifications();
         }, POLL_INTERVAL);
 
         return () => {
-            console.log('🛑 Stopping notification polling');
+            //console.log('🛑 Stopping notification polling');
             clearInterval(pollingIntervalRef.current);
         };
     }, [isAuthenticated, localToken]);

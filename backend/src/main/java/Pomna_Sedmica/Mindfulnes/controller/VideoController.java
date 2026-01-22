@@ -5,6 +5,7 @@ import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.service.TrainerService;
 import Pomna_Sedmica.Mindfulnes.service.VideoService;
+import Pomna_Sedmica.Mindfulnes.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,10 +21,12 @@ public class VideoController {
 
     private final VideoService videoService;
     private final TrainerService trainerService;
+    private final UserService userService;
 
-    public VideoController(VideoService videoService, TrainerService trainerService) {
+    public VideoController(VideoService videoService, TrainerService trainerService, UserService userService) {
         this.videoService = videoService;
         this.trainerService = trainerService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -43,7 +46,6 @@ public class VideoController {
         return videoService.getRecommendations(user);
     }
 
-    // NEW: Get all videos uploaded by the authenticated trainer
     @GetMapping("/trainer/me")
     @PreAuthorize("hasRole('TRAINER')")
     public List<VideoResponseDTO> getMyVideos(@AuthenticationPrincipal Jwt jwt) {
@@ -79,13 +81,20 @@ public class VideoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('TRAINER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteVideo(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        User user = trainerService.getOrCreateTrainerFromJwt(jwt);
-        if (user.getRole() != Role.TRAINER) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can delete videos");
+        // Get the user from JWT
+        User user = userService.getOrCreateUserFromJwt(jwt);
+
+        // Check if user is ADMIN or TRAINER
+        if (user.getRole() == Role.ADMIN) {
+            // Admins can delete any video
+            videoService.deleteVideoById(id);
+        } else if (user.getRole() == Role.TRAINER) {
+            // Trainers can only delete their own videos
+            videoService.deleteVideoFromDb(id, user);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers and admins can delete videos");
         }
-        videoService.deleteVideoFromDb(id, user);
     }
 }

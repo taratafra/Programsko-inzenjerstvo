@@ -415,7 +415,6 @@ export default function TrainerDashboard({ setActiveTab }) {
                     ) : (
                         <div className={styles.emptyState}>
                             <p>No content uploaded yet</p>
-                            <p>Upload videos, audios, or blogs to share with your clients</p>
                         </div>
                     )}
                 </div>

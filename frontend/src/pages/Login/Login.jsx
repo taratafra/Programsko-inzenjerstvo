@@ -44,6 +44,15 @@ function Login() {
       }
 
       if (!response.ok) {
+
+        if (response.status === 403 || 
+            data.error === "UserBanned" || 
+            data.message?.toLowerCase().includes("banned") ||
+            data.message?.toLowerCase().includes("account has been suspended")) {
+          alert("Your account has been banned. Please contact support for more information.");
+          throw new Error("Your account has been banned");
+        }
+
         if (response.status === 404 || response.status === 500 && data.message?.toLowerCase().includes("user not found")) {
           throw new Error("Email does not exist");
         }

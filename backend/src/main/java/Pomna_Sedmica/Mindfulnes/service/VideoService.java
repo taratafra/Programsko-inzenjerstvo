@@ -180,8 +180,43 @@ public class VideoService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own videos");
         }
 
+        // Delete associated comments first
         commentRepository.deleteByVideoId(videoId);
+
+        // Delete the file from storage
+        deleteVideoFileFromStorage(video.getUrl());
+
+        // Delete from database
         videoRepository.delete(video);
+    }
+
+    @Transactional
+    public void deleteVideoById(Long videoId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+
+        // Delete associated comments first
+        commentRepository.deleteByVideoId(videoId);
+
+        // Delete the file from storage
+        deleteVideoFileFromStorage(video.getUrl());
+
+        // Delete from database
+        videoRepository.delete(video);
+    }
+
+    private void deleteVideoFileFromStorage(String storedUrl) {
+        if (storedUrl == null) return;
+
+        try {
+            com.google.cloud.storage.Blob blob = storageBucket.get(storedUrl);
+            if (blob != null) {
+                blob.delete();
+            }
+        } catch (Exception e) {
+            System.err.println("Error deleting video file from storage: " + storedUrl + " - " + e.getMessage());
+            // Don't throw - continue with database deletion even if file deletion fails
+        }
     }
 
     public List<VideoResponseDTO> getRecommendations(User user) {
@@ -242,4 +277,5 @@ public class VideoService {
 
         return storedUrl;
     }
+
 }

@@ -9,6 +9,16 @@ export default function AdminDashboard({ setActiveTab }) {
 
     const [users, setUsers] = useState([]);
     const [trainers, setTrainers] = useState([]);
+    const [videos, setVideos] = useState([]);
+    const [currentAdmin, setCurrentAdmin] = useState(null);
+
+    // Stats
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        totalTrainers: 0,
+        activeSessions: 0,
+        totalContent: 0,
+    });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -19,22 +29,14 @@ export default function AdminDashboard({ setActiveTab }) {
 
     const normalizeRole = (role) => (role || "").toString().trim().toUpperCase();
 
-    // Robustly read banned flag regardless of backend naming
     const getIsBanned = (obj) => {
         if (!obj) return false;
-
-        // most common
         if (typeof obj.isBanned === "boolean") return obj.isBanned;
         if (typeof obj.banned === "boolean") return obj.banned;
-
-        // other possible spellings
         if (typeof obj.is_banned === "boolean") return obj.is_banned;
         if (typeof obj.ban === "boolean") return obj.ban;
-
-        // nested shapes (just in case)
         if (obj.user && typeof obj.user.isBanned === "boolean") return obj.user.isBanned;
         if (obj.user && typeof obj.user.banned === "boolean") return obj.user.banned;
-
         return false;
     };
 
@@ -53,6 +55,23 @@ export default function AdminDashboard({ setActiveTab }) {
         return localToken;
     };
 
+    // Fetch current admin info
+    const fetchCurrentAdmin = async () => {
+        try {
+            const token = await getToken();
+            const res = await fetch(`${BACKEND_URL}/api/admins/me`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setCurrentAdmin(data);
+            }
+        } catch (e) {
+            console.error("fetchCurrentAdmin error:", e);
+        }
+    };
+
     const fetchUsers = async () => {
         setLoading(true);
         setError("");
@@ -68,7 +87,11 @@ export default function AdminDashboard({ setActiveTab }) {
             }
 
             const data = await res.json();
-            setUsers(Array.isArray(data) ? data : []);
+            // Filter out admins from the user list
+            const filteredUsers = Array.isArray(data) 
+                ? data.filter(user => normalizeRole(user?.role) !== "ADMIN")
+                : [];
+            setUsers(filteredUsers);
         } catch (e) {
             console.error("fetchUsers error:", e);
             setError(e?.message || "Failed to load users");
@@ -103,46 +126,140 @@ export default function AdminDashboard({ setActiveTab }) {
         }
     };
 
+    const fetchVideos = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const token = await getToken();
+            const res = await fetch(`${BACKEND_URL}/api/videos?size=1000`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || `Failed to fetch videos (${res.status})`);
+            }
+
+            const data = await res.json();
+            // Handle paginated response
+            const videoList = data.content || data;
+            setVideos(Array.isArray(videoList) ? videoList : []);
+        } catch (e) {
+            console.error("fetchVideos error:", e);
+            setError(e?.message || "Failed to load videos");
+            setVideos([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch stats for overview
+    const fetchStats = async () => {
+        setLoading(true);
+        try {
+            const token = await getToken();
+
+            const [usersRes, trainersRes, videosRes] = await Promise.all([
+                fetch(`${BACKEND_URL}/api/users`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+                fetch(`${BACKEND_URL}/api/trainers`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+                fetch(`${BACKEND_URL}/api/videos?size=1000`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+            ]);
+
+            const usersData = await usersRes.json();
+            const trainersData = await trainersRes.json();
+            const videosData = await videosRes.json();
+
+            // Filter out admins when counting users
+            const usersList = Array.isArray(usersData) 
+                ? usersData.filter(u => normalizeRole(u?.role) !== "ADMIN")
+                : [];
+            const trainersList = Array.isArray(trainersData) ? trainersData : [];
+            const videosList = videosData.content || videosData;
+
+            // Calculate active users (non-banned users, excluding admins)
+            const activeUsers = usersList.filter((u) => !getIsBanned(u)).length;
+
+            setStats({
+                totalUsers: usersList.length,
+                totalTrainers: trainersList.length,
+                activeSessions: activeUsers,
+                totalContent: Array.isArray(videosList) ? videosList.length : 0,
+            });
+        } catch (e) {
+            console.error("fetchStats error:", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
+        fetchCurrentAdmin();
+    }, []);
+
+    useEffect(() => {
+        if (activeSection === "overview") fetchStats();
         if (activeSection === "users") fetchUsers();
         if (activeSection === "trainers") fetchTrainers();
+        if (activeSection === "content") fetchVideos();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSection]);
 
     const matchesSearch = (item, q) => {
-        const haystack = [item?.id, item?.email, item?.name, item?.surname, item?.role]
+        const haystack = [
+            item?.id,
+            item?.email,
+            item?.name,
+            item?.surname,
+            item?.role,
+            item?.title,
+            item?.description,
+            item?.trainerName,
+        ]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
         return haystack.includes(q);
     };
 
-    // User tab: exclude ADMIN and TRAINER (trainers live in Trainer tab)
     const userRows = useMemo(() => {
         const q = search.trim().toLowerCase();
         return users
-            .filter((u) => normalizeRole(u?.role) !== "ADMIN")
             .filter((u) => normalizeRole(u?.role) !== "TRAINER")
             .filter((u) => (q ? matchesSearch(u, q) : true));
     }, [users, search]);
 
-    // Trainer tab: fetched from /api/trainers
     const trainerRows = useMemo(() => {
         const q = search.trim().toLowerCase();
         return trainers.filter((t) => (q ? matchesSearch(t, q) : true));
     }, [trainers, search]);
 
+    const videoRows = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        return videos.filter((v) => (q ? matchesSearch(v, q) : true));
+    }, [videos, search]);
+
     const refreshActive = async () => {
+        if (activeSection === "overview") return fetchStats();
         if (activeSection === "users") return fetchUsers();
         if (activeSection === "trainers") return fetchTrainers();
+        if (activeSection === "content") return fetchVideos();
     };
 
-    /**
-     * listType:
-     *  - "users": uses /api/admins/users/{id}/ban|unban
-     *  - "trainers": uses /api/admins/trainers/{id}/ban|unban
-     */
     const setBanStatus = async (id, banned, listType) => {
+        // Prevent self-ban for users/trainers
+        if (currentAdmin && currentAdmin.id === id && !banned) {
+            // Allow self-unban (shouldn't happen, but just in case)
+        } else if (currentAdmin && currentAdmin.id === id && banned) {
+            alert("You cannot ban yourself!");
+            return;
+        }
+
         const endpoint = banned ? "ban" : "unban";
         const basePath = listType === "trainers" ? "trainers" : "users";
 
@@ -161,7 +278,6 @@ export default function AdminDashboard({ setActiveTab }) {
                 throw new Error(msg || `Failed to ${endpoint} (${res.status})`);
             }
 
-            // optimistic update: set multiple keys so UI stays consistent
             if (listType === "users") {
                 setUsers((prev) =>
                     prev.map((u) =>
@@ -170,7 +286,7 @@ export default function AdminDashboard({ setActiveTab }) {
                                   ...u,
                                   isBanned: banned,
                                   banned,
-                                  is_banned: banned, // in case backend uses this
+                                  is_banned: banned,
                               }
                             : u
                     )
@@ -189,13 +305,41 @@ export default function AdminDashboard({ setActiveTab }) {
                     )
                 );
             }
+
+            
+
         } catch (e) {
             console.error(`setBanStatus ${endpoint} error:`, e);
             alert(e?.message || `Failed to ${endpoint}`);
         }
     };
 
-    const renderTable = (rows, listType) => (
+    const deleteVideo = async (videoId) => {
+        if (!window.confirm("Are you sure you want to delete this video?")) {
+            return;
+        }
+
+        try {
+            const token = await getToken();
+            const res = await fetch(`${BACKEND_URL}/api/videos/${videoId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || `Failed to delete video (${res.status})`);
+            }
+
+            setVideos((prev) => prev.filter((v) => v.id !== videoId));
+            alert("Video deleted successfully!");
+        } catch (e) {
+            console.error("deleteVideo error:", e);
+            alert(e?.message || "Failed to delete video");
+        }
+    };
+
+    const renderUserTable = (rows, listType) => (
         <div className={styles.tableWrap}>
             <table className={styles.table}>
                 <thead>
@@ -214,6 +358,7 @@ export default function AdminDashboard({ setActiveTab }) {
                             const fullName =
                                 `${u?.name || ""} ${u?.surname || ""}`.trim() || "-";
                             const isBanned = getIsBanned(u);
+                            const isCurrentAdmin = currentAdmin && currentAdmin.id === u.id;
 
                             return (
                                 <tr key={u.id}>
@@ -237,6 +382,7 @@ export default function AdminDashboard({ setActiveTab }) {
                                             <button
                                                 className={`${styles.actionBtn} ${styles.unbanBtn}`}
                                                 onClick={() => setBanStatus(u.id, false, listType)}
+                                                disabled={isCurrentAdmin}
                                             >
                                                 Unban
                                             </button>
@@ -244,6 +390,12 @@ export default function AdminDashboard({ setActiveTab }) {
                                             <button
                                                 className={`${styles.actionBtn} ${styles.banBtn}`}
                                                 onClick={() => setBanStatus(u.id, true, listType)}
+                                                disabled={isCurrentAdmin}
+                                                title={
+                                                    isCurrentAdmin
+                                                        ? "You cannot ban yourself"
+                                                        : ""
+                                                }
                                             >
                                                 Ban
                                             </button>
@@ -257,6 +409,60 @@ export default function AdminDashboard({ setActiveTab }) {
                         <tr>
                             <td colSpan={6} className={styles.emptyRow}>
                                 No results found.
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+
+    const renderVideoTable = (rows) => (
+        <div className={styles.tableWrap}>
+            <table className={styles.table}>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Duration</th>
+                        <th>Trainer</th>
+                        <th className={styles.actionsCol}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {!loading &&
+                        rows.map((v) => {
+                            const trainerName = v.trainerName || 
+                                (v.trainer ? `${v.trainer.name || ""} ${v.trainer.surname || ""}`.trim() : "-");
+
+                            return (
+                                <tr key={v.id}>
+                                    <td>{v.id}</td>
+                                    <td>{v.title || "-"}</td>
+                                    <td>
+                                        <span className={styles.typeBadge}>
+                                            {v.type || "-"}
+                                        </span>
+                                    </td>
+                                    <td>{v.duration ? `${v.duration} min` : "-"}</td>
+                                    <td>{trainerName}</td>
+                                    <td className={styles.actionsCol}>
+                                        <button
+                                            className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                                            onClick={() => deleteVideo(v.id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+
+                    {!loading && rows.length === 0 && (
+                        <tr>
+                            <td colSpan={6} className={styles.emptyRow}>
+                                No content found.
                             </td>
                         </tr>
                     )}
@@ -302,23 +508,44 @@ export default function AdminDashboard({ setActiveTab }) {
             <div className={styles.content}>
                 {activeSection === "overview" && (
                     <div className={styles.section}>
-                        <h2>System Overview</h2>
+                        <div className={styles.sectionHeaderRow}>
+                            <h2>System Overview</h2>
+                            <button
+                                className={styles.refreshBtn}
+                                onClick={fetchStats}
+                                disabled={loading}
+                            >
+                                {loading ? "Loading..." : "Refresh"}
+                            </button>
+                        </div>
                         <div className={styles.statsGrid}>
                             <div className={styles.statCard}>
+                                <div className={styles.statIcon}>👥</div>
                                 <h3>Total Users</h3>
-                                <p className={styles.statNumber}>-</p>
+                                <p className={styles.statNumber}>
+                                    {loading ? "..." : stats.totalUsers}
+                                </p>
                             </div>
                             <div className={styles.statCard}>
+                                <div className={styles.statIcon}>🎯</div>
                                 <h3>Total Trainers</h3>
-                                <p className={styles.statNumber}>-</p>
+                                <p className={styles.statNumber}>
+                                    {loading ? "..." : stats.totalTrainers}
+                                </p>
                             </div>
                             <div className={styles.statCard}>
-                                <h3>Active Sessions</h3>
-                                <p className={styles.statNumber}>-</p>
+                                <div className={styles.statIcon}>✨</div>
+                                <h3>Active Users</h3>
+                                <p className={styles.statNumber}>
+                                    {loading ? "..." : stats.activeSessions}
+                                </p>
                             </div>
                             <div className={styles.statCard}>
+                                <div className={styles.statIcon}>🎥</div>
                                 <h3>Total Content</h3>
-                                <p className={styles.statNumber}>-</p>
+                                <p className={styles.statNumber}>
+                                    {loading ? "..." : stats.totalContent}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -335,8 +562,8 @@ export default function AdminDashboard({ setActiveTab }) {
                                 </h2>
                                 <p className={styles.subtle}>
                                     {activeSection === "users"
-                                        ? "Users (admins excluded; trainers shown in Trainer tab)"
-                                        : "Trainer accounts (from /api/trainers)"}
+                                        ? "Manage user accounts (admins and trainers excluded)"
+                                        : "Manage trainer accounts"}
                                 </p>
                             </div>
 
@@ -361,20 +588,49 @@ export default function AdminDashboard({ setActiveTab }) {
                         {error && <div className={styles.errorBox}>{error}</div>}
 
                         {activeSection === "users"
-                            ? renderTable(userRows, "users")
-                            : renderTable(trainerRows, "trainers")}
+                            ? renderUserTable(userRows, "users")
+                            : renderUserTable(trainerRows, "trainers")}
                     </div>
                 )}
 
                 {activeSection === "content" && (
                     <div className={styles.section}>
-                        <h2>Content Management</h2>
-                        <p>Content management functionality will be implemented here</p>
-                        <div className={styles.placeholder}>
-                            <p>• View all uploaded content</p>
-                            <p>• Moderate content</p>
-                            <p>• Content analytics</p>
+                        <div className={styles.sectionHeaderRow}>
+                            <div>
+                                <h2>Content Management</h2>
+                                <p className={styles.subtle}>
+                                    Manage all videos, audios, and content in the system
+                                </p>
+                            </div>
+
+                            <button
+                                className={styles.refreshBtn}
+                                onClick={refreshActive}
+                                disabled={loading}
+                            >
+                                {loading ? "Loading..." : "Refresh"}
+                            </button>
                         </div>
+
+                        <div className={styles.toolbar}>
+                            <input
+                                className={styles.searchInput}
+                                placeholder="Search by title, type, trainer…"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+
+                        {error && <div className={styles.errorBox}>{error}</div>}
+
+                        <div className={styles.contentStats}>
+                            <div className={styles.miniStat}>
+                                <span className={styles.miniStatLabel}>Total Videos:</span>
+                                <span className={styles.miniStatValue}>{videos.length}</span>
+                            </div>
+                        </div>
+
+                        {renderVideoTable(videoRows)}
                     </div>
                 )}
             </div>
