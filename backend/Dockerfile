@@ -6,6 +6,8 @@ WORKDIR /workspace
 COPY . .
 RUN pwd
 RUN ls -la
+RUN cp serviceAccountKey.json backend/serviceAccountKey.json
+RUN cp serviceAccountKey.json backend/src/main/resources/serviceAccountKey.json
 # RUN chmod +x ./backend/mvnw
 
 # Build your Spring Boot JAR

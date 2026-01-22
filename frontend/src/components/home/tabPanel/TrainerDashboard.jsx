@@ -9,10 +9,11 @@ export default function TrainerDashboard({ setActiveTab }) {
     const { getAccessTokenSilently, isAuthenticated } = useAuth0();
     const [clients, setClients] = useState([]);
     const [schedules, setSchedules] = useState([]);
+    const [content, setContent] = useState([]);
+    const [averageRating, setAverageRating] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeSection, setActiveSection] = useState('overview');
     
-    // Client statistics states
     const [selectedClient, setSelectedClient] = useState(null);
     const [clientCheckIns, setClientCheckIns] = useState([]);
     const [loadingStats, setLoadingStats] = useState(false);
@@ -31,9 +32,7 @@ export default function TrainerDashboard({ setActiveTab }) {
                 });
             } else {
                 const localToken = localStorage.getItem("token");
-                if (!localToken) {
-                    throw new Error("No authentication token found");
-                }
+                if (!localToken) throw new Error("No authentication token found");
                 return localToken;
             }
         } catch (error) {
@@ -46,36 +45,79 @@ export default function TrainerDashboard({ setActiveTab }) {
         loadDashboardData();
     }, []);
 
+    // Debug effect to monitor schedules state
+    useEffect(() => {
+        console.log('📅 Current schedules in state:', schedules);
+        console.log('📅 Number of schedules:', schedules.length);
+        if (schedules.length > 0) {
+            console.log('📅 First schedule details:', schedules[0]);
+            console.log('📅 Upcoming schedules:', getUpcomingSchedules());
+        }
+    }, [schedules]);
+
     const loadDashboardData = async () => {
         try {
             const token = await getToken();
             
-            // Load clients with full details in one call
-            const clientsResponse = await fetch(`${BACKEND_URL}/api/trainers/me/clients`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            // Fetch clients first
+            const clientsRes = await fetch(`${BACKEND_URL}/api/trainers/me/clients`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (clientsResponse.ok) {
-                const clientsData = await clientsResponse.json();
+            let clientsData = [];
+            if (clientsRes.ok) {
+                clientsData = await clientsRes.json();
+                console.log('✅ Clients loaded:', clientsData);
                 setClients(clientsData);
+            } else {
+                console.error('❌ Clients fetch failed:', clientsRes.status, await clientsRes.text());
             }
 
-            const schedulesResponse = await fetch(`${BACKEND_URL}/api/schedules/trainer/me`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            // Fetch schedules where trainer is the trainer (client appointments)
+            const schedulesRes = await fetch(`${BACKEND_URL}/api/schedules/trainer/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (schedulesResponse.ok) {
-                const schedulesData = await schedulesResponse.json();
-                setSchedules(schedulesData);
+            if (schedulesRes.ok) {
+                const schedulesData = await schedulesRes.json();
+                console.log('✅ Schedules loaded:', schedulesData);
+                console.log('📊 Schedules count:', schedulesData.length);
+                console.log('📊 Schedules full data:', JSON.stringify(schedulesData, null, 2));
+                setSchedules(Array.isArray(schedulesData) ? schedulesData : []);
+            } else {
+                console.error('❌ Schedules fetch failed:', schedulesRes.status, await schedulesRes.text());
+                setSchedules([]);
+            }
+
+            // Fetch content
+            const contentRes = await fetch(`${BACKEND_URL}/api/videos/trainer/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (contentRes.ok) {
+                const contentData = await contentRes.json();
+                console.log('✅ Content loaded:', contentData);
+                setContent(contentData);
+            } else {
+                console.error('❌ Content fetch failed:', contentRes.status);
+            }
+
+            // Fetch average rating
+            const ratingRes = await fetch(`${BACKEND_URL}/api/videos/trainer/me/average-rating`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (ratingRes.ok) {
+                const ratingData = await ratingRes.json();
+                console.log('✅ Rating loaded:', ratingData);
+                setAverageRating(ratingData);
+            } else {
+                console.error('❌ Rating fetch failed:', ratingRes.status);
             }
             
             setLoading(false);
         } catch (error) {
-            console.error('Error loading dashboard data:', error);
+            console.error('❌ Error loading dashboard data:', error);
             setLoading(false);
         }
     };
@@ -84,18 +126,14 @@ export default function TrainerDashboard({ setActiveTab }) {
         setLoadingStats(true);
         try {
             const token = await getToken();
-            
             const response = await fetch(`${BACKEND_URL}/api/mood-checkins/${clientId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
                 const data = await response.json();
                 setClientCheckIns(Array.isArray(data) ? data : []);
             } else {
-                console.error('Failed to load client statistics');
                 setClientCheckIns([]);
             }
         } catch (error) {
@@ -118,35 +156,66 @@ export default function TrainerDashboard({ setActiveTab }) {
         setActiveSection('clients');
     };
 
+    const handleDeleteContent = async (contentId) => {
+        if (!window.confirm('Are you sure you want to delete this content?')) return;
+
+        try {
+            const token = await getToken();
+            const response = await fetch(`${BACKEND_URL}/api/videos/${contentId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok || response.status === 204) {
+                setContent(content.filter(c => c.id !== contentId));
+                alert('Content deleted successfully');
+            } else {
+                alert('Failed to delete content');
+            }
+        } catch (error) {
+            console.error('Error deleting content:', error);
+            alert('Error deleting content');
+        }
+    };
+
     const getUpcomingSchedules = () => {
+        console.log('🔍 Getting upcoming schedules from:', schedules);
+        
+        if (!schedules || schedules.length === 0) {
+            console.log('⚠️ No schedules to filter');
+            return [];
+        }
+
         const now = new Date();
-        return schedules
-            .filter(s => s.enabled)
-            .filter(s => {
-                if (s.repeatType === 'ONCE') {
-                    return new Date(s.date) >= now;
-                }
-                return true;
-            })
-            .slice(0, 5);
+        const today = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        const filtered = schedules.filter(s => {
+            console.log(`📋 Checking schedule: ${s.title}, enabled: ${s.enabled}, repeatType: ${s.repeatType}`);
+            
+            // Only show enabled schedules
+            if (!s.enabled) {
+                console.log(`  ❌ Schedule disabled`);
+                return false;
+            }
+            
+            if (s.repeatType === 'ONCE') {
+                const isUpcoming = s.date && s.date >= today;
+                console.log(`  📅 ONCE schedule: date=${s.date}, isUpcoming=${isUpcoming}`);
+                return isUpcoming;
+            }
+            
+            // DAILY and WEEKLY schedules are always considered upcoming
+            console.log(`  ✅ ${s.repeatType} schedule - always upcoming`);
+            return true;
+        });
+
+        console.log('✅ Filtered upcoming schedules:', filtered);
+        return filtered.slice(0, 5);
     };
 
-    const hasDataForMetric = (dataKey) => {
-        return clientCheckIns.some(checkIn => checkIn[dataKey] != null);
-    };
-
-    const hasEmotionsData = () => {
-        return clientCheckIns.some(checkIn => checkIn.emotions && checkIn.emotions.length > 0);
-    };
-
-    const hasTextualData = () => {
-        return clientCheckIns.some(checkIn => 
-            checkIn.caffeineIntake || 
-            checkIn.alcoholIntake || 
-            checkIn.physicalActivity || 
-            checkIn.notes
-        );
-    };
+    const hasDataForMetric = (dataKey) => clientCheckIns.some(c => c[dataKey] != null);
+    const hasEmotionsData = () => clientCheckIns.some(c => c.emotions?.length > 0);
+    const hasTextualData = () => clientCheckIns.some(c => c.caffeineIntake || c.alcoholIntake || c.physicalActivity || c.notes);
 
     if (loading) {
         return (
@@ -156,17 +225,16 @@ export default function TrainerDashboard({ setActiveTab }) {
         );
     }
 
+    const upcomingSchedules = getUpcomingSchedules();
+
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>💼 Trainer Dashboard</h2>
 
-            {/* Section Navigation */}
             <div className={styles.sectionNav}>
                 <button
                     onClick={() => setActiveSection('overview')}
-                    className={`${styles.sectionButton} ${
-                        activeSection === 'overview' ? styles.sectionButtonActive : ''
-                    }`}
+                    className={`${styles.sectionButton} ${activeSection === 'overview' ? styles.sectionButtonActive : ''}`}
                 >
                     📊 Overview
                 </button>
@@ -175,23 +243,18 @@ export default function TrainerDashboard({ setActiveTab }) {
                         setActiveSection('clients');
                         setSelectedClient(null);
                     }}
-                    className={`${styles.sectionButton} ${
-                        activeSection === 'clients' ? styles.sectionButtonActive : ''
-                    }`}
+                    className={`${styles.sectionButton} ${activeSection === 'clients' ? styles.sectionButtonActive : ''}`}
                 >
                     👥 Clients ({clients.length})
                 </button>
                 <button
-                    onClick={() => setActiveSection('schedules')}
-                    className={`${styles.sectionButton} ${
-                        activeSection === 'schedules' ? styles.sectionButtonActive : ''
-                    }`}
+                    onClick={() => setActiveSection('content')}
+                    className={`${styles.sectionButton} ${activeSection === 'content' ? styles.sectionButtonActive : ''}`}
                 >
-                    📅 Schedules ({schedules.length})
+                    🎬 Content ({content.length})
                 </button>
             </div>
 
-            {/* Overview Section */}
             {activeSection === 'overview' && (
                 <div className={styles.overviewSection}>
                     <div className={styles.statsGrid}>
@@ -203,60 +266,58 @@ export default function TrainerDashboard({ setActiveTab }) {
                         
                         <div className={styles.statCard}>
                             <div className={styles.statIcon}>📅</div>
-                            <div className={styles.statNumber}>{schedules.length}</div>
-                            <div className={styles.statLabel}>Active Schedules</div>
+                            <div className={styles.statNumber}>{upcomingSchedules.length}</div>
+                            <div className={styles.statLabel}>Upcoming Sessions</div>
                         </div>
                         
                         <div className={styles.statCard}>
-                            <div className={styles.statIcon}>✅</div>
+                            <div className={styles.statIcon}>⭐</div>
                             <div className={styles.statNumber}>
-                                {schedules.filter(s => s.enabled).length}
+                                {averageRating ? averageRating.averageRating.toFixed(1) : 'N/A'}
                             </div>
-                            <div className={styles.statLabel}>Enabled Schedules</div>
-                        </div>
-
-                        <div className={styles.statCard}>
-                            <div className={styles.statIcon}>🔄</div>
-                            <div className={styles.statNumber}>
-                                {schedules.filter(s => s.repeatType === 'WEEKLY').length}
-                            </div>
-                            <div className={styles.statLabel}>Recurring Sessions</div>
+                            <div className={styles.statLabel}>Average Rating</div>
                         </div>
                     </div>
 
-                    {/* Upcoming Sessions */}
                     <div className={styles.upcomingSection}>
                         <h3 className={styles.sectionTitle}>📆 Upcoming Sessions</h3>
-                        {getUpcomingSchedules().length > 0 ? (
+                        {upcomingSchedules.length > 0 ? (
                             <div className={styles.scheduleList}>
-                                {getUpcomingSchedules().map(schedule => (
+                                {upcomingSchedules.map(schedule => (
                                     <div key={schedule.id} className={styles.scheduleCard}>
                                         <div className={styles.scheduleHeader}>
                                             <h4>{schedule.title}</h4>
-                                            <span className={styles.scheduleBadge}>
-                                                {schedule.repeatType}
-                                            </span>
+                                            <span className={styles.scheduleBadge}>{schedule.repeatType}</span>
                                         </div>
                                         <div className={styles.scheduleDetails}>
                                             <p>🕐 {schedule.startTime}</p>
-                                            {schedule.repeatType === 'ONCE' && (
+                                            {schedule.repeatType === 'ONCE' && schedule.date && (
                                                 <p>📅 {new Date(schedule.date).toLocaleDateString()}</p>
                                             )}
-                                            {schedule.repeatType === 'WEEKLY' && (
-                                                <p>📆 {schedule.daysOfWeek?.join(', ')}</p>
+                                            {schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek && schedule.daysOfWeek.length > 0 && (
+                                                <p>📆 {schedule.daysOfWeek.join(', ')}</p>
+                                            )}
+                                            {schedule.repeatType === 'DAILY' && (
+                                                <p>📆 Every day</p>
                                             )}
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className={styles.emptyMessage}>No upcoming sessions scheduled</p>
+                            <div className={styles.emptyMessage}>
+                                <p>No upcoming sessions scheduled</p>
+                                {schedules.length > 0 && (
+                                    <p style={{ fontSize: '0.9em', marginTop: '0.5rem' }}>
+                                        (You have {schedules.length} total schedule(s), but none are upcoming or enabled)
+                                    </p>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* Clients Section */}
             {activeSection === 'clients' && (
                 <div className={styles.clientsSection}>
                     <h3 className={styles.sectionTitle}>👥 Your Clients</h3>
@@ -280,9 +341,7 @@ export default function TrainerDashboard({ setActiveTab }) {
                                                 Subscribed: {new Date(client.subscriptionDate).toLocaleDateString()}
                                             </p>
                                         )}
-                                        <p className={styles.viewStats}>
-                                            📊 Click to view statistics
-                                        </p>
+                                        <p className={styles.viewStats}>📊 Click to view statistics</p>
                                     </div>
                                 </div>
                             ))}
@@ -295,7 +354,6 @@ export default function TrainerDashboard({ setActiveTab }) {
                 </div>
             )}
 
-            {/* Client Statistics Section */}
             {activeSection === 'statistics' && selectedClient && (
                 <div className={styles.statisticsSection}>
                     <div className={styles.statisticsHeader}>
@@ -310,68 +368,54 @@ export default function TrainerDashboard({ setActiveTab }) {
                     {loadingStats ? (
                         <div className={styles.loading}>Loading statistics...</div>
                     ) : clientCheckIns.length === 0 ? (
-                        <p className={styles.noData}>
-                            No mood check-in data available for this client yet.
-                        </p>
+                        <p className={styles.noData}>No mood check-in data available for this client yet.</p>
                     ) : (
                         <div className={styles.chartsContainer}>
-                            {hasDataForMetric('moodScore') && (
-                                <MetricChart title="Mood" data={clientCheckIns} dataKey="moodScore" />
-                            )}
-                            {hasDataForMetric('sleepQuality') && (
-                                <MetricChart title="Sleep Quality" data={clientCheckIns} dataKey="sleepQuality" />
-                            )}
-                            {hasDataForMetric('stressLevel') && (
-                                <MetricChart title="Stress Level" data={clientCheckIns} dataKey="stressLevel" />
-                            )}
-                            {hasDataForMetric('focusLevel') && (
-                                <MetricChart title="Focus Level" data={clientCheckIns} dataKey="focusLevel" />
-                            )}
-                            {hasEmotionsData() && (
-                                <EmotionsChart data={clientCheckIns} />
-                            )}
-                            {hasTextualData() && (
-                                <TextualDataDisplay data={clientCheckIns} />
-                            )}
+                            {hasDataForMetric('moodScore') && <MetricChart title="Mood" data={clientCheckIns} dataKey="moodScore" />}
+                            {hasDataForMetric('sleepQuality') && <MetricChart title="Sleep Quality" data={clientCheckIns} dataKey="sleepQuality" />}
+                            {hasDataForMetric('stressLevel') && <MetricChart title="Stress Level" data={clientCheckIns} dataKey="stressLevel" />}
+                            {hasDataForMetric('focusLevel') && <MetricChart title="Focus Level" data={clientCheckIns} dataKey="focusLevel" />}
+                            {hasEmotionsData() && <EmotionsChart data={clientCheckIns} />}
+                            {hasTextualData() && <TextualDataDisplay data={clientCheckIns} />}
                         </div>
                     )}
                 </div>
             )}
 
-            {/* Schedules Section */}
-            {activeSection === 'schedules' && (
-                <div className={styles.schedulesSection}>
-                    <h3 className={styles.sectionTitle}>📅 All Schedules</h3>
-                    {schedules.length > 0 ? (
-                        <div className={styles.schedulesList}>
-                            {schedules.map(schedule => (
-                                <div key={schedule.id} className={styles.scheduleItem}>
-                                    <div className={styles.scheduleInfo}>
-                                        <h4>{schedule.title}</h4>
-                                        <div className={styles.scheduleMetadata}>
-                                            <span className={`${styles.badge} ${styles[schedule.repeatType.toLowerCase()]}`}>
-                                                {schedule.repeatType}
-                                            </span>
-                                            <span className={`${styles.badge} ${schedule.enabled ? styles.enabled : styles.disabled}`}>
-                                                {schedule.enabled ? 'Enabled' : 'Disabled'}
-                                            </span>
-                                        </div>
-                                        <div className={styles.scheduleTime}>
-                                            <p>🕐 {schedule.startTime}</p>
-                                            {schedule.repeatType === 'ONCE' && schedule.date && (
-                                                <p>📅 {new Date(schedule.date).toLocaleDateString()}</p>
-                                            )}
-                                            {schedule.repeatType === 'WEEKLY' && schedule.daysOfWeek && (
-                                                <p>📆 {schedule.daysOfWeek.join(', ')}</p>
-                                            )}
-                                        </div>
+            {activeSection === 'content' && (
+                <div className={styles.contentSection}>
+                    <h3 className={styles.sectionTitle}>🎬 Your Content</h3>
+                    {content.length > 0 ? (
+                        <div className={styles.contentGrid}>
+                            {content.map(item => (
+                                <div key={item.id} className={styles.contentCard}>
+                                    <div className={styles.contentHeader}>
+                                        <h4>{item.title}</h4>
+                                        <span className={`${styles.contentBadge} ${styles[item.type.toLowerCase()]}`}>
+                                            {item.type}
+                                        </span>
+                                    </div>
+                                    <p className={styles.contentDescription}>{item.description}</p>
+                                    <div className={styles.contentMetadata}>
+                                        {item.duration && <span>⏱️ {item.duration} min</span>}
+                                        {item.level && <span>📊 {item.level}</span>}
+                                        {item.goal && <span>🎯 {item.goal}</span>}
+                                    </div>
+                                    <div className={styles.contentActions}>
+                                        <button 
+                                            className={styles.deleteButton}
+                                            onClick={() => handleDeleteContent(item.id)}
+                                        >
+                                            🗑️ Delete
+                                        </button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
                         <div className={styles.emptyState}>
-                            <p>No schedules created yet</p>
+                            <p>No content uploaded yet</p>
+                            <p>Upload videos, audios, or blogs to share with your clients</p>
                         </div>
                     )}
                 </div>

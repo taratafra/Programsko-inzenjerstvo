@@ -39,19 +39,35 @@ public class SecurityConfigProd {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**","/onboarding/**","/messages/**"));
-        http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+        // Enable CSRF protection (default) - only disable for specific stateless APIs if needed
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/onboarding/**", "/messages/**"));
+
+        // Keep frame options enabled for clickjacking protection
+        // Remove this line entirely or use: .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
 
         http
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/users/**").authenticated()
-                        .requestMatchers("/api/user/settings/**").authenticated()
                         .requestMatchers("/public").permitAll()
-                        .anyRequest().permitAll()
+
+                        // Authenticated endpoints
+                        .requestMatchers("/api/trainers/**").authenticated()
+                        .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/api/schedules/**").authenticated()
+                        .requestMatchers("/api/admins/**").authenticated()
+                        .requestMatchers("/api/user/settings/**").authenticated()
+                        .requestMatchers("/api/daily-focus/**").authenticated()
+                        .requestMatchers("/api/mood-checkins/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        .requestMatchers("/api/messages/**").authenticated()
+                        .requestMatchers("/api/reminders/**").authenticated()
+                        .requestMatchers("/onboarding/**").authenticated()
+
+                        // IMPORTANT: Deny everything else by default
+                        .anyRequest().authenticated()  // or .denyAll()
                 )
                 .cors(Customizer.withDefaults())
-                // JWT Resource Server with custom decoder and converter
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt
                                 .decoder(customJwtDecoder())

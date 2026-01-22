@@ -15,6 +15,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
 
 @Service
 public class VideoService {
@@ -37,28 +42,35 @@ public class VideoService {
                 .collect(Collectors.toList());
     }
 
+    // NEW: Get all videos by a specific trainer
+    public List<VideoResponseDTO> getVideosByTrainer(User trainer) {
+        List<Video> videos = videoRepository.findByTrainerIdOrderByCreatedAtDesc(trainer.getId());
+        return videos.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     public VideoResponseDTO createVideo(String title, String description, String type, String goal, String level, Integer duration, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
         String fileName = "videos/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        
+
         com.google.cloud.storage.Blob blob = storageBucket.create(
                 fileName,
                 file.getInputStream(),
                 file.getContentType()
         );
 
-        String url = blob.signUrl(7, java.util.concurrent.TimeUnit.DAYS).toString();
 
         Video video = new Video();
         video.setTitle(title);
         video.setDescription(description);
-        video.setUrl(url);
+        video.setUrl(fileName);
         video.setTrainer(trainer);
         try {
             video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.valueOf(type));
         } catch (Exception e) {
             video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         }
-        
+
         try {
             video.setGoal(Pomna_Sedmica.Mindfulnes.domain.enums.Goal.valueOf(goal));
         } catch (Exception e) {
@@ -87,7 +99,7 @@ public class VideoService {
         dto.setId(video.getId());
         dto.setTitle(video.getTitle());
         dto.setDescription(video.getDescription());
-        dto.setUrl(video.getUrl());
+        dto.setUrl(getSignedUrl(video.getUrl()));
         dto.setCreatedAt(video.getCreatedAt());
         dto.setType(video.getType() != null ? video.getType().name() : "VIDEO");
         dto.setGoal(video.getGoal() != null ? video.getGoal().name() : null);
@@ -103,38 +115,58 @@ public class VideoService {
         return dto;
     }
 
-    public List<VideoResponseDTO> getFilteredVideos(String type, String goal, String level, String durationRange) {
-        List<Video> videos = videoRepository.findAllByOrderByCreatedAtDesc();
+    public org.springframework.data.domain.Page<VideoResponseDTO> getFilteredVideos(String type, String goal, String level, String durationRange, Pageable pageable) {
+        Specification<Video> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-        return videos.stream()
-                .filter(v -> type == null || type.isEmpty() || (v.getType() != null && v.getType().name().equals(type)))
-                .filter(v -> goal == null || goal.isEmpty() || (v.getGoal() != null && v.getGoal().name().equals(goal)))
-                .filter(v -> level == null || level.isEmpty() || (v.getLevel() != null && v.getLevel().name().equals(level)))
-                .filter(v -> {
-                    if (durationRange == null || durationRange.isEmpty()) return true;
-                    if (v.getDuration() == null) return false;
+            if (type != null && !type.isEmpty()) {
+                predicates.add(cb.equal(root.get("type"), Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.valueOf(type)));
+            }
+            if (goal != null && !goal.isEmpty()) {
+                predicates.add(cb.equal(root.get("goal"), Pomna_Sedmica.Mindfulnes.domain.enums.Goal.valueOf(goal)));
+            }
+            if (level != null && !level.isEmpty()) {
+                predicates.add(cb.equal(root.get("level"), Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience.valueOf(level)));
+            }
 
-                    // Podcast specific filters (in hours)
-                    if ("AUDIO".equals(type)) {
-                        switch (durationRange) {
-                            case "short": return v.getDuration() < 60;
-                            case "long": return v.getDuration() >= 60 && v.getDuration() <= 180;
-                            case "superlong": return v.getDuration() > 180;
-                            default: return true;
-                        }
-                    }
-
-                    // Video specific filters (in minutes)
+            if (durationRange != null && !durationRange.isEmpty()) {
+                if ("AUDIO".equals(type)) {
                     switch (durationRange) {
-                        case "5-10": return v.getDuration() >= 5 && v.getDuration() <= 10;
-                        case "10-15": return v.getDuration() >= 10 && v.getDuration() <= 15;
-                        case "15-20": return v.getDuration() >= 15 && v.getDuration() <= 20;
-                        case "20-plus": return v.getDuration() > 20;
-                        default: return true;
+                        case "short":
+                            predicates.add(cb.lessThan(root.get("duration"), 60));
+                            break;
+                        case "long":
+                            predicates.add(cb.between(root.get("duration"), 60, 180));
+                            break;
+                        case "superlong":
+                            predicates.add(cb.greaterThan(root.get("duration"), 180));
+                            break;
                     }
-                })
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+                } else {
+                    switch (durationRange) {
+                        case "5-10":
+                            predicates.add(cb.between(root.get("duration"), 5, 10));
+                            break;
+                        case "10-15":
+                            predicates.add(cb.between(root.get("duration"), 10, 15));
+                            break;
+                        case "15-20":
+                            predicates.add(cb.between(root.get("duration"), 15, 20));
+                            break;
+                        case "20-plus":
+                            predicates.add(cb.greaterThan(root.get("duration"), 20));
+                            break;
+                    }
+                }
+            }
+
+            // Order by createdAt desc
+            query.orderBy(cb.desc(root.get("createdAt")));
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return videoRepository.findAll(spec, pageable).map(this::mapToDTO);
     }
 
 
@@ -151,6 +183,7 @@ public class VideoService {
         commentRepository.deleteByVideoId(videoId);
         videoRepository.delete(video);
     }
+
     public List<VideoResponseDTO> getRecommendations(User user) {
         List<Video> videos = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         List<Video> blogs = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.BLOG);
@@ -188,11 +221,25 @@ public class VideoService {
 
     private List<Video> filterContent(List<Video> content, java.util.Set<Pomna_Sedmica.Mindfulnes.domain.enums.Goal> goals, Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience level) {
         List<Video> filtered = content.stream()
-            .filter(v -> v.getLevel() == level || v.getLevel() == null)
-            .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
-            .collect(Collectors.toList());
+                .filter(v -> v.getLevel() == level || v.getLevel() == null)
+                .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
+                .collect(Collectors.toList());
 
-        // If filtering results in empty list, return original list (fallback)
         return filtered.isEmpty() ? content : filtered;
+    }
+
+    private String getSignedUrl(String storedUrl) {
+        if (storedUrl == null) return null;
+
+        try {
+            com.google.cloud.storage.Blob blob = storageBucket.get(storedUrl);
+            if (blob != null) {
+                return blob.signUrl(7, java.util.concurrent.TimeUnit.DAYS).toString();
+            }
+        } catch (Exception e) {
+            System.err.println("Error signing URL for blob: " + storedUrl + " - " + e.getMessage());
+        }
+
+        return storedUrl;
     }
 }

@@ -17,23 +17,24 @@ sleep:
   webhook:
     secret: ${SLEEP_WEBHOOK_SECRET:}
 
-# ────────────── TERRA INTEGRATION ──────────────
-# Terra widget session generation and webhook signature verification.
-terra:
-  base-url: ${TERRA_BASE_URL:https://api.tryterra.co/v2}
-  dev-id: ${TERRA_DEV_ID:}
-  api-key: ${TERRA_API_KEY:}
-  signing-secret: ${TERRA_SIGNING_SECRET:}
-  signature-tolerance-seconds: ${TERRA_SIGNATURE_TOLERANCE_SECONDS:300}
+# ────────────── FitBit INTEGRATION ──────────────
+fitbit:
+  auth-url: ${FITBIT_AUTH_URL:https://www.fitbit.com/oauth2/authorize}
+  api-base: ${FITBIT_API_BASE:https://api.fitbit.com}
 
-  # These are the URLs you register with Terra when creating the widget session.
-  auth:
-    success-redirect-url: ${TERRA_AUTH_SUCCESS_REDIRECT_URL:http://localhost:8080/api/sleep/terra/callback/success}
-    failure-redirect-url: ${TERRA_AUTH_FAILURE_REDIRECT_URL:http://localhost:8080/api/sleep/terra/callback/failure}
+  client-id: ${FITBIT_CLIENT_ID:}
+  client-secret: ${FITBIT_CLIENT_SECRET:}
 
-  # Where our callback sends the browser after saving the integration.
+  # Redirect URI MUST match exactly what you set in Fitbit dev portal
+  # Keep this route because frontend expects /api/sleep/terra/callback/success to exist
+  redirect-uri: ${FITBIT_REDIRECT_URI:http://localhost:8080/api/sleep/terra/callback/success}
+
+  # Minimum needed for sleep data
+  scopes: ${FITBIT_SCOPES:sleep}
+
+  # Where to redirect after connect
   frontend:
-    return-url: ${TERRA_FRONTEND_RETURN_URL:http://localhost:3000/sleep}
+    return-url: ${FITBIT_FRONTEND_RETURN_URL:http://localhost:3000/sleep}
 
 
 ---
@@ -67,6 +68,9 @@ spring:
   config:
     activate:
       on-profile: dev
+  fitbit:
+    mock:
+      enabled: true
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
@@ -110,6 +114,9 @@ spring:
   config:
     activate:
       on-profile: prod
+  fitbit:
+    mock:
+      enabled: false
   datasource:
     url: ${DB_URL}
     driver-class-name: org.postgresql.Driver

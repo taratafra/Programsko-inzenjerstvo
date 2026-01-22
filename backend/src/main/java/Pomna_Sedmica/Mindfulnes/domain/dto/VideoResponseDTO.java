@@ -20,5 +20,7 @@ public class VideoResponseDTO {
     private String goal;
     private String level;
     private Integer duration;
+    private Double averageRating;
+    private Long totalRatings;
 }
 

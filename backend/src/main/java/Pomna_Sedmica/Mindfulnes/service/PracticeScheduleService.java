@@ -187,4 +187,8 @@ public class PracticeScheduleService {
                 })
                 .collect(Collectors.toSet());
     }
+
+    public List<PracticeSchedule> listForTrainer(Long trainerId) {
+        return repo.findAllByTrainerIdOrderByStartTimeAsc(trainerId);
+    }
 }

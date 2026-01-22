@@ -27,18 +27,31 @@ public class VideoController {
     }
 
     @GetMapping
-    public List<VideoResponseDTO> getAllVideos(
+    public org.springframework.data.domain.Page<VideoResponseDTO> getAllVideos(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String goal,
             @RequestParam(required = false) String level,
-            @RequestParam(required = false) String durationRange) {
-        return videoService.getFilteredVideos(type, goal, level, durationRange);
+            @RequestParam(required = false) String durationRange,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return videoService.getFilteredVideos(type, goal, level, durationRange, org.springframework.data.domain.PageRequest.of(page, size));
     }
 
     @GetMapping("/recommendations")
     public List<VideoResponseDTO> getRecommendations(@AuthenticationPrincipal Jwt jwt) {
         User user = trainerService.getOrCreateTrainerFromJwt(jwt);
         return videoService.getRecommendations(user);
+    }
+
+    // NEW: Get all videos uploaded by the authenticated trainer
+    @GetMapping("/trainer/me")
+    @PreAuthorize("hasRole('TRAINER')")
+    public List<VideoResponseDTO> getMyVideos(@AuthenticationPrincipal Jwt jwt) {
+        User trainer = trainerService.getOrCreateTrainerFromJwt(jwt);
+        if (trainer.getRole() != Role.TRAINER) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can access this endpoint");
+        }
+        return videoService.getVideosByTrainer(trainer);
     }
 
     @GetMapping("/{id}")
@@ -57,7 +70,7 @@ public class VideoController {
             @RequestParam(value = "duration", required = false) Integer duration,
             @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             @AuthenticationPrincipal Jwt jwt) throws java.io.IOException {
-        
+
         User user = trainerService.getOrCreateTrainerFromJwt(jwt);
         if (user.getRole() != Role.TRAINER) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only trainers can upload videos");

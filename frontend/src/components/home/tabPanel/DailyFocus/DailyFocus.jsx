@@ -12,7 +12,7 @@ export default function DailyFocus({ user, getAccessTokenSilently, isAuthenticat
 
   const tabs = [
     "Meditate",
-    "Excercise",
+    "Exercise",
     "Reflect"
   ];
 
@@ -21,7 +21,7 @@ export default function DailyFocus({ user, getAccessTokenSilently, isAuthenticat
         case "Meditate":
           return <Meditate user={user}/>
 
-        case "Excercise":
+        case "Exercise":
           return <Exercise user={user}/>
         
         case "Reflect":

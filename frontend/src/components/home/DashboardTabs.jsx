@@ -4,12 +4,7 @@ import styles from "../../pages/Home/Home.module.css";
 export default function DashboardTabs({ activeTab, setActiveTab }) {
   
   const tabs = [
-    "Personalized recomendations",
-    "Focus",
-    "Sleep",
-    "Stress",
-    "Gratitude",
-    "Breathing",
+    "Personalized recomendations"
   ];
 
   const homeTabs = ["Personalized recomendations", "Focus", "Sleep", "Stress", "Gratitude", "Breathing", "General Information"];
@@ -21,7 +16,7 @@ export default function DashboardTabs({ activeTab, setActiveTab }) {
   }
 
   return (
-    <div className={styles.tabsContainer}>
+    <div className={`${styles.tabsContainer} ${styles.homeTabsContainer}`}>
       {tabs.map((tab) => (
         <button
           key={tab}

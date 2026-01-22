@@ -6,7 +6,6 @@ export default function Trainers() {
     const { getAccessTokenSilently, isAuthenticated } = useAuth0();
     const [trainers, setTrainers] = useState([]);
     const [subscribedTrainers, setSubscribedTrainers] = useState([]);
-    const [primaryTrainerId, setPrimaryTrainerId] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND;
@@ -90,18 +89,6 @@ export default function Trainers() {
                 const subscribed = trainers.filter(t => subscribedIds.includes(t.id));
                 setSubscribedTrainers(subscribed);
             }
-
-            // Get primary trainer ID
-            const primaryResponse = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (primaryResponse.ok) {
-                const data = await primaryResponse.json();
-                setPrimaryTrainerId(data.trainerId);
-            }
         } catch (error) {
             console.error('Error loading subscribed trainers:', error);
         }
@@ -151,28 +138,6 @@ export default function Trainers() {
         }
     };
 
-    const setPrimary = async (trainerId) => {
-        try {
-            const token = await getToken();
-            
-            const response = await fetch(`${BACKEND_URL}/api/trainers/me/primary`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ trainerId })
-            });
-
-            if (response.ok) {
-                setPrimaryTrainerId(trainerId);
-            }
-        } catch (error) {
-            console.error('Error setting primary trainer:', error);
-            alert('Failed to set primary trainer');
-        }
-    };
-
     if (loading) {
         return (
             <div className={styles.container}>
@@ -187,7 +152,6 @@ export default function Trainers() {
             <div className={styles.trainersGrid}>
                 {trainers.map(trainer => {
                     const isSubscribed = subscribedTrainers.some(t => t.id === trainer.id);
-                    const isPrimary = primaryTrainerId === trainer.id;
                     
                     return (
                         <div key={trainer.id} className={styles.trainerCard}>
@@ -197,9 +161,6 @@ export default function Trainers() {
                                     alt={trainer.name}
                                     className={styles.trainerAvatar}
                                 />
-                                {isPrimary && (
-                                    <span className={styles.primaryBadge}>Primary</span>
-                                )}
                             </div>
                             
                             <h3 className={styles.trainerName}>
@@ -216,22 +177,12 @@ export default function Trainers() {
                                         <div className={styles.subscribedLabel}>
                                             ✓ Subscribed
                                         </div>
-                                        <div className={styles.buttonGroup}>
-                                            {!isPrimary && (
-                                                <button
-                                                    onClick={() => setPrimary(trainer.id)}
-                                                    className={styles.primaryButton}
-                                                >
-                                                    Set Primary
-                                                </button>
-                                            )}
-                                            <button
-                                                onClick={() => handleUnsubscribe(trainer.id)}
-                                                className={styles.unsubscribeButton}
-                                            >
-                                                Unsubscribe
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => handleUnsubscribe(trainer.id)}
+                                            className={styles.unsubscribeButton}
+                                        >
+                                            Unsubscribe
+                                        </button>
                                     </>
                                 ) : (
                                     <button
