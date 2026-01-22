@@ -289,7 +289,14 @@ export default function Questionnaire() {
             const updatedUser = await onboardingResponse.json();
             console.log("Onboarding completed successfully!", updatedUser);
 
-            navigate("/home", { replace: true });
+            // Redirect based on role and approval status
+            if (isTrainer && !updatedUser.approved) {
+                // Trainer needs approval, redirect to lobby
+                navigate("/trainer-lobby", { replace: true });
+            } else {
+                // Regular user or approved trainer, go to home
+                navigate("/home", { replace: true });
+            }
 
         } catch (err) {
             console.error("Error submitting questionnaire:", err);

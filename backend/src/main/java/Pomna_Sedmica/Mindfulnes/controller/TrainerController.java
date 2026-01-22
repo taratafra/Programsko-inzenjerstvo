@@ -37,14 +37,23 @@ public class TrainerController {
         return ResponseEntity.ok(trainerService.getAllTrainers());
     }
 
+    // Add this method to TrainerController.java
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TrainerDTOResponse> getTrainerById(@PathVariable Long id) {
+        return trainerService.getTrainerById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(404).build());
+    }
+
     @GetMapping("/me")
     public ResponseEntity<TrainerDTOResponse> getCurrentTrainer(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) return ResponseEntity.status(401).build();
 
-        String email = jwt.getClaimAsString("email");
-        if (email == null) email = jwt.getSubject();
+        String auth0Id = jwt.getSubject();
+        if (auth0Id == null) return ResponseEntity.status(401).build();
 
-        return trainerService.getTrainerByEmail(email)
+        return trainerService.getTrainerByAuth0IdWithId(auth0Id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(404).build());
     }

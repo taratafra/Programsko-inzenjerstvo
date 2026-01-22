@@ -2,9 +2,11 @@ package Pomna_Sedmica.Mindfulnes.service;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.mapper.AdminMapper;
+import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -167,5 +169,22 @@ public class AdminService {
 
         trainer.setBanned(banned);
         trainerRepository.save(trainer);
+    }
+
+    @Transactional
+    public void setTrainerApprovalStatus(Long trainerId, boolean approved) {
+        Trainer trainer = trainerRepository.findById(trainerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+
+        trainer.setApproved(approved);
+        trainerRepository.save(trainer);
+    }
+
+    public List<TrainerDTOResponse> getPendingTrainers() {
+        return trainerRepository.findAll()
+                .stream()
+                .filter(trainer -> !trainer.isApproved())
+                .map(TrainerMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

@@ -2,6 +2,7 @@ package Pomna_Sedmica.Mindfulnes.controller;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.service.AdminService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -106,5 +107,22 @@ public class AdminController {
     public ResponseEntity<Void> unbanTrainer(@PathVariable Long trainerId) {
         adminService.setTrainerBanStatus(trainerId, false);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/trainers/{trainerId}/approve")
+    public ResponseEntity<Void> approveTrainer(@PathVariable Long trainerId) {
+        adminService.setTrainerApprovalStatus(trainerId, true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/trainers/{trainerId}/reject")
+    public ResponseEntity<Void> rejectTrainer(@PathVariable Long trainerId) {
+        adminService.setTrainerApprovalStatus(trainerId, false);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/trainers/pending")
+    public ResponseEntity<List<TrainerDTOResponse>> getPendingTrainers() {
+        return ResponseEntity.ok(adminService.getPendingTrainers());
     }
 }
