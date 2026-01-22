@@ -20,7 +20,7 @@ import YourPlan from "../../components/home/tabPanel/YourPlan/YourPlan";
 
 import Statistics from "../../components/home/tabPanel/Statistics/Statistics";
 import MoodCheckIn from "../../components/home/tabPanel/MoodCheckIn/MoodCheckIn.jsx";
-import Video from "../../components/home/tabPanel/video/Videos.jsx";
+import Video from "../../components/home/tabPanel/Videos/Videos.jsx";
 import AdminDashboard from "../../components/home/tabPanel/AdminDashboard/AdminDashboard";
 import CalendarMain from "../../components/home/tabPanel/CalendarMain";
 import Videos from "../../components/home/tabPanel/Videos/Videos.jsx";
