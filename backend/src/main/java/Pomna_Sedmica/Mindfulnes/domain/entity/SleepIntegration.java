@@ -8,14 +8,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Represents a link between a Mindfulness user and an external sleep provider.
- *
- * For a real provider, you would usually store OAuth tokens (access/refresh), token expiry,
- * and the provider-specific user id.
- *
- * For the faculty project/demo, storing externalUserId + an optional accessToken is enough.
- */
 @Entity
 @Getter
 @Setter
@@ -40,13 +32,29 @@ public class SleepIntegration {
     @Column(name = "provider", nullable = false)
     private SleepProvider provider;
 
-    /** Provider-specific user identifier (e.g. Terra user_id). */
+    /**
+     * Provider-specific user identifier (e.g., Fitbit user_id).
+     */
     @Column(name = "external_user_id", nullable = false)
     private String externalUserId;
 
-    /** Optional token if you do direct API calls per user. */
-    @Column(name = "access_token", length = 2000)
+    @Column(name = "access_token", length = 4000)
     private String accessToken;
+
+    @Column(name = "refresh_token", length = 4000)
+    private String refreshToken;
+
+    @Column(name = "token_type")
+    private String tokenType;
+
+    @Column(name = "scope", length = 2000)
+    private String scope;
+
+    /**
+     * Token expiry in UTC (optional but recommended).
+     */
+    @Column(name = "token_expires_at")
+    private LocalDateTime tokenExpiresAt;
 
     @Column(name = "connected_at", nullable = false)
     private LocalDateTime connectedAt;
