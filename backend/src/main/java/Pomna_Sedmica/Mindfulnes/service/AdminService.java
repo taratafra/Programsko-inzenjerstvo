@@ -2,9 +2,11 @@ package Pomna_Sedmica.Mindfulnes.service;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.mapper.AdminMapper;
+import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
