@@ -107,44 +107,6 @@ export default function Home() {
                             return;
                         }
 
-                        // TRAINER APPROVAL CHECK
-                        if (userResponse.role === "TRAINER") {
-                            const token = await getAccessTokenSilently({
-                                authorizationParams: {
-                                    audience: AUDIENCE,
-                                    scope: "openid profile email",
-                                },
-                            });
-
-                            try {
-                                const trainerRes = await fetch(
-                                    `${BACKEND_URL}/api/trainers/me`,
-                                    {
-                                        headers: { Authorization: `Bearer ${token}` },
-                                    }
-                                );
-
-                                if (trainerRes.ok) {
-                                    const trainerData = await trainerRes.json();
-                                    
-                                    // If trainer is not approved, redirect to trainer lobby
-                                    if (!trainerData.approved) {
-                                        navigate("/trainer-lobby", { replace: true });
-                                        return;
-                                    }
-                                } else if (trainerRes.status === 404) {
-                                    // Trainer record doesn't exist, redirect to lobby
-                                    navigate("/trainer-lobby", { replace: true });
-                                    return;
-                                }
-                            } catch (error) {
-                                console.error("Error checking trainer approval:", error);
-                                // If we can't verify, redirect to lobby for safety
-                                navigate("/trainer-lobby", { replace: true });
-                                return;
-                            }
-                        }
-
                         setUser(userResponse);
 
                         // Check if questionnaire needs to be completed
@@ -182,37 +144,6 @@ export default function Home() {
                     if (data?.isBanned === true || data?.banned === true) {
                         await handleBannedUser();
                         return;
-                    }
-
-                    // TRAINER APPROVAL CHECK
-                    if (data.role === "TRAINER") {
-                        try {
-                            const trainerRes = await fetch(
-                                `${BACKEND_URL}/api/trainers/me`,
-                                {
-                                    headers: { Authorization: `Bearer ${localToken}` },
-                                }
-                            );
-
-                            if (trainerRes.ok) {
-                                const trainerData = await trainerRes.json();
-                                
-                                // If trainer is not approved, redirect to trainer lobby
-                                if (!trainerData.approved) {
-                                    navigate("/trainer-lobby", { replace: true });
-                                    return;
-                                }
-                            } else if (trainerRes.status === 404) {
-                                // Trainer record doesn't exist, redirect to lobby
-                                navigate("/trainer-lobby", { replace: true });
-                                return;
-                            }
-                        } catch (error) {
-                            console.error("Error checking trainer approval:", error);
-                            // If we can't verify, redirect to lobby for safety
-                            navigate("/trainer-lobby", { replace: true });
-                            return;
-                        }
                     }
 
                     setUser(data);
