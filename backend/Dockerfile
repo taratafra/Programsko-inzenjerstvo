@@ -6,6 +6,11 @@ WORKDIR /workspace
 
 # Copy everything (adjust if your repo layout is different)
 COPY . .
+RUN pwd
+RUN ls -la
+RUN cp serviceAccountKey.json backend/serviceAccountKey.json
+RUN cp serviceAccountKey.json backend/src/main/resources/serviceAccountKey.json
+# RUN chmod +x ./backend/mvnw
 
 # Build the Spring Boot jar (your earlier Dockerfile built in /workspace/backend)
 RUN cd backend && mvn -DskipTests clean package
