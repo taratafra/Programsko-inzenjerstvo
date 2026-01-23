@@ -1,27 +1,37 @@
-# 1) Build stage (Java 21)
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+# ---------- Build stage ----------
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
-# Copy everything from backend/ (Dockerfile context is already backend/)
+# Copy the whole repo into the build container
 COPY . .
-RUN pwd
-RUN ls -la
-RUN cp serviceAccountKey.json backend/serviceAccountKey.json
-RUN cp serviceAccountKey.json backend/src/main/resources/serviceAccountKey.json
-# RUN chmod +x ./backend/mvnw
 
-# Build your Spring Boot JAR
-RUN cd backend/ && mvn clean package -Dspring.profiles.active=prod -DskipTests
+# Build the Spring Boot jar
+RUN cd backend && mvn -DskipTests package
 
-# 2) Runtime stage (Java 21 JRE)
-#FROM eclipse-temurin:21-jre-alpine
-FROM eclipse-temurin:21-jre-alpine 
+
+# ---------- Runtime stage ----------
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-# Copy the packaged JAR from the builder stage
+
+# Copy the built jar
 COPY --from=builder /workspace/backend/target/*.jar /app/app.jar
 
-# Expose the default Spring Boot port (optional)
+
+COPY --from=builder /workspace/backend/ContentBase/ /app/ContentBase/
+
+ENV JAVA_TOOL_OPTIONS="-Dio.netty.handler.ssl.noOpenSsl=true"
 EXPOSE 8080
 
-# Run the backend
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod" ,"/app/app.jar"]
+
+ENTRYPOINT ["/bin/sh", "-lc", "\
+  if [ -f /etc/secrets/serviceAccountKey.json ]; then \
+    echo '[entrypoint] Copying Firebase key from /etc/secrets/serviceAccountKey.json to /app/serviceAccountKey.json'; \
+    cp /etc/secrets/serviceAccountKey.json /app/serviceAccountKey.json; \
+    chmod 400 /app/serviceAccountKey.json; \
+  else \
+    echo '[entrypoint] Firebase key not found at /etc/secrets/serviceAccountKey.json'; \
+  fi; \
+  echo '[entrypoint] /app/serviceAccountKey.json status:'; \
+  ls -la /app/serviceAccountKey.json || true; \
+  exec java -Dspring.profiles.active=prod -jar /app/app.jar \
+"]
