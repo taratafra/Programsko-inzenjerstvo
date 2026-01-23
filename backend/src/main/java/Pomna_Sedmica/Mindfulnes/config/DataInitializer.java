@@ -10,6 +10,7 @@ import Pomna_Sedmica.Mindfulnes.service.FirebaseStorageService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.file.Files;
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 @Configuration
+@Profile("!test")
 public class DataInitializer {
 
     @Bean
