@@ -170,4 +170,21 @@ public class AdminService {
         trainer.setBanned(banned);
         trainerRepository.save(trainer);
     }
+
+    @Transactional
+    public void setTrainerApprovalStatus(Long trainerId, boolean approved) {
+        Trainer trainer = trainerRepository.findById(trainerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+
+        trainer.setApproved(approved);
+        trainerRepository.save(trainer);
+    }
+
+    public List<TrainerDTOResponse> getPendingTrainers() {
+        return trainerRepository.findAll()
+                .stream()
+                .filter(trainer -> !trainer.isApproved())
+                .map(TrainerMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }

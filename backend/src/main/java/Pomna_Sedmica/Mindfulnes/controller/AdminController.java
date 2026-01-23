@@ -108,4 +108,21 @@ public class AdminController {
         adminService.setTrainerBanStatus(trainerId, false);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/trainers/{trainerId}/approve")
+    public ResponseEntity<Void> approveTrainer(@PathVariable Long trainerId) {
+        adminService.setTrainerApprovalStatus(trainerId, true);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/trainers/{trainerId}/reject")
+    public ResponseEntity<Void> rejectTrainer(@PathVariable Long trainerId) {
+        adminService.setTrainerApprovalStatus(trainerId, false);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/trainers/pending")
+    public ResponseEntity<List<TrainerDTOResponse>> getPendingTrainers() {
+        return ResponseEntity.ok(adminService.getPendingTrainers());
+    }
 }

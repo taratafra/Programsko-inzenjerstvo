@@ -180,7 +180,6 @@ public ResponseEntity<List<User>> getMyClientsDetails(@AuthenticationPrincipal J
      * POST /trainers/{userId}/primary
      * body: {"trainerId": 5}
      */
-    @Profile("dev")
     @PostMapping("/{userId}/primary")
     public ResponseEntity<Void> setPrimaryDev(@PathVariable Long userId,
                                               @RequestBody Map<String, Object> body) {
@@ -197,7 +196,6 @@ public ResponseEntity<List<User>> getMyClientsDetails(@AuthenticationPrincipal J
     /**
      * GET /trainers/{trainerId}/users  (dev-only)
      */
-    @Profile("dev")
     @GetMapping("/{trainerId}/users")
     public ResponseEntity<List<Long>> usersForTrainerDev(@PathVariable Long trainerId) {
         var ids = trainerLinks.listUsersForTrainer(trainerId)

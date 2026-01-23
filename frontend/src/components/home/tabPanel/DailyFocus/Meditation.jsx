@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./MoodHabits.module.css";
-import { useAuth0 } from "@auth0/auth0-react";
 
 export default function DailyMeditationVideo() {
     const [video, setVideo] = useState(null);
@@ -36,19 +35,10 @@ export default function DailyMeditationVideo() {
             queryParams.append("page", 0);
             queryParams.append("size", 100); // uzmi sve iz kategorije
 
-              let token = localStorage.getItem("token");
-                if (isAuthenticated) {
-                token = await getAccessTokenSilently({
-                    authorizationParams: {
-                    audience: `${AUDIENCE}`,
-                    scope: "openid profile email",
-            },
-        });
-        }
+            const res = await fetch(
+                `${BACKEND_URL}/api/videos?${queryParams.toString()}`
+            );
 
-            const res = await fetch(`${BACKEND_URL}/api/videos?${queryParams.toString()}`, {
-                headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
             if (!res.ok) {
                 console.error("Failed to fetch videos");
                 return;
