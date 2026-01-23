@@ -33,10 +33,19 @@ export default function DailyMeditationVideo() {
             queryParams.append("page", 0);
             queryParams.append("size", 100); // uzmi sve iz kategorije
 
-            const res = await fetch(
-                `${BACKEND_URL}/api/videos?${queryParams.toString()}`
-            );
+              let token = localStorage.getItem("token");
+                if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: {
+                    audience: `${AUDIENCE}`,
+                    scope: "openid profile email",
+            },
+        });
+        }
 
+            const res = await fetch(`${BACKEND_URL}/api/videos?${queryParams.toString()}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
             if (!res.ok) {
                 console.error("Failed to fetch videos");
                 return;
