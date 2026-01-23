@@ -68,4 +68,10 @@ public class FirebaseConfig {
 
         return FirebaseApp.initializeApp(options);
     }
+
+     @Bean
+    public Bucket firebaseBucket(FirebaseApp firebaseApp) {
+        return StorageClient.getInstance(firebaseApp).bucket();
+    }
 }
+
