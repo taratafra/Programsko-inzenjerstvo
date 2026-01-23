@@ -1,25 +1,40 @@
-# 1) Build stage (Java 21)
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+# ---- Build stage ----
+# Use a Debian-based builder (not Alpine) to avoid native-lib issues (e.g., netty tcnative on musl).
+FROM maven:3.9-eclipse-temurin-21 AS builder
+
 WORKDIR /workspace
 
-# Copy everything from backend/ (Dockerfile context is already backend/)
+# Copy everything (adjust if your repo layout is different)
 COPY . .
 RUN pwd
 RUN ls -la
+RUN cp serviceAccountKey.json backend/serviceAccountKey.json
+RUN cp serviceAccountKey.json backend/src/main/resources/serviceAccountKey.json
 # RUN chmod +x ./backend/mvnw
 
-# Build your Spring Boot JAR
-RUN cd backend/ && mvn clean package -Dspring.profiles.active=prod -DskipTests
+# Build the Spring Boot jar (your earlier Dockerfile built in /workspace/backend)
+RUN cd backend && mvn -DskipTests clean package
 
-# 2) Runtime stage (Java 21 JRE)
-#FROM eclipse-temurin:21-jre-alpine
-FROM eclipse-temurin:21-jre-alpine 
+
+# ---- Runtime stage ----
+# Use a Debian-based JRE image (not Alpine) for better native library compatibility.
+FROM eclipse-temurin:21-jre
+
 WORKDIR /app
-# Copy the packaged JAR from the builder stage
+
+# Copy the built jar (matches your backend/target output)
 COPY --from=builder /workspace/backend/target/*.jar /app/app.jar
 
-# Expose the default Spring Boot port (optional)
+# Render provides $PORT; Spring should bind to it (we set SERVER_PORT to be safe).
+# If your application already has server.port=${PORT:8080}, this is optional but harmless.
+ENV SERVER_PORT=${PORT}
+
+# Optional: helps avoid Netty OpenSSL/tcnative crashes by forcing JDK SSL provider.
+# You can also set this in Render as JAVA_TOOL_OPTIONS instead of baking into the image.
+ENV JAVA_TOOL_OPTIONS="-Dio.netty.handler.ssl.noOpenSsl=true"
+
+# Render doesn't require EXPOSE, but it doesn't hurt (defaults to 8080 locally)
 EXPOSE 8080
 
-# Run the backend
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod" ,"/app/app.jar"]
+# IMPORTANT: JVM args must come BEFORE -jar
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "/app/app.jar"]

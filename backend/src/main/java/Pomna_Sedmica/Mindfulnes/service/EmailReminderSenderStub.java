@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Profile({"dev", "test"}) // u dev/test šalji preko Mailtrap SMTP-a (ili samo log)
 public class EmailReminderSenderStub implements ReminderSender {
 
     private final JavaMailSender mailSender;

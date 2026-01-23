@@ -6,6 +6,7 @@ import Pomna_Sedmica.Mindfulnes.service.TrainerLinkService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -81,19 +82,44 @@ public class TrainerLinkController {
      * POST /trainers/me/subscribe
      * body: {"trainerId": 5}
      */
+//    @PostMapping("/me/subscribe")
+//    public ResponseEntity<Void> subscribeToTrainer(@AuthenticationPrincipal Jwt jwt,
+//                                                   @RequestBody Map<String, Object> body) {
+//        User me = userService.getOrCreateUserFromJwt(jwt);
+//
+//        Object raw = body.get("trainerId");
+//        if (raw == null) return ResponseEntity.badRequest().build();
+//
+//        Long trainerId = Long.valueOf(String.valueOf(raw));
+//        trainerLinks.linkTrainer(me.getId(), trainerId, false); // false = not primary
+//
+//        return ResponseEntity.noContent().build();
+//    }
+
     @PostMapping("/me/subscribe")
     public ResponseEntity<Void> subscribeToTrainer(@AuthenticationPrincipal Jwt jwt,
                                                    @RequestBody Map<String, Object> body) {
         User me = userService.getOrCreateUserFromJwt(jwt);
 
         Object raw = body.get("trainerId");
-        if (raw == null) return ResponseEntity.badRequest().build();
+        if (raw == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
         Long trainerId = Long.valueOf(String.valueOf(raw));
+
+        // 🔒 BLOCK self-subscription
+        if (me.getId().equals(trainerId)) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .build();
+        }
+
         trainerLinks.linkTrainer(me.getId(), trainerId, false); // false = not primary
 
         return ResponseEntity.noContent().build();
     }
+
 
     /**
      * Unsubscribe from a trainer

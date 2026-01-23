@@ -66,6 +66,9 @@ public class User{
     @Column(name = "last_modified_at")
     private LocalDateTime lastModifiedAt;
 
+    @Column(name = "is_banned")
+    private boolean isBanned;
+
     @Column(name = "bio", length = 1000)
     private String bio;
 
@@ -85,6 +88,7 @@ public class User{
         this.dateOfBirth = dob;
         this.role = role;
         this.isSocialLogin = isSocialLogin;
+        this.isBanned = false;
     }
     @PrePersist
     protected void onCreate() {

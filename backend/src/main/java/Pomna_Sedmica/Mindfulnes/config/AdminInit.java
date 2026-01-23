@@ -30,7 +30,7 @@ public class AdminInit {
                         passwordEncoder.encode("admin"), //moze se prebacit u env
                         null,
                         "admin",
-                        "admin",
+                        "adminkovic",
                         null,
                         Role.ADMIN,//isto neka ostane user, a promijeni se kod onboardinga
                         false
@@ -48,8 +48,8 @@ public class AdminInit {
                         "user@user",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
                         null,
-                        "admin",
-                        "admin",
+                        "Pero",
+                        "Peric",
                         null,
                         Role.USER,//isto neka ostane user, a promijeni se kod onboardinga
                         false
@@ -59,8 +59,8 @@ public class AdminInit {
                         "trainer@trainer",
                         passwordEncoder.encode("admin"), //moze se prebacit u env
                         null,
-                        "admin",
-                        "admin",
+                        "Zvonko",
+                        "Zvonic",
                         null,
                         Role.TRAINER,//isto neka ostane user, a promijeni se kod onboardinga
                         false
@@ -76,8 +76,8 @@ public class AdminInit {
                         "trainer2@trainer",
                         passwordEncoder.encode("admin"),//moze se prebacit u env
                         null,
-                        "admin",
-                        "admin",
+                        "Petar",
+                        "Grasak",
                         null,
                         Role.TRAINER,//isto neka ostane user, a promijeni se kod onboardinga
                         false

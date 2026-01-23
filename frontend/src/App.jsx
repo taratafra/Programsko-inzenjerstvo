@@ -8,6 +8,7 @@ import Questionnaire from "./pages/Questionnaire/Questionnaire.jsx";
 import Watch from "./pages/Watch/Watch";
 import { ToastProvider } from './components/home/tabPanel/ToastNotification';
 import NotificationService from "./components/home/tabPanel/NotificationService.jsx";
+import TrainerLobby from "./pages/TrainerLobby/TrainerLobby.jsx";
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/questions" element={<Questionnaire />} />
+        <Route path="/trainer-lobby" element={<TrainerLobby/>}></Route>
 
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />

@@ -25,6 +25,7 @@ public record TrainerDTOResponse(
         String profilePictureUrl,
         Boolean firstLogin,
         Boolean approved,
+        Boolean isBanned,
         Set<User> subscribers,
         Set<Video> videoContent
 ) {

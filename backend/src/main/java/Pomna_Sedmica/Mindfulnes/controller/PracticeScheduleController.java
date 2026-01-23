@@ -41,6 +41,23 @@ public class PracticeScheduleController {
         return ResponseEntity.ok(list);
     }
 
+    // ---------------------- NEW: TRAINER ENDPOINT ----------------------
+    /**
+     * Get all schedules where I am the trainer (clients' appointments with me)
+     * GET /api/schedules/trainer/me
+     */
+    @GetMapping("/trainer/me")
+    public ResponseEntity<List<PracticeScheduleResponse>> listSchedulesForMeAsTrainer(@AuthenticationPrincipal Jwt jwt) {
+        User me = userService.getOrCreateUserFromJwt(jwt);
+
+        var list = schedules.listForTrainer(me.getId())
+                .stream()
+                .map(PracticeScheduleResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(list);
+    }
+
     @PostMapping("/me")
     public ResponseEntity<PracticeScheduleResponse> createMySchedule(@AuthenticationPrincipal Jwt jwt,
                                                                      @Valid @RequestBody PracticeScheduleRequest req) {
