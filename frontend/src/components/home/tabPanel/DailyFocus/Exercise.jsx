@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import styles from "./MoodHabits.module.css";
 
 export default function DailyExerciseVideo() {
