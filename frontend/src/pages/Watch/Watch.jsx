@@ -146,7 +146,14 @@ export default function Watch() {
 
     useEffect(() => {
         const fetchContent = async () => {
-            try {
+            try {    
+                let token = localStorage.getItem("token");
+
+                if (isAuthenticated) {
+                    token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                }
                 const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
                 if (res.ok) {
                     const data = await res.json();
