@@ -56,7 +56,7 @@ def test_wrong_password(driver):
 
     wait = WebDriverWait(driver, 10)
 
-    driver.find_element(By.CSS_SELECTOR, "input[placeholder='Email']").send_keys("user@fer.ugnz.hr")
+    driver.find_element(By.CSS_SELECTOR, "input[placeholder='Email']").send_keys("user@fer.hr")
     driver.find_element(By.CSS_SELECTOR, "input[placeholder='Password']").send_keys("krivalozinka")
     driver.find_element(By.CLASS_NAME, "submit-btn").click()
 
