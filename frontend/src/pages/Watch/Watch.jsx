@@ -154,7 +154,11 @@ export default function Watch() {
                     authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
                     });
                 }
-                const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
+
+                const res = await fetch(`${BACKEND_URL}/api/videos/${id}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                });
+                //const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
                 if (res.ok) {
                     const data = await res.json();
 
