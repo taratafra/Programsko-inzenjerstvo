@@ -65,7 +65,7 @@ public class FirebaseConfig {
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setStorageBucket("pomna-sedmica.appspot.com")
+                .setStorageBucket("pomna-sedmica-bucket")
                 .build();
 
         return FirebaseApp.initializeApp(options);
