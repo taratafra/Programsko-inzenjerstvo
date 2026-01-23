@@ -49,6 +49,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import com.google.firebase.cloud.StorageClient;
+import com.google.cloud.storage.Bucket;
 @Configuration
 public class FirebaseConfig {
 
