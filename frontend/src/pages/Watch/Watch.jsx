@@ -86,7 +86,7 @@ export default function Watch() {
     });
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
-    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE
     const [loading, setLoading] = useState(true);
 
     const { getAccessTokenSilently } = useAuth0();

@@ -9,7 +9,7 @@ export default function DailyMeditationVideo() {
 
     const navigate = useNavigate();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
-    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
+    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE
     const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
     // 🔁 Deterministički daily index (isti video cijeli dan)
