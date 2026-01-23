@@ -14,14 +14,69 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND;
-  const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
+  const { loginWithRedirect, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate("/home");
-    }
-  }, [isAuthenticated, isLoading, navigate]);
+    const checkAuthAndRedirect = async () => {
+      if (!isLoading && isAuthenticated) {
+        // Check if user is a trainer before redirecting to home
+        try {
+          const token = await getAccessTokenSilently({
+            authorizationParams: {
+              audience: process.env.REACT_APP_AUTH0_AUDIENCE,
+              scope: "openid profile email",
+            },
+          });
+
+          // Get user data from backend
+          const userRes = await fetch(`${BACKEND_URL}/api/users`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              email: "", // Will be populated from token
+              isSocialLogin: true,
+            }),
+          });
+
+          if (userRes.ok) {
+            const userData = await userRes.json();
+
+            // If user is a trainer, check approval status
+            if (userData.role === "TRAINER") {
+              const trainerRes = await fetch(`${BACKEND_URL}/api/trainers/me`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+
+              if (trainerRes.ok) {
+                const trainerData = await trainerRes.json();
+                
+                // Redirect based on approval status
+                if (!trainerData.approved) {
+                  navigate("/trainer-lobby");
+                  return;
+                }
+              } else if (trainerRes.status === 404) {
+                // Trainer record doesn't exist
+                navigate("/trainer-lobby");
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error);
+        }
+
+        // If all checks pass, redirect to home
+        navigate("/home");
+      }
+    };
+
+    checkAuthAndRedirect();
+  }, [isAuthenticated, isLoading, navigate, BACKEND_URL, getAccessTokenSilently]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -63,6 +118,31 @@ function Login() {
       }
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
+      }
+
+      // Check if user is a trainer and if they're approved
+      if (data.user && data.user.role === "TRAINER") {
+        try {
+          const trainerRes = await fetch(`${BACKEND_URL}/api/trainers/me`, {
+            headers: { Authorization: `Bearer ${data.access_token}` },
+          });
+
+          if (trainerRes.ok) {
+            const trainerData = await trainerRes.json();
+            
+            // If trainer is not approved, redirect to trainer lobby
+            if (!trainerData.approved) {
+              setMessage("Your trainer account is pending approval.");
+              navigate("/trainer-lobby");
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("Error checking trainer status:", error);
+          // If we can't verify trainer status, redirect to lobby to be safe
+          navigate("/trainer-lobby");
+          return;
+        }
       }
 
       setMessage("Login successful!");

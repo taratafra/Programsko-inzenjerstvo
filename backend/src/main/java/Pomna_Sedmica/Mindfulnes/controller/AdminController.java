@@ -2,6 +2,7 @@ package Pomna_Sedmica.Mindfulnes.controller;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.service.AdminService;
 import Pomna_Sedmica.Mindfulnes.service.UserService;
 import lombok.RequiredArgsConstructor;
