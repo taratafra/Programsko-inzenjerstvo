@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./MoodHabits.module.css";
-import { useAuth0 } from "@auth0/auth0-react";
 
 export default function DailyExerciseVideo() {
     const [video, setVideo] = useState(null);
@@ -9,8 +8,6 @@ export default function DailyExerciseVideo() {
 
     const navigate = useNavigate();
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
-    const AUDIENCE = process.env.REACT_APP_AUTH0_AUDIENCE || BACKEND_URL;
-    const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
     // 🔁 Deterministički daily index (isti video cijeli dan)
     const getDailyIndex = (length) => {

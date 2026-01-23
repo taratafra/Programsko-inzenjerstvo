@@ -9,6 +9,7 @@ export default function AdminDashboard({ setActiveTab }) {
 
     const [users, setUsers] = useState([]);
     const [trainers, setTrainers] = useState([]);
+    const [pendingTrainers, setPendingTrainers] = useState([]);
     const [videos, setVideos] = useState([]);
     const [currentAdmin, setCurrentAdmin] = useState(null);
 
@@ -18,6 +19,7 @@ export default function AdminDashboard({ setActiveTab }) {
         totalTrainers: 0,
         activeSessions: 0,
         totalContent: 0,
+        pendingApprovals: 0,
     });
 
     const [loading, setLoading] = useState(false);
@@ -126,6 +128,31 @@ export default function AdminDashboard({ setActiveTab }) {
         }
     };
 
+    const fetchPendingTrainers = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const token = await getToken();
+            const res = await fetch(`${BACKEND_URL}/api/admins/trainers/pending`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || `Failed to fetch pending trainers (${res.status})`);
+            }
+
+            const data = await res.json();
+            setPendingTrainers(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error("fetchPendingTrainers error:", e);
+            setError(e?.message || "Failed to load pending trainers");
+            setPendingTrainers([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const fetchVideos = async () => {
         setLoading(true);
         setError("");
@@ -159,7 +186,7 @@ export default function AdminDashboard({ setActiveTab }) {
         try {
             const token = await getToken();
 
-            const [usersRes, trainersRes, videosRes] = await Promise.all([
+            const [usersRes, trainersRes, videosRes, pendingRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/api/users`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
@@ -169,11 +196,15 @@ export default function AdminDashboard({ setActiveTab }) {
                 fetch(`${BACKEND_URL}/api/videos?size=1000`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
+                fetch(`${BACKEND_URL}/api/admins/trainers/pending`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
             ]);
 
             const usersData = await usersRes.json();
             const trainersData = await trainersRes.json();
             const videosData = await videosRes.json();
+            const pendingData = await pendingRes.json();
 
             // Filter out admins when counting users
             const usersList = Array.isArray(usersData) 
@@ -181,6 +212,7 @@ export default function AdminDashboard({ setActiveTab }) {
                 : [];
             const trainersList = Array.isArray(trainersData) ? trainersData : [];
             const videosList = videosData.content || videosData;
+            const pendingList = Array.isArray(pendingData) ? pendingData : [];
 
             // Calculate active users (non-banned users, excluding admins)
             const activeUsers = usersList.filter((u) => !getIsBanned(u)).length;
@@ -190,6 +222,7 @@ export default function AdminDashboard({ setActiveTab }) {
                 totalTrainers: trainersList.length,
                 activeSessions: activeUsers,
                 totalContent: Array.isArray(videosList) ? videosList.length : 0,
+                pendingApprovals: pendingList.length,
             });
         } catch (e) {
             console.error("fetchStats error:", e);
@@ -206,6 +239,7 @@ export default function AdminDashboard({ setActiveTab }) {
         if (activeSection === "overview") fetchStats();
         if (activeSection === "users") fetchUsers();
         if (activeSection === "trainers") fetchTrainers();
+        if (activeSection === "approvals") fetchPendingTrainers();
         if (activeSection === "content") fetchVideos();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSection]);
@@ -239,6 +273,11 @@ export default function AdminDashboard({ setActiveTab }) {
         return trainers.filter((t) => (q ? matchesSearch(t, q) : true));
     }, [trainers, search]);
 
+    const pendingTrainerRows = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        return pendingTrainers.filter((t) => (q ? matchesSearch(t, q) : true));
+    }, [pendingTrainers, search]);
+
     const videoRows = useMemo(() => {
         const q = search.trim().toLowerCase();
         return videos.filter((v) => (q ? matchesSearch(v, q) : true));
@@ -248,6 +287,7 @@ export default function AdminDashboard({ setActiveTab }) {
         if (activeSection === "overview") return fetchStats();
         if (activeSection === "users") return fetchUsers();
         if (activeSection === "trainers") return fetchTrainers();
+        if (activeSection === "approvals") return fetchPendingTrainers();
         if (activeSection === "content") return fetchVideos();
     };
 
@@ -306,11 +346,71 @@ export default function AdminDashboard({ setActiveTab }) {
                 );
             }
 
-            
-
         } catch (e) {
             console.error(`setBanStatus ${endpoint} error:`, e);
             alert(e?.message || `Failed to ${endpoint}`);
+        }
+    };
+
+    const approveTrainer = async (trainerId) => {
+        try {
+            const token = await getToken();
+            const res = await fetch(
+                `${BACKEND_URL}/api/admins/trainers/${trainerId}/approve`,
+                {
+                    method: "PATCH",
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || `Failed to approve trainer (${res.status})`);
+            }
+
+            // Remove from pending list
+            setPendingTrainers((prev) => prev.filter((t) => t.id !== trainerId));
+            
+            // Refresh stats
+            fetchStats();
+            
+            alert("Trainer approved successfully!");
+        } catch (e) {
+            console.error("approveTrainer error:", e);
+            alert(e?.message || "Failed to approve trainer");
+        }
+    };
+
+    const rejectTrainer = async (trainerId) => {
+        if (!window.confirm("Are you sure you want to reject this trainer application?")) {
+            return;
+        }
+
+        try {
+            const token = await getToken();
+            const res = await fetch(
+                `${BACKEND_URL}/api/admins/trainers/${trainerId}/reject`,
+                {
+                    method: "PATCH",
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || `Failed to reject trainer (${res.status})`);
+            }
+
+            // Remove from pending list
+            setPendingTrainers((prev) => prev.filter((t) => t.id !== trainerId));
+            
+            // Refresh stats
+            fetchStats();
+            
+            alert("Trainer application rejected.");
+        } catch (e) {
+            console.error("rejectTrainer error:", e);
+            alert(e?.message || "Failed to reject trainer");
         }
     };
 
@@ -417,6 +517,63 @@ export default function AdminDashboard({ setActiveTab }) {
         </div>
     );
 
+    const renderPendingTrainersTable = (rows) => (
+        <div className={styles.tableWrap}>
+            <table className={styles.table}>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Applied</th>
+                        <th className={styles.actionsCol}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {!loading &&
+                        rows.map((t) => {
+                            const fullName =
+                                `${t?.name || ""} ${t?.surname || ""}`.trim() || "-";
+                            const createdAt = t.createdAt 
+                                ? new Date(t.createdAt).toLocaleDateString()
+                                : "-";
+
+                            return (
+                                <tr key={t.id}>
+                                    <td>{t.id}</td>
+                                    <td>{fullName}</td>
+                                    <td>{t.email || "-"}</td>
+                                    <td>{createdAt}</td>
+                                    <td className={styles.actionsCol}>
+                                        <button
+                                            className={`${styles.actionBtn} ${styles.approveBtn}`}
+                                            onClick={() => approveTrainer(t.id)}
+                                        >
+                                            Approve
+                                        </button>
+                                        <button
+                                            className={`${styles.actionBtn} ${styles.rejectBtn}`}
+                                            onClick={() => rejectTrainer(t.id)}
+                                        >
+                                            Reject
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+
+                    {!loading && rows.length === 0 && (
+                        <tr>
+                            <td colSpan={5} className={styles.emptyRow}>
+                                No pending trainer applications.
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+
     const renderVideoTable = (rows) => (
         <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -498,6 +655,15 @@ export default function AdminDashboard({ setActiveTab }) {
                     Trainer Management
                 </button>
                 <button
+                    className={activeSection === "approvals" ? styles.active : ""}
+                    onClick={() => setActiveSection("approvals")}
+                >
+                    Trainer Approvals
+                    {stats.pendingApprovals > 0 && (
+                        <span className={styles.badge}>{stats.pendingApprovals}</span>
+                    )}
+                </button>
+                <button
                     className={activeSection === "content" ? styles.active : ""}
                     onClick={() => setActiveSection("content")}
                 >
@@ -547,6 +713,13 @@ export default function AdminDashboard({ setActiveTab }) {
                                     {loading ? "..." : stats.totalContent}
                                 </p>
                             </div>
+                            <div className={styles.statCard}>
+                                <div className={styles.statIcon}>⏳</div>
+                                <h3>Pending Approvals</h3>
+                                <p className={styles.statNumber}>
+                                    {loading ? "..." : stats.pendingApprovals}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -590,6 +763,40 @@ export default function AdminDashboard({ setActiveTab }) {
                         {activeSection === "users"
                             ? renderUserTable(userRows, "users")
                             : renderUserTable(trainerRows, "trainers")}
+                    </div>
+                )}
+
+                {activeSection === "approvals" && (
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeaderRow}>
+                            <div>
+                                <h2>Trainer Approval Queue</h2>
+                                <p className={styles.subtle}>
+                                    Review and approve trainer applications
+                                </p>
+                            </div>
+
+                            <button
+                                className={styles.refreshBtn}
+                                onClick={refreshActive}
+                                disabled={loading}
+                            >
+                                {loading ? "Loading..." : "Refresh"}
+                            </button>
+                        </div>
+
+                        <div className={styles.toolbar}>
+                            <input
+                                className={styles.searchInput}
+                                placeholder="Search by name, email, id…"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+
+                        {error && <div className={styles.errorBox}>{error}</div>}
+
+                        {renderPendingTrainersTable(pendingTrainerRows)}
                     </div>
                 )}
 
