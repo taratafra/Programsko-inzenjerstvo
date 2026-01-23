@@ -31,5 +31,7 @@ ENTRYPOINT ["/bin/sh", "-lc", "\
   else \
     echo '[entrypoint] Firebase key not found at /etc/secrets/serviceAccountKey.json'; \
   fi; \
+  echo '[entrypoint] /app/serviceAccountKey.json status:'; \
+  ls -la /app/serviceAccountKey.json || true; \
   exec java -Dspring.profiles.active=prod -jar /app/app.jar \
 "]
