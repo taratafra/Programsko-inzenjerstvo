@@ -11,7 +11,7 @@ Projektni repozitorij za tim Pomna-sedmica za izradu aplikacije Mindfulness u ko
 * Ivan Lučić, ivan.lucic@fer.hr
 
 # Linkovi
-https://pomna-sedmica.onrender.com/login
+https://programsko-inzenjerstvo-csfw.onrender.com
 
 # Lokalni deploy
 NAPOMENA: Ne preporučamo lokalni deploy, no u slučaju da je neophodno morate se javiti Tara Tafra (tara.tafra@fer.hr) kako biste dobili api ključeve za potrebne vanjske servise
