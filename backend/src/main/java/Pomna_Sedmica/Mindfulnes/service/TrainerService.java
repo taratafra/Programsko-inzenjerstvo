@@ -20,12 +20,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.reactive.function.client.WebClient;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
 public class TrainerService {
 
     private final UserRepository userRepository;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${auth0.domain}")
+    private String auth0Domain;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -35,7 +42,7 @@ public class TrainerService {
         Optional<User> existingUser = Optional.empty();
 
         if (dto.auth0Id() != null && !dto.auth0Id().isEmpty()) {
-            existingUser = userRepository.findByAuth0Id(dto.auth0Id());
+            existingUser = userRepository.findByAuth0Id(dto.auth0Id()).stream().findFirst();
         }
 
         if (existingUser.isEmpty() && dto.email() != null && !dto.email().isEmpty()) {
@@ -68,6 +75,7 @@ public class TrainerService {
 
     public Optional<TrainerDTOResponse> getTrainerByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
+                .stream().findFirst()
                 .map(Trainer::new)
                 .map(TrainerMapper::toDTO);
     }
@@ -84,6 +92,7 @@ public class TrainerService {
     @Transactional
     public Optional<TrainerDTOResponse> completeOnboardingByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
+                .stream().findFirst()
                 .map(user -> {
                     System.out.println("DEBUG completeOnboardingByAuth0Id: Found user with auth0Id: " + auth0Id);
                     System.out.println("DEBUG: User ID: " + user.getId());
@@ -160,7 +169,26 @@ public class TrainerService {
             email = sub;
         }
 
-        Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub);
+        // Try to fetch email from UserInfo endpoint if missing
+        if (email == null || email.isBlank()) {
+            try {
+                String domain = auth0Domain.startsWith("http") ? auth0Domain : "https://" + auth0Domain;
+                WebClient webClient = webClientBuilder.baseUrl(domain).build();
+                Map userInfo = webClient.get()
+                        .uri("/userinfo")
+                        .header("Authorization", "Bearer " + jwt.getTokenValue())
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                if (userInfo != null && userInfo.get("email") != null) {
+                    email = (String) userInfo.get("email");
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to fetch userinfo in TrainerService: " + e.getMessage());
+            }
+        }
+
+        Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub).stream().findFirst();
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
             user.setLastLogin(LocalDateTime.now());

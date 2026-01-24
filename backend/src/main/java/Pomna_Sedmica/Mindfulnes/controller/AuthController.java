@@ -74,28 +74,69 @@ public class AuthController {
                 return ResponseEntity.status(401).body("Invalid Auth0 credentials");
             }
 
-            String auth0Id = decodeAuth0Sub(token.getId_token());
-            User user = userRepository.findByAuth0Id(auth0Id)
-                    .orElseGet(() -> {
-                        User u = new User(
-                                req.getEmail(),
-                                null,
-                                auth0Id,
-                                "Auth0User",
-                                "",
-                                LocalDate.now(),
-                                Role.USER, //ovo treba promijenit, ne moze vise default bit user, zapravo neka bude user pa neka onboarding promijeni
-                                true
-                        );
-                        return userRepository.save(u);
-                    });
+            JSONObject payload = decodeTokenPayload(token.getId_token());
+            String auth0Id = payload.getString("sub");
+
+            String tokenEmail = null;
+            if (payload.has("email")) {
+                tokenEmail = payload.getString("email");
+            }
+
+            if (tokenEmail == null || tokenEmail.endsWith("placeholder.local")) {
+                try {
+                    Map userInfo = webClient.get()
+                            .uri("/userinfo")
+                            .header("Authorization", "Bearer " + token.getAccess_token())
+                            .retrieve()
+                            .bodyToMono(Map.class)
+                            .block();
+                    if (userInfo != null && userInfo.get("email") != null) {
+                        tokenEmail = (String) userInfo.get("email");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Failed to fetch userinfo: " + e.getMessage());
+                }
+            }
+
+            if (tokenEmail == null || tokenEmail.endsWith("placeholder.local")) {
+                if (req.getEmail() != null && !req.getEmail().endsWith("placeholder.local")) {
+                    tokenEmail = req.getEmail();
+                }
+            }
+
+            if (tokenEmail == null || tokenEmail.endsWith("placeholder.local")) {
+                return ResponseEntity.status(400).body("Unable to retrieve valid email from social login.");
+            }
+
+            String email = tokenEmail.toLowerCase();
+
+            User user = userRepository.findByAuth0Id(auth0Id).stream().findFirst()
+                    .or(() -> userRepository.findByEmail(email))
+                    .map(existingUser -> {
+                        if (existingUser.getAuth0Id() == null) {
+                            existingUser.setAuth0Id(auth0Id);
+                            existingUser.setSocialLogin(true);
+                        }
+                        return existingUser;
+                    })
+                    .orElseGet(() -> new User(
+                            email,
+                            null,
+                            auth0Id,
+                            "Auth0User",
+                            "",
+                            LocalDate.now(),
+                            Role.USER, //ovo treba promijenit, ne moze vise default bit user, zapravo neka bude user pa neka onboarding promijeni
+                            true
+                    ));
 
             user.setLastLogin(LocalDateTime.now());
             userRepository.save(user);
 
             return ResponseEntity.ok(Map.of("access_token", token.getAccess_token()));
         } else {
-            User user = userRepository.findByEmail(req.getEmail())
+            String email = req.getEmail().toLowerCase();
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
@@ -113,14 +154,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
+        String email = req.getEmail().toLowerCase();
+        if (userRepository.findByEmail(email).isPresent()) {
             return ResponseEntity.status(400).body("Email already exists");
         }
 
         String encoded = passwordEncoder.encode(req.getPassword());
 
         User user = new User(
-                req.getEmail(),
+                email,
                 encoded,
                 null,
                 req.getName(),
@@ -139,9 +181,9 @@ public class AuthController {
         return ResponseEntity.ok("Registered successfully");
     }
 
-    private String decodeAuth0Sub(String idToken) {
+    private JSONObject decodeTokenPayload(String idToken) {
         String[] parts = idToken.split("\\.");
         String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
-        return new JSONObject(payload).getString("sub");
+        return new JSONObject(payload);
     }
 }

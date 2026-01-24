@@ -190,19 +190,26 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.reactive.function.client.WebClient;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final WebClient.Builder webClientBuilder;
+
+    @Value("${auth0.domain}")
+    private String auth0Domain;
 
     @Transactional
     public UserDTOResponse saveOrUpdateUser(SaveAuth0UserRequestDTO dto) {
         Optional<User> existingUser = Optional.empty();
 
         if (dto.auth0Id() != null && !dto.auth0Id().isEmpty()) {
-            existingUser = userRepository.findByAuth0Id(dto.auth0Id());
+            existingUser = userRepository.findByAuth0Id(dto.auth0Id()).stream().findFirst();
         }
 
         if (existingUser.isEmpty() && dto.email() != null && !dto.email().isEmpty()) {
@@ -249,6 +256,7 @@ public class UserService {
 
     public Optional<UserDTOResponse> getUserByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
+                .stream().findFirst()
                 .map(UserMapper::toDTO);
     }
 
@@ -266,6 +274,7 @@ public class UserService {
     @Transactional
     public Optional<UserDTOResponse> completeOnboardingByAuth0Id(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
+                .stream().findFirst()
                 .map(user -> {
                     user.setOnboardingComplete(true);
                     User savedUser = userRepository.save(user);
@@ -290,7 +299,26 @@ public class UserService {
             email = sub;
         }
 
-        Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub);
+        // Try to fetch email from UserInfo endpoint if missing
+        if (email == null || email.isBlank()) {
+            try {
+                String domain = auth0Domain.startsWith("http") ? auth0Domain : "https://" + auth0Domain;
+                WebClient webClient = webClientBuilder.baseUrl(domain).build();
+                Map userInfo = webClient.get()
+                        .uri("/userinfo")
+                        .header("Authorization", "Bearer " + jwt.getTokenValue())
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
+                if (userInfo != null && userInfo.get("email") != null) {
+                    email = (String) userInfo.get("email");
+                }
+            } catch (Exception e) {
+                System.out.println("Failed to fetch userinfo in UserService: " + e.getMessage());
+            }
+        }
+
+        Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub).stream().findFirst();
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
             user.setLastLogin(LocalDateTime.now());
