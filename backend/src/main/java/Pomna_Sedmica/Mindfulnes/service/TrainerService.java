@@ -69,13 +69,15 @@ public class TrainerService {
 
     public Optional<TrainerDTOResponse> getTrainerByEmail(String email) {
         return userRepository.findByEmail(email)
+                .filter(user -> user.getRole() == Role.TRAINER)
                 .map(Trainer::new)
                 .map(TrainerMapper::toDTO);
     }
 
-    public Optional<TrainerDTOResponse> getTrainerByAuth0Id(String auth0Id) {
+
+    public Optional<TrainerDTOResponse> getTrainerByAuth0IdWithId(String auth0Id) {
         return userRepository.findByAuth0Id(auth0Id)
-                .stream().findFirst()
+                .filter(user -> user.getRole() == Role.TRAINER)
                 .map(Trainer::new)
                 .map(TrainerMapper::toDTO);
     }
@@ -103,6 +105,14 @@ public class TrainerService {
                 });
     }
 
+
+    public Optional<TrainerDTOResponse> getTrainerById(Long id) {
+        return userRepository.findById(id)
+                .filter(user -> user.getRole() == Role.TRAINER)
+                .map(Trainer::new)
+                .map(TrainerMapper::toDTO);
+    }
+
     private TrainerDTOResponse convertToTrainerAndComplete(User user) {
         // Update user properties
         user.setOnboardingComplete(true);
@@ -119,36 +129,45 @@ public class TrainerService {
 
         System.out.println("DEBUG: Converting User to Trainer");
 
-        // Save the updated User first
+        // Save the updated User first to ensure role is set
         User savedUser = userRepository.save(user);
-        entityManager.flush(); // Force the save to happen
+        entityManager.flush();
 
         System.out.println("DEBUG: Saved user with ID: " + savedUser.getId());
 
         // Create a Trainer entry in the trainer table
-        // This is needed for JOINED inheritance strategy
         try {
-            entityManager.createNativeQuery(
-                            "INSERT INTO trainer (id, approved) VALUES (?, ?)"
-                    )
+            // Check if trainer entry already exists
+            Long count = (Long) entityManager.createNativeQuery(
+                            "SELECT COUNT(*) FROM trainer WHERE id = ?")
                     .setParameter(1, savedUser.getId())
-                    .setParameter(2, false)
-                    .executeUpdate();
+                    .getSingleResult();
 
-            System.out.println("DEBUG: Created trainer table entry");
+            if (count == 0) {
+                entityManager.createNativeQuery(
+                                "INSERT INTO trainer (id, approved) VALUES (?, ?)")
+                        .setParameter(1, savedUser.getId())
+                        .setParameter(2, false)
+                        .executeUpdate();
+
+                System.out.println("DEBUG: Created trainer table entry");
+            } else {
+                System.out.println("DEBUG: Trainer entry already exists");
+            }
         } catch (Exception e) {
-            // If trainer entry already exists, that's fine
-            System.out.println("DEBUG: Trainer entry may already exist: " + e.getMessage());
+            System.err.println("ERROR: Failed to create/check trainer entry: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create trainer record", e);
         }
 
         entityManager.flush();
-        entityManager.clear(); // Clear the persistence context
+        entityManager.clear();
 
         // Now fetch it back as a Trainer
         Trainer trainer = (Trainer) userRepository.findById(savedUser.getId())
                 .orElseThrow(() -> new RuntimeException("Could not find trainer after conversion"));
 
-        System.out.println("DEBUG: Successfully fetched as Trainer");
+        System.out.println("DEBUG: Successfully fetched as Trainer, approved: " + trainer.isApproved());
 
         return TrainerMapper.toDTO(trainer);
     }
@@ -164,7 +183,6 @@ public class TrainerService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "JWT 'sub' claim is required");
         }
 
-        // If email claim is missing but sub looks like an email (local JWT), use sub as email
         if ((email == null || email.isBlank()) && sub.contains("@")) {
             email = sub;
         }
@@ -191,6 +209,11 @@ public class TrainerService {
         Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub).stream().findFirst();
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
+
+            if (user.isBanned()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+            }
+
             user.setLastLogin(LocalDateTime.now());
             return userRepository.save(user);
         }
@@ -199,6 +222,11 @@ public class TrainerService {
             Optional<User> byEmail = userRepository.findByEmail(email);
             if (byEmail.isPresent()) {
                 User user = byEmail.get();
+
+                if (user.isBanned()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+                }
+
                 if (user.getAuth0Id() == null || user.getAuth0Id().isEmpty()) {
                     user.setAuth0Id(sub);
                 }

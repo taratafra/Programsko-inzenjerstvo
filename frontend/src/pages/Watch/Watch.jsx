@@ -5,9 +5,13 @@ import styles from "./Watch.module.css";
 import ReactMarkdown from "react-markdown";
 
 // --- STAR RATING ---
-const StarRating = ({ onRate }) => {
-    const [rating, setRating] = useState(0);
+const StarRating = ({ onRate, currentRating = 0, averageRating = 0, totalRatings = 0 }) => {
+    const [rating, setRating] = useState(currentRating);
     const [hover, setHover] = useState(0);
+
+    useEffect(() => {
+        setRating(currentRating);
+    }, [currentRating]);
 
     const handleRate = (value) => {
         setRating(value);
@@ -16,23 +20,34 @@ const StarRating = ({ onRate }) => {
 
     return (
         <div className={styles.starRating}>
-            {[...Array(5)].map((_, index) => {
-                const ratingValue = index + 1;
-                return (
-                    <span
-                        key={index}
-                        className={ratingValue <= (hover || rating) ? styles.starFilled : styles.starEmpty}
-                        onClick={() => handleRate(ratingValue)}
-                        onMouseEnter={() => setHover(ratingValue)}
-                        onMouseLeave={() => setHover(0)}
-                    >
-                        ★
+            <div className={styles.starContainer}>
+                {[...Array(5)].map((_, index) => {
+                    const ratingValue = index + 1;
+                    return (
+                        <span
+                            key={index}
+                            className={ratingValue <= (hover || rating) ? styles.starFilled : styles.starEmpty}
+                            onClick={() => handleRate(ratingValue)}
+                            onMouseEnter={() => setHover(ratingValue)}
+                            onMouseLeave={() => setHover(0)}
+                        >
+                            ★
+                        </span>
+                    );
+                })}
+            </div>
+            <div className={styles.ratingInfo}>
+                {rating > 0 ? (
+                    <span className={styles.ratingText}>Your rating: {rating}/5</span>
+                ) : (
+                    <span className={styles.ratingText}>Click to rate</span>
+                )}
+                {totalRatings > 0 && (
+                    <span className={styles.averageRating}>
+                        Average: {averageRating.toFixed(1)}/5 ({totalRatings} {totalRatings === 1 ? 'rating' : 'ratings'})
                     </span>
-                );
-            })}
-            <span className={styles.ratingText}>
-                {rating > 0 ? `You rated: ${rating}/5` : "Rate"}
-            </span>
+                )}
+            </div>
         </div>
     );
 };
@@ -51,12 +66,23 @@ export default function Watch() {
     const [replyingTo, setReplyingTo] = useState(null);
     const [replyText, setReplyText] = useState("");
 
+    // --- SUBSCRIBE STATE ---
+    const [isSubscribed, setIsSubscribed] = useState(false);
+    const [isSubscribing, setIsSubscribing] = useState(false);
+
+    // --- RATING STATE ---
+    const [userRating, setUserRating] = useState(0);
+    const [averageRating, setAverageRating] = useState(0);
+    const [totalRatings, setTotalRatings] = useState(0);
+    const [isRating, setIsRating] = useState(false);
+
     // --- CONTENT DATA STATE ---
     const [contentData, setContentData] = useState({
         title: "Loading...",
         type: location.state?.type || "VIDEO",
         url: "",
-        textBody: ""
+        textBody: "",
+        trainerId: null
     });
 
     const BACKEND_URL = process.env.REACT_APP_BACKEND || "http://localhost:8080";
@@ -90,7 +116,6 @@ export default function Watch() {
                     } catch (tokenErr) {
                         console.error("Error getting token in Watch:", tokenErr);
                     }
-                    // We don't set loading false here because fetchContent handles it
                 } else if (localToken) {
                     const res = await fetch(`${BACKEND_URL}/api/users/me`, {
                         headers: { Authorization: `Bearer ${localToken}` },
@@ -121,8 +146,19 @@ export default function Watch() {
 
     useEffect(() => {
         const fetchContent = async () => {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
+            try {    
+                let token = localStorage.getItem("token");
+
+                if (isAuthenticated) {
+                    token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                }
+
+                const res = await fetch(`${BACKEND_URL}/api/videos/${id}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                });
+                //const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
                 if (res.ok) {
                     const data = await res.json();
 
@@ -141,6 +177,7 @@ export default function Watch() {
                         type: itemType,
                         url: data.url,
                         trainerName: data.trainerName,
+                        trainerId: data.trainerId,
                         createdAt: data.createdAt,
                         textBody: itemType === 'BLOG' ? "Loading blog content..." : ""
                     });
@@ -153,6 +190,11 @@ export default function Watch() {
                             setContentData(prev => ({ ...prev, textBody: text }));
                         }
                     }
+
+                    // Check if already subscribed
+                    if (data.trainerId) {
+                        checkSubscriptionStatus(data.trainerId);
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching content:", err);
@@ -163,7 +205,175 @@ export default function Watch() {
 
         fetchContent();
         fetchComments();
+        fetchRatings();
     }, [id, location.state?.type, BACKEND_URL]);
+
+    const fetchRatings = async () => {
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                try {
+                    token = await getAccessTokenSilently({
+                        authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                } catch (e) {
+                    console.error("Error getting token for ratings:", e);
+                }
+            }
+
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const res = await fetch(`${BACKEND_URL}/api/videos/${id}/ratings`, { headers });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setAverageRating(data.averageRating || 0);
+                setTotalRatings(data.totalRatings || 0);
+                setUserRating(data.userRating || 0);
+            }
+        } catch (err) {
+            console.error("Error fetching ratings:", err);
+        }
+    };
+
+    const handleRateVideo = async (ratingValue) => {
+        if (isRating) return;
+        setIsRating(true);
+
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
+
+            if (!token) {
+                alert("Please log in to rate this content");
+                setIsRating(false);
+                return;
+            }
+
+            const res = await fetch(`${BACKEND_URL}/api/videos/${id}/ratings`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ rating: ratingValue })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setUserRating(data.userRating);
+                setAverageRating(data.averageRating);
+                setTotalRatings(data.totalRatings);
+            } else {
+                alert("Failed to submit rating");
+            }
+        } catch (err) {
+            console.error("Error submitting rating:", err);
+            alert("Error submitting rating");
+        } finally {
+            setIsRating(false);
+        }
+    };
+
+    const checkSubscriptionStatus = async (trainerId) => {
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                try {
+                    token = await getAccessTokenSilently({
+                        authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                    });
+                } catch (e) {
+                    console.error("Error getting token:", e);
+                    return;
+                }
+            }
+
+            if (!token) return;
+
+            // Use the correct endpoint that returns list of trainer IDs
+            const res = await fetch(`${BACKEND_URL}/api/trainers/me/subscriptions`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (res.ok) {
+                const trainerIds = await res.json(); // This is an array of trainer IDs
+                console.log('📋 User subscriptions (trainer IDs):', trainerIds);
+                console.log('🎯 Checking if subscribed to trainer:', trainerId);
+                
+                // Check if the current trainer's ID is in the list
+                const isCurrentlySubscribed = trainerIds.includes(trainerId);
+                console.log('✅ Is subscribed?', isCurrentlySubscribed);
+                
+                setIsSubscribed(isCurrentlySubscribed);
+            }
+        } catch (err) {
+            console.error("Error checking subscription status:", err);
+        }
+    };
+
+    const handleSubscribe = async () => {
+        if (!contentData.trainerId) {
+            alert("Trainer information not available");
+            return;
+        }
+
+        setIsSubscribing(true);
+
+        try {
+            let token = localStorage.getItem("token");
+            if (isAuthenticated) {
+                token = await getAccessTokenSilently({
+                    authorizationParams: { audience: `${AUDIENCE}`, scope: "openid profile email" },
+                });
+            }
+
+            if (!token) {
+                alert("Please log in to subscribe");
+                setIsSubscribing(false);
+                return;
+            }
+
+            let res;
+            if (isSubscribed) {
+                // Unsubscribe - DELETE request
+                res = await fetch(`${BACKEND_URL}/api/trainers/me/${contentData.trainerId}`, {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            } else {
+                // Subscribe - POST request
+                res = await fetch(`${BACKEND_URL}/api/trainers/me/subscribe`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ trainerId: contentData.trainerId })
+                });
+            }
+
+            if (res.ok || res.status === 204) {
+                // Toggle the subscription state
+                const newState = !isSubscribed;
+                setIsSubscribed(newState);
+                alert(newState ? "Subscribed successfully!" : "Unsubscribed successfully!");
+            } else {
+                const errorText = await res.text();
+                alert(`Failed to ${isSubscribed ? 'unsubscribe' : 'subscribe'}: ${errorText}`);
+            }
+        } catch (err) {
+            console.error("Error processing subscription:", err);
+            alert("Error processing subscription");
+        } finally {
+            setIsSubscribing(false);
+        }
+    };
 
     const fetchComments = async () => {
         try {
@@ -240,7 +450,7 @@ export default function Watch() {
             });
 
             if (res.ok) {
-                await fetchComments(); // Refresh comments to show nested reply
+                await fetchComments();
                 setReplyingTo(null);
                 setReplyText("");
             }
@@ -266,7 +476,7 @@ export default function Watch() {
             });
 
             if (res.ok) {
-                fetchComments(); // Refresh to remove deleted comment
+                fetchComments();
             }
         } catch (err) {
             console.error("Error deleting comment:", err);
@@ -389,14 +599,29 @@ export default function Watch() {
                                         By {contentData.trainerName} • {contentData.createdAt ? new Date(contentData.createdAt).toLocaleDateString() : "Recently"}
                                     </p>
                                 </div>
-                                <button className={styles.subscribeBtn}>Subscribe</button>
+                                <button 
+                                    className={styles.subscribeBtn}
+                                    onClick={handleSubscribe}
+                                    disabled={isSubscribing}
+                                    style={{
+                                        backgroundColor: isSubscribed ? '#ff6b6b' : '#4318FF',
+                                        cursor: isSubscribing ? 'not-allowed' : 'pointer'
+                                    }}
+                                >
+                                    {isSubscribing ? 'Processing...' : isSubscribed ? 'Unsubscribe' : 'Subscribe'}
+                                </button>
                             </div>
 
                             {/* --- REVIEWS --- */}
                             <div className={styles.actionRow}>
                                 <div className={styles.reviewSection}>
                                     <span>Leave a Review:</span>
-                                    <StarRating onRate={(val) => console.log(val)} />
+                                    <StarRating 
+                                        onRate={handleRateVideo} 
+                                        currentRating={userRating}
+                                        averageRating={averageRating}
+                                        totalRatings={totalRatings}
+                                    />
                                 </div>
                             </div>
 

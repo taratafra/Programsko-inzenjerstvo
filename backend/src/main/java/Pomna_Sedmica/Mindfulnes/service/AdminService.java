@@ -2,9 +2,11 @@ package Pomna_Sedmica.Mindfulnes.service;
 
 import Pomna_Sedmica.Mindfulnes.domain.dto.SaveAuth0UserRequestDTO;
 import Pomna_Sedmica.Mindfulnes.domain.dto.UserDTOResponse;
+import Pomna_Sedmica.Mindfulnes.domain.dto.TrainerDTOResponse;
 import Pomna_Sedmica.Mindfulnes.domain.entity.User;
 import Pomna_Sedmica.Mindfulnes.domain.enums.Role;
 import Pomna_Sedmica.Mindfulnes.mapper.AdminMapper;
+import Pomna_Sedmica.Mindfulnes.mapper.TrainerMapper;
 import Pomna_Sedmica.Mindfulnes.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import Pomna_Sedmica.Mindfulnes.domain.entity.Trainer;
+import Pomna_Sedmica.Mindfulnes.repository.TrainerRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +30,7 @@ import java.util.Map;
 public class AdminService {
 
     private final UserRepository userRepository;
-    private final WebClient.Builder webClientBuilder;
-
-    @Value("${auth0.domain}")
-    private String auth0Domain;
+    private final TrainerRepository trainerRepository;
 
     @Transactional
     public UserDTOResponse saveOrUpdateAdmin(SaveAuth0UserRequestDTO dto) {
@@ -130,6 +131,12 @@ public class AdminService {
         Optional<User> byAuth0Id = userRepository.findByAuth0Id(sub).stream().findFirst();
         if (byAuth0Id.isPresent()) {
             User user = byAuth0Id.get();
+
+            // Check if user is banned
+            if (user.isBanned()) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+            }
+
             user.setLastLogin(LocalDateTime.now());
             return userRepository.save(user);
         }
@@ -138,6 +145,12 @@ public class AdminService {
             Optional<User> byEmail = userRepository.findByEmail(email);
             if (byEmail.isPresent()) {
                 User user = byEmail.get();
+
+                // Check if user is banned
+                if (user.isBanned()) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been banned");
+                }
+
                 if (user.getAuth0Id() == null || user.getAuth0Id().isEmpty()) {
                     user.setAuth0Id(sub);
                 }
@@ -161,5 +174,41 @@ public class AdminService {
         newUser.setRequiresPasswordReset(false);
 
         return userRepository.save(newUser);
+    }
+
+
+    @Transactional
+    public void setUserBanStatus(Long userId, boolean banned) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        user.setBanned(banned);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void setTrainerBanStatus(Long trainerId, boolean banned) {
+        Trainer trainer = trainerRepository.findById(trainerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+
+        trainer.setBanned(banned);
+        trainerRepository.save(trainer);
+    }
+
+    @Transactional
+    public void setTrainerApprovalStatus(Long trainerId, boolean approved) {
+        Trainer trainer = trainerRepository.findById(trainerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+
+        trainer.setApproved(approved);
+        trainerRepository.save(trainer);
+    }
+
+    public List<TrainerDTOResponse> getPendingTrainers() {
+        return trainerRepository.findAll()
+                .stream()
+                .filter(trainer -> !trainer.isApproved())
+                .map(TrainerMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }

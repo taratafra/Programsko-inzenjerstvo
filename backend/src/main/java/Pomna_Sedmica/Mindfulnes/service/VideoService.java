@@ -42,9 +42,17 @@ public class VideoService {
                 .collect(Collectors.toList());
     }
 
+    // NEW: Get all videos by a specific trainer
+    public List<VideoResponseDTO> getVideosByTrainer(User trainer) {
+        List<Video> videos = videoRepository.findByTrainerIdOrderByCreatedAtDesc(trainer.getId());
+        return videos.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
     public VideoResponseDTO createVideo(String title, String description, String type, String goal, String level, Integer duration, org.springframework.web.multipart.MultipartFile file, User trainer) throws java.io.IOException {
         String fileName = "videos/" + System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        
+
         com.google.cloud.storage.Blob blob = storageBucket.create(
                 fileName,
                 file.getInputStream(),
@@ -62,7 +70,7 @@ public class VideoService {
         } catch (Exception e) {
             video.setType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         }
-        
+
         try {
             video.setGoal(Pomna_Sedmica.Mindfulnes.domain.enums.Goal.valueOf(goal));
         } catch (Exception e) {
@@ -151,7 +159,7 @@ public class VideoService {
                     }
                 }
             }
-            
+
             // Order by createdAt desc
             query.orderBy(cb.desc(root.get("createdAt")));
 
@@ -172,9 +180,45 @@ public class VideoService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own videos");
         }
 
+        // Delete associated comments first
         commentRepository.deleteByVideoId(videoId);
+
+        // Delete the file from storage
+        deleteVideoFileFromStorage(video.getUrl());
+
+        // Delete from database
         videoRepository.delete(video);
     }
+
+    @Transactional
+    public void deleteVideoById(Long videoId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Video not found"));
+
+        // Delete associated comments first
+        commentRepository.deleteByVideoId(videoId);
+
+        // Delete the file from storage
+        deleteVideoFileFromStorage(video.getUrl());
+
+        // Delete from database
+        videoRepository.delete(video);
+    }
+
+    private void deleteVideoFileFromStorage(String storedUrl) {
+        if (storedUrl == null) return;
+
+        try {
+            com.google.cloud.storage.Blob blob = storageBucket.get(storedUrl);
+            if (blob != null) {
+                blob.delete();
+            }
+        } catch (Exception e) {
+            System.err.println("Error deleting video file from storage: " + storedUrl + " - " + e.getMessage());
+            // Don't throw - continue with database deletion even if file deletion fails
+        }
+    }
+
     public List<VideoResponseDTO> getRecommendations(User user) {
         List<Video> videos = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.VIDEO);
         List<Video> blogs = videoRepository.findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType.BLOG);
@@ -212,9 +256,9 @@ public class VideoService {
 
     private List<Video> filterContent(List<Video> content, java.util.Set<Pomna_Sedmica.Mindfulnes.domain.enums.Goal> goals, Pomna_Sedmica.Mindfulnes.domain.enums.MeditationExperience level) {
         List<Video> filtered = content.stream()
-            .filter(v -> v.getLevel() == level || v.getLevel() == null)
-            .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
-            .collect(Collectors.toList());
+                .filter(v -> v.getLevel() == level || v.getLevel() == null)
+                .filter(v -> v.getGoal() == null || goals.contains(v.getGoal()))
+                .collect(Collectors.toList());
 
         return filtered.isEmpty() ? content : filtered;
     }
@@ -233,4 +277,5 @@ public class VideoService {
 
         return storedUrl;
     }
+
 }

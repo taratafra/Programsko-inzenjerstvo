@@ -17,5 +17,6 @@ public interface PracticeScheduleRepository extends JpaRepository<PracticeSchedu
     List<PracticeSchedule> findByEnabledTrue();
 
     List<PracticeSchedule> findByUserIdAndEnabledTrue(Long userId);
+    List<PracticeSchedule> findAllByTrainerIdOrderByStartTimeAsc(Long trainerId);
 
 }

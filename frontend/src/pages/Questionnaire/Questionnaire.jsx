@@ -15,6 +15,7 @@ export default function Questionnaire() {
         confirmPassword: ""
     });
     const [loading, setLoading] = useState(true);
+    const [userRole, setUserRole] = useState(null); // Track if user is admin
     const navigate = useNavigate();
     const { getAccessTokenSilently, isAuthenticated } = useAuth0();
 
@@ -37,7 +38,13 @@ export default function Questionnaire() {
 
                 if (userRes.ok) {
                     const userData = await userRes.json();
-                    console.log(userData)
+                    console.log(userData);
+                    
+                    // Check if user is admin
+                    if (userData.role === "ADMIN" || userData.isAdmin) {
+                        setUserRole("ADMIN");
+                    }
+                    
                     if (userData.firstLogin) {
                         setRequiresPasswordReset(true);
                     } else {
@@ -166,14 +173,25 @@ export default function Questionnaire() {
 
             const roleMapping = {
                 "user": "USER",
-                "coach": "COACH"
-            }
+                "coach": "COACH",
+                "admin": "ADMIN"
+            };
 
-            const role = formData.get("role");
-            if (!role) {
-                setError("Please select your role");
-                setIsSubmitting(false);
-                return;
+            let role;
+            let isTrainer = false;
+
+            // If user is admin, use admin role, otherwise get from form
+            if (userRole === "ADMIN") {
+                role = "admin";
+                isTrainer = false; // Admins are not trainers
+            } else {
+                role = formData.get("role");
+                if (!role) {
+                    setError("Please select your role");
+                    setIsSubmitting(false);
+                    return;
+                }
+                isTrainer = role === "coach";
             }
 
             const consent = formData.get("consent");
@@ -182,8 +200,6 @@ export default function Questionnaire() {
                 setIsSubmitting(false);
                 return;
             }
-
-            const isTrainer = role === "coach";
 
             const surveyData = {
                 stressLevel: parseInt(formData.get("stress")),
@@ -240,12 +256,17 @@ export default function Questionnaire() {
                 }
             }
 
-            // FIXED: Use different endpoint based on role
-            const onboardingEndpoint = isTrainer 
-                ? `${BACKEND_URL}/api/trainers/complete-onboarding`
-                : `${BACKEND_URL}/api/users/complete-onboarding`;
+            // Determine onboarding endpoint based on role
+            let onboardingEndpoint;
+            if (userRole === "ADMIN") {
+                onboardingEndpoint = `${BACKEND_URL}/api/users/complete-onboarding`;
+            } else if (isTrainer) {
+                onboardingEndpoint = `${BACKEND_URL}/api/trainers/complete-onboarding`;
+            } else {
+                onboardingEndpoint = `${BACKEND_URL}/api/users/complete-onboarding`;
+            }
 
-            console.log(`Completing onboarding for ${isTrainer ? 'trainer' : 'user'} at: ${onboardingEndpoint}`);
+            console.log(`Completing onboarding for ${userRole === "ADMIN" ? "admin" : isTrainer ? 'trainer' : 'user'} at: ${onboardingEndpoint}`);
 
             const onboardingResponse = await fetch(onboardingEndpoint, {
                 method: "POST",
@@ -268,7 +289,14 @@ export default function Questionnaire() {
             const updatedUser = await onboardingResponse.json();
             console.log("Onboarding completed successfully!", updatedUser);
 
-            navigate("/home", { replace: true });
+            // Redirect based on role and approval status
+            if (isTrainer && !updatedUser.approved) {
+                // Trainer needs approval, redirect to lobby
+                navigate("/trainer-lobby", { replace: true });
+            } else {
+                // Regular user or approved trainer, go to home
+                navigate("/home", { replace: true });
+            }
 
         } catch (err) {
             console.error("Error submitting questionnaire:", err);
@@ -290,22 +318,34 @@ export default function Questionnaire() {
                     </div>
                 )}
 
-                <fieldset className={styles.role}>
-                    <legend>Role<span aria-hidden="true">*</span></legend>
-                    <div>
-                        <label htmlFor="role">What type of account would you like to create?</label>
+                {/* Only show role selection if user is NOT an admin */}
+                {userRole !== "ADMIN" && (
+                    <fieldset className={styles.role}>
+                        <legend>Role<span aria-hidden="true">*</span></legend>
                         <div>
-                            <label>
-                                <input type="radio" name="role" value="user" required /> User
-                            </label>
+                            <label htmlFor="role">What type of account would you like to create?</label>
+                            <div>
+                                <label>
+                                    <input type="radio" name="role" value="user" required /> User
+                                </label>
+                            </div>
+                            <div>
+                                <label>
+                                    <input type="radio" name="role" value="coach" /> Coach (Enable video uploads)
+                                </label>
+                            </div>
                         </div>
-                        <div>
-                            <label>
-                                <input type="radio" name="role" value="coach" /> Coach (Enable video uploads)
-                            </label>
-                        </div>
+                    </fieldset>
+                )}
+
+                {/* Show admin notice if user is admin */}
+                {userRole === "ADMIN" && (
+                    <div className={styles.adminNotice}>
+                        <p><strong>Admin Account Detected</strong></p>
+                        <p>Your account role is set to Administrator. Please complete the questionnaire to access the dashboard.</p>
                     </div>
-                </fieldset>
+                )}
+
                 <fieldset className={styles.wellbeing}>
                     <legend>Wellbeing<span aria-hidden="true">*</span></legend>
 

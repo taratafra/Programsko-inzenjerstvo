@@ -58,6 +58,7 @@ public class TrainerMapper {
                 user.getProfilePictureUrl(),
                 user.isFirstLogin(),
                 user.isApproved(),
+                user.isBanned(),
                 user.getSubscribers(),
                 user.getVideoContent()
         );

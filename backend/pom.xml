@@ -113,14 +113,14 @@
             <artifactId>firebase-admin</artifactId>
             <version>9.2.0</version>
         </dependency>
-
+        <!--
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>spring-cloud-gcp-starter-storage</artifactId>
             <version>5.9.0</version>
         </dependency>
+        -->
     </dependencies>
-
     <build>
         <plugins>
             <plugin>

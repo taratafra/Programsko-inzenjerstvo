@@ -10,4 +10,6 @@ import java.util.List;
 public interface VideoRepository extends JpaRepository<Video, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Video> {
     List<Video> findAllByOrderByCreatedAtDesc();
     List<Video> findByType(Pomna_Sedmica.Mindfulnes.domain.enums.ContentType type);
+    List<Video> findByTrainerIdOrderByCreatedAtDesc(Long trainerId);
+    List<Video> findByTrainerId(Long trainerId);
 }

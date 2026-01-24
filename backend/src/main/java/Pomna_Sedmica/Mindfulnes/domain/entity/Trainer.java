@@ -51,9 +51,11 @@ public Trainer(User user) {
     this.setLastModifiedAt(user.getLastModifiedAt());
     this.setOnboardingComplete(user.isOnboardingComplete());
 
-    // ✅ Hardcode these so the frontend doesn't force the password reset screen
+    //  Hardcode these so the frontend doesn't force the password reset screen
     this.setFirstLogin(false);
     this.setRequiresPasswordReset(false);
+
+    this.setBanned(user.isBanned());
 
     // Keep optional profile fields
     this.setBio(user.getBio());

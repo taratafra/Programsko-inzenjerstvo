@@ -146,6 +146,8 @@ export default function Streak({user, getAccessTokenSilently}) {
 
   const getBadgeIcon = (badgeType) => {
     switch(badgeType) {
+      case 'FIRST_SUBMISSION':
+        return '🏆'
       case 'STREAK_7':
         return '🥉';
       case 'STREAK_30':
@@ -153,12 +155,14 @@ export default function Streak({user, getAccessTokenSilently}) {
       case 'STREAK_100':
         return '🥇';
       default:
-        return '🏆';
+        return null;
     }
   };
 
   const getBadgeName = (badgeType) => {
     switch(badgeType) {
+      case 'FIRST_SUBMISSION':
+        return 'First Submission'      
       case 'STREAK_7':
         return '7 Day Streak';
       case 'STREAK_30':
